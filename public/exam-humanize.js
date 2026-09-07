@@ -134,11 +134,14 @@ function buildSubjectCard(form, key, label, fullScore) {
   rankBlock.append(rankPair("班级", classRank, classPeople), rankPair("学校", schoolRank, schoolPeople));
   card.append(rankBlock);
 
+  const rawLabel = rawWrap.querySelector(".exam-control-label");
   const syncMode = () => {
     const converted = mode.value === "raw_and_converted" || mode.value === "converted";
-    finalWrap.hidden = !converted;
-    final.disabled = !converted;
-    rawWrap.querySelector(".exam-control-label").textContent = converted ? "原始分" : "成绩";
+    const shouldHideFinal = !converted;
+    if (finalWrap.hidden !== shouldHideFinal) finalWrap.hidden = shouldHideFinal;
+    if (final.disabled !== shouldHideFinal) final.disabled = shouldHideFinal;
+    const nextLabel = converted ? "原始分" : "成绩";
+    if (rawLabel && rawLabel.textContent !== nextLabel) rawLabel.textContent = nextLabel;
   };
   mode.addEventListener("change", syncMode);
   mode.dataset.examModeBound = "1";
@@ -195,6 +198,8 @@ function enhanceExamForm(form) {
   buildOverview(form, oldGrid);
   buildSubjects(form, subjectEditor);
 
+  if (form.dataset.draftRestored === "1") syncSubjectModes(form);
+
   const notes = form.querySelector("textarea[name='notes']")?.closest(".field");
   if (notes) {
     notes.classList.add("exam-notes");
@@ -207,16 +212,18 @@ function enhanceExamForm(form) {
   });
 }
 
-function scan() {
+function scanDialogLifecycle() {
   const form = document.querySelector("#exam-form");
-  if (form) {
-    enhanceExamForm(form);
-    if (form.querySelector(".notice-box")?.textContent?.includes("已恢复本机未同步草稿")) syncSubjectModes(form);
-  } else {
-    document.documentElement.classList.remove("exam-dialog-open");
-  }
+  if (form) enhanceExamForm(form);
+  else document.documentElement.classList.remove("exam-dialog-open");
 }
 
-const observer = new MutationObserver(scan);
-observer.observe(document.documentElement, { childList: true, subtree: true });
-scan();
+document.addEventListener("score:draft-restored", (event) => {
+  const form = event.target;
+  if (!(form instanceof HTMLFormElement) || form.id !== "exam-form") return;
+  if (form.dataset.humanized === "1") syncSubjectModes(form);
+});
+
+const observer = new MutationObserver(scanDialogLifecycle);
+observer.observe(document.body, { childList: true });
+scanDialogLifecycle();
