@@ -9,13 +9,21 @@
     "brandMark": "标",
     "keepFeatureTerms": ["轨迹", "高三轨迹", "分享高三轨迹", "家庭轨迹"]
   },
-  "work": [
-    "Update browser title, loading state, login/header/footer/share/onboarding brand surfaces.",
-    "Keep trajectory-specific feature copy unchanged.",
-    "Update README and architecture naming.",
-    "Bump package/lockfile/Worker APP_VERSION to 0.2.1.",
-    "Add regression tests including observer-safety for the brand enhancement layer.",
-    "Run CI, merge with expected head SHA, then verify Cloudflare production appVersion 0.2.1."
+  "completed": [
+    "Browser title and loading shell use 高三坐标.",
+    "Login/header/footer/share/onboarding brand surfaces are normalized by a top-level-only brand layer.",
+    "Brand mark is 标 and login tagline is 看见现在的位置，也看见一路的变化.",
+    "Trajectory-specific feature wording remains unchanged.",
+    "README and architecture naming are updated.",
+    "Package, lockfile and Worker APP_VERSION are 0.2.1.",
+    "Brand and observer-safety regression tests were added.",
+    "CI run 34090245157 passed after correcting the old patch-version-hardcoded v0.2 test contract."
   ],
-  "status": "in_progress"
+  "releaseGate": [
+    "Final head CI must pass.",
+    "Merge with expected head SHA only.",
+    "main CI must pass.",
+    "Cloudflare deploy must pass and production /api/health must attest appVersion 0.2.1."
+  ],
+  "status": "ready_for_merge"
 }
