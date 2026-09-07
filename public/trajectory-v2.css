@@ -1,0 +1,24 @@
+.trajectory-insight { margin: 18px 0; }
+.trajectory-insight .section-head { align-items: flex-start; }
+.trajectory-insight-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.trajectory-insight-item { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); }
+.trajectory-insight-item > small { display: block; color: var(--muted); margin-bottom: 7px; }
+.trajectory-insight-item > strong { display: block; font-size: 18px; line-height: 1.35; }
+.trajectory-insight-item > p { margin: 8px 0 6px; line-height: 1.55; }
+.trajectory-insight-item > em { display: block; color: var(--muted); font-style: normal; font-size: 12px; line-height: 1.5; }
+.trajectory-chips { display: grid; gap: 7px; margin: 8px 0; }
+.trajectory-chip { display: block; padding: 8px 10px; border-radius: 10px; background: var(--surface); font-size: 13px; line-height: 1.45; }
+.trajectory-chip.is-up::before { content: "↑ "; }
+.trajectory-chip.is-down::before { content: "↓ "; }
+.share-scope-v2 { display: grid; gap: 8px; margin: 14px 0 16px; padding: 13px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); }
+.share-scope-v2 > strong { margin-bottom: 2px; }
+.share-scope-v2 > label { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; align-items: start; padding: 8px; border-radius: 10px; cursor: pointer; }
+.share-scope-v2 > label input { margin-top: 4px; }
+.share-scope-v2 > label span { font-weight: 700; }
+.share-scope-v2 > label small { grid-column: 2; color: var(--muted); line-height: 1.45; }
+.share-scope-v2 > label:has(input:checked) { background: var(--surface); }
+.share-single-picker { margin: 4px 0 0; }
+.trajectory-insight-external { margin-top: 16px; }
+@media (max-width: 900px) {
+  .trajectory-insight-grid { grid-template-columns: 1fr; }
+}
