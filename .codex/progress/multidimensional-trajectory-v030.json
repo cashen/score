@@ -1,0 +1,119 @@
+{
+  "project": "cashen/score",
+  "branch": "feat/multidimensional-trajectory-v030",
+  "baseMainSha": "6e3f8e1d2d3bafefcb89ed240c322c5de3c13c60",
+  "targetVersion": "0.3.0",
+  "product": "高三坐标",
+  "goal": "Build multidimensional senior-year trajectory analysis for students, parents and teacher-facing shares without turning the product into a generic score table.",
+  "productPrinciple": [
+    "孩子现在在哪",
+    "最近有没有变化",
+    "变化来自哪一科",
+    "再回到具体考试和分数核对"
+  ],
+  "nonGoals": [
+    "No high-stakes prediction of Gaokao score or admission outcome.",
+    "No alarmist AI judgement copy.",
+    "No radar chart as the primary comparison UI.",
+    "No teacher account system in v0.3.0; teacher use is a privacy-scoped share preset.",
+    "No third-party analytics or new paid storage dependency."
+  ],
+  "stages": [
+    {
+      "id": "S0",
+      "name": "release safety and weak-network recovery",
+      "status": "in_progress",
+      "acceptance": [
+        "All work stays on this PR branch until every stage is green.",
+        "This checkpoint and PR body remain authoritative after interruption.",
+        "Every material commit updates this checkpoint status before release.",
+        "Do not infer completed work from chat history; verify branch diff, tests and checkpoint.",
+        "Do not use destructive reset/checkout over unverified work.",
+        "No broad subtree MutationObserver regression; exam entry responsiveness remains protected."
+      ]
+    },
+    {
+      "id": "S1",
+      "name": "single-subject historical trajectory",
+      "status": "pending",
+      "acceptance": [
+        "Six subjects each have a history view across exams.",
+        "Show score trajectory, school rank/percentile trajectory and class rank trajectory when available.",
+        "If participant count is absent, degrade to rank-only and never invent percentile.",
+        "Summarize latest-vs-previous and recent 3-6 comparable exams.",
+        "Explain that score changes across different exam difficulty are not equivalent to relative-position changes.",
+        "PC and Android both support subject switching without hover-only behavior."
+      ]
+    },
+    {
+      "id": "S2",
+      "name": "six-subject change map",
+      "status": "pending",
+      "acceptance": [
+        "Compare all six subjects by current relative position, direction and stability.",
+        "Prefer school percentile/rank, then class rank, then score-only with explicit caveat.",
+        "Identify primary contributors moving forward and subjects worth attention without alarmist language.",
+        "Do not put six unreadable lines or a radar chart in the primary UI."
+      ]
+    },
+    {
+      "id": "S3",
+      "name": "multidimensional trajectory sharing",
+      "status": "pending",
+      "acceptance": [
+        "Trajectory share contains Overview, Subject, Six-subject comparison and Exam timeline dimensions.",
+        "Existing single-exam share remains pinned to the selected exam.",
+        "Shared subject view can browse each subject's historical score/rank/percentile data.",
+        "Shared six-subject comparison is readable on phone and desktop.",
+        "Existing clickable/touch exam timeline remains available and current/past states stay distinct.",
+        "Share projection remains allow-listed; private notes never leak."
+      ]
+    },
+    {
+      "id": "S4",
+      "name": "exam comparability metadata",
+      "status": "pending",
+      "acceptance": [
+        "Exam data supports an optional comparison series/group and comparison level/type metadata without breaking schema-v1 records.",
+        "Analysis prefers same comparison series when enough points exist.",
+        "Cross-series or mixed-scope trends display a clear comparability caveat instead of overclaiming.",
+        "Old exams with no comparability metadata continue to render and analyze conservatively."
+      ]
+    },
+    {
+      "id": "S5",
+      "name": "student-parent-teacher reading perspectives",
+      "status": "pending",
+      "acceptance": [
+        "Student copy emphasizes where I am and which subject is changing.",
+        "Parent copy emphasizes what changed and what is worth attention, avoiding panic wording.",
+        "Teacher share preset exposes academic trajectory fields only and never account/family/private-note data.",
+        "Perspectives are display/share presets over one data model, not duplicated records."
+      ]
+    },
+    {
+      "id": "S6",
+      "name": "release gate",
+      "status": "pending",
+      "acceptance": [
+        "Version is 0.3.0 across package, lockfile and Worker APP_VERSION.",
+        "npm run verify passes on final PR head.",
+        "Regression tests cover rank-only data, multi-exam subject comparison, sharing privacy, comparability fallbacks, Android-friendly interaction and observer safety.",
+        "PR is merged only with expected_head_sha after final CI is green.",
+        "main CI passes.",
+        "Cloudflare deploy checks out the exact tested SHA.",
+        "Production /api/health attests appVersion=0.3.0 before declaring complete."
+      ]
+    }
+  ],
+  "restartProtocol": [
+    "1. Fetch current main SHA and this branch head; never assume chat-state is current.",
+    "2. Read this checkpoint and PR body completely.",
+    "3. Inspect PR changed files/diff and latest CI before changing code.",
+    "4. Treat only committed code + passing tests as completed; never mark a stage complete from prose alone.",
+    "5. Resume the first stage whose status is not completed, preserving already-committed work.",
+    "6. If main advanced, compare/reconcile deliberately; do not force-reset the feature branch.",
+    "7. Update this checkpoint after each completed stage and before final merge."
+  ],
+  "status": "plan_committed"
+}
