@@ -1,6 +1,7 @@
 {
   "project": "cashen/score",
   "workstream": "family-management-v016",
+  "branch": "feat/family-management-v016",
   "targetVersion": "0.1.6",
   "trigger": "User wants normal in-product user creation instead of relying on ADMIN_BOOTSTRAP_SECRET, and current data model already supports multiple members and multiple students.",
   "intent": [
@@ -19,5 +20,6 @@
     "Add integration/security/UI contract tests and bump package/runtime to 0.1.6.",
     "Require PR CI green, review diff, expected-head merge, main CI, Cloudflare deploy and production /api/health 0.1.6."
   ],
+  "status": "draft-pr-bootstrap",
   "resumeRule": "Resume from the latest open family-management PR head. Do not re-run admin provisioning for the existing family and do not weaken v0.1.1+ Worker-secret deployment protections."
 }
