@@ -1,0 +1,21 @@
+{
+  "project": "cashen/score",
+  "branch": "chore/rename-gaosan-coordinates-v021",
+  "targetVersion": "0.2.1",
+  "goal": "Rename the product brand from 高三轨迹 to 高三坐标 while keeping 轨迹 as the core feature concept.",
+  "brandContract": {
+    "productName": "高三坐标",
+    "tagline": "看见现在的位置，也看见一路的变化",
+    "brandMark": "标",
+    "keepFeatureTerms": ["轨迹", "高三轨迹", "分享高三轨迹", "家庭轨迹"]
+  },
+  "work": [
+    "Update browser title, loading state, login/header/footer/share/onboarding brand surfaces.",
+    "Keep trajectory-specific feature copy unchanged.",
+    "Update README and architecture naming.",
+    "Bump package/lockfile/Worker APP_VERSION to 0.2.1.",
+    "Add regression tests including observer-safety for the brand enhancement layer.",
+    "Run CI, merge with expected head SHA, then verify Cloudflare production appVersion 0.2.1."
+  ],
+  "status": "in_progress"
+}
