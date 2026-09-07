@@ -3,7 +3,7 @@
   "branch": "feat/v020-trajectory-invite-recovery",
   "targetVersion": "0.2.0",
   "releaseMode": "single consolidated release; nothing reaches main until all stages pass",
-  "status": "implementation-complete-final-ci-before-merge",
+  "status": "ready-for-merge",
   "stages": [
     {
       "id": "S1",
@@ -47,14 +47,14 @@
     {
       "id": "S4",
       "name": "Full release gate",
-      "status": "awaiting-final-ci-and-production",
+      "status": "pr-ci-green-awaiting-main-production",
       "evidence": [
         "package.json, package-lock.json and Worker APP_VERSION are 0.2.0.",
         "Worker entrypoint is src/v020.js and onboarding/share v2 routes are wired.",
-        "Latest implementation CI was green before this checkpoint-only commit.",
-        "Next gate: CI for this exact head, Ready, expected_head_sha merge, main CI, Cloudflare deploy, production /api/health appVersion=0.2.0."
+        "Exact PR head cfbd2b7f48d00e59c298dcb91d2b9619ce57816e passed CI run 34088574949.",
+        "Next gate: mark Ready, merge with expected_head_sha, require main CI, Cloudflare deploy and production /api/health appVersion=0.2.0."
       ]
     }
   ],
-  "resumeRule": "Resume from PR #10 latest head. Do not modify main directly. If final PR CI is green, mark Ready and merge only with exact expected_head_sha; then require main CI, Cloudflare deploy and production health attestation for 0.2.0 before declaring completion."
+  "resumeRule": "PR #10 exact head passed CI. Mark Ready and merge only with expected_head_sha; then require main CI, Cloudflare deploy and production health attestation for 0.2.0 before declaring completion."
 }
