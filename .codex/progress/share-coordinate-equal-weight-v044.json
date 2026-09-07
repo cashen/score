@@ -1,0 +1,31 @@
+{
+  "project": "cashen/score",
+  "release": "0.4.4",
+  "branch": "feat/share-coordinate-equal-weight-v044",
+  "base_sha": "8971b19ce253d050ed66cd6ca07b072711f18283",
+  "status": "sealed",
+  "resume_protocol": [
+    "Fetch latest main SHA, PR exact head, diff, CI and this checkpoint before editing.",
+    "Treat only committed code and passing tests as completed; never infer completion from chat history.",
+    "If main moved, compare/reconcile explicitly; never force-reset or overwrite unverified work."
+  ],
+  "goal": "Render the current exam coordinate values as equal-weight peer metrics: 校第 X 名 | 班第 X 名 | X 分. All share the same font size, weight and color, remain visually smaller than the student name, and wrap naturally on narrow screens.",
+  "completed": [
+    "School rank, class rank and total score are emitted as peer v44-coordinate-item elements.",
+    "Desktop coordinate metrics share 24px / 650 / var(--text), below the 30px student name.",
+    "Mobile coordinate metrics share 20px, <=380px 19px, below the 26px mobile student name.",
+    "Subtle 1px separators distinguish coordinate items without creating a hero metric.",
+    "Exam name/date remains above the coordinate row.",
+    "Optional school percentile remains inside the school metric instead of becoming a separate hero.",
+    "flex-wrap remains enabled with no white-space: nowrap.",
+    "No backend/KV/auth/share-token/data-model changes and no subtree:true observer introduced.",
+    "Version is exactly 0.4.4 across package.json, package-lock.json and wrangler.toml."
+  ],
+  "test_evidence": {
+    "initial_run": "34165521280 failed because inherited v0.4.2 tests encoded the old oversized school-rank implementation; product code and new v0.4.4 tests passed.",
+    "corrected_head": "e3ed33dd10d1ea466c28f6d0d700173fae1edc02",
+    "corrected_ci_run": "34165573254",
+    "corrected_ci_conclusion": "success"
+  },
+  "release_gate": "Run CI again on this sealed checkpoint commit. Only that exact final head may be marked Ready and merged with expected_head_sha. Then require main CI and Cloudflare production attestation of 0.4.4."
+}

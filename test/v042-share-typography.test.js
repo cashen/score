@@ -17,23 +17,22 @@ test("v0.4.2 assets are wired after v0.4.1 and syntax checked", () => {
   assert.match(pkg.scripts.check, /public\/ui-v042\.js/);
 });
 
-test("coordinate becomes one direct semantic unit instead of a field label plus giant number", () => {
+test("coordinate remains one direct semantic unit instead of field-label plus giant number", () => {
   assert.match(ui, /v42CompactRank/);
   assert.match(ui, /`\$\{prefix\}第 \$\{named\[1\]\} 名`/);
-  assert.match(ui, /primary = `校\$\{source\.schoolPct\}`/);
-  assert.match(ui, /primary = schoolRank/);
-  assert.match(ui, /meta\.push\(classRank\)/);
-  assert.match(ui, /meta\.push\(`\$\{source\.total\} 分`\)/);
+  assert.match(ui, /const schoolRank = v42CompactRank\("校"/);
+  assert.match(ui, /const classRank = v42CompactRank\("班"/);
+  assert.match(ui, /metrics\.push\(classRank\)/);
+  assert.match(ui, /metrics\.push\(`\$\{source\.total\} 分`\)/);
   assert.match(ui, /source\.exam/);
 });
 
 test("typography caps prevent a ranking-poster hierarchy before JS finishes", () => {
   assert.match(css, /\.v41-current-coordinate > h1[\s\S]*font-size: 30px/);
   assert.match(css, /\.v41-coordinate-primary > small[\s\S]*display: none/);
-  assert.match(css, /\.v41-coordinate-primary > strong[\s\S]*font-size: clamp\(38px, 4\.4vw, 44px\)/);
-  assert.match(css, /\.v41-coordinate-primary > span[\s\S]*font-size: 19px/);
+  assert.match(css, /\.v41-coordinate-primary > strong,[\s\S]*\.v44-coordinate-item[\s\S]*font-size: 24px/);
   assert.match(css, /\.subject-card \.score[\s\S]*font-size: 26px/);
-  assert.doesNotMatch(css, /v41-coordinate-primary[^}]*font-size:\s*(?:5[0-9]|[6-9][0-9])px/);
+  assert.doesNotMatch(css, /v44-coordinate-item[^}]*font-size:\s*(?:3[0-9]|4[0-9]|[5-9][0-9])px/);
 });
 
 test("subject area steps down from the coordinate surface and mobile becomes six compact rows", () => {
@@ -48,10 +47,10 @@ test("public report width and mobile reading order are intentionally bounded", (
   assert.match(css, /--v42-report-max: 960px/);
   assert.match(css, /\.public-shell[\s\S]*max-width: var\(--v42-report-max\)/);
   assert.match(css, /@media \(max-width: 620px\)[\s\S]*padding-inline: 12px/);
-  assert.match(css, /\.v41-coordinate-primary > em[\s\S]*order: 0/);
-  assert.match(css, /\.v41-coordinate-primary > strong[\s\S]*order: 1/);
-  assert.match(css, /font-size: 36px/);
-  assert.match(css, /@media \(max-width: 380px\)[\s\S]*font-size: 34px/);
+  assert.match(css, /\.v41-coordinate-primary > em[\s\S]*display: block/);
+  assert.match(css, /\.v44-coordinate-row[\s\S]*flex-wrap: wrap/);
+  assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.v44-coordinate-item[\s\S]*font-size: 20px/);
+  assert.match(css, /@media \(max-width: 380px\)[\s\S]*\.v44-coordinate-item[\s\S]*font-size: 19px/);
 });
 
 test("v0.4.2 enhancement keeps DOM observation narrow", () => {
