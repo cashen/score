@@ -28,4 +28,4 @@ jobs:
             echo "Cloudflare deployment skipped: CLOUDFLARE_API_TOKEN is not configured."
             exit 0
           fi
-          npx --yes wrangler@4 deploy
+          npx --yes wrangler@4 deploy --keep-vars
