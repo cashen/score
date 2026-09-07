@@ -2,6 +2,7 @@
   "project": "cashen/score",
   "workstream": "family-management-v016",
   "branch": "feat/family-management-v016",
+  "pr": 8,
   "targetVersion": "0.1.6",
   "trigger": "User wants normal in-product user creation instead of relying on ADMIN_BOOTSTRAP_SECRET, and current data model already supports multiple members and multiple students.",
   "intent": [
@@ -12,14 +13,18 @@
     "Viewer accounts remain read-only; owner-only actions must be enforced server-side, not just hidden in UI.",
     "Preserve existing exams, sharing, KV key contract, secret deployment hardening and v0.1.5 share-copy behavior."
   ],
-  "plan": [
-    "Create feature branch and PR before functional code changes.",
-    "Add safe family-member endpoints with CSRF, role checks, username uniqueness and session revocation on access changes.",
-    "Add family student-creation endpoint with owner/editor permission and safe profile normalization.",
-    "Add Settings UI for family members and adding another child; hide or disable actions according to role.",
-    "Add integration/security/UI contract tests and bump package/runtime to 0.1.6.",
-    "Require PR CI green, review diff, expected-head merge, main CI, Cloudflare deploy and production /api/health 0.1.6."
+  "delivered": [
+    "Authenticated /api/family/members GET+POST and /api/family/members/:id PATCH with owner-only mutations.",
+    "Member role changes and disable/re-enable increment sessionVersion, invalidating old sessions.",
+    "Authenticated /api/family/students POST for owner/editor, with viewer denied server-side.",
+    "Settings enhancement for member list/create/role/access management and adding another child.",
+    "Viewer settings are explicitly read-only; passwords and bootstrap secret are never rendered or returned.",
+    "Integration and UI/security contract tests added; package and Worker runtime bumped to 0.1.6."
   ],
-  "status": "draft-pr-bootstrap",
-  "resumeRule": "Resume from the latest open family-management PR head. Do not re-run admin provisioning for the existing family and do not weaken v0.1.1+ Worker-secret deployment protections."
+  "verification": {
+    "prHeadCi": "success",
+    "remaining": ["mark PR ready", "expected-head merge", "main CI", "Cloudflare deploy", "production /api/health 0.1.6"]
+  },
+  "status": "implementation-complete-awaiting-final-ci-and-merge",
+  "resumeRule": "Resume from PR #8 latest head. Do not re-run admin provisioning for the existing family and do not weaken v0.1.1+ Worker-secret deployment protections. Merge only after final PR-head CI is green, then verify main CI, Cloudflare deploy and production health 0.1.6."
 }
