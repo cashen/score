@@ -144,9 +144,7 @@ function v41EnhanceShareComposer(main) {
   const secret = cards.find((card) => card.querySelector("#secret-mode")) || grid.querySelector(".share-card");
   const publicCard = cards.find((card) => card.querySelector("#public-mode"));
   v41WatchShareCard(secret, "secret");
-  if (publicCard) {
-    publicCard.querySelectorAll("[data-v4-audience-step], .v3-teacher-preset").forEach((node) => node.remove());
-  }
+  v41WatchShareCard(publicCard, "public");
 }
 
 function v41CoordinatePrimary(card) {
@@ -155,7 +153,8 @@ function v41CoordinatePrimary(card) {
   const clazz = rankCards.find((item) => v41Text(item.querySelector("small")).includes("班级"));
   const schoolStrong = v41Text(school?.querySelector("strong"));
   const schoolHints = school ? [...school.querySelectorAll("small")].slice(1).map(v41Text).filter(Boolean) : [];
-  const schoolPct = schoolHints.find((text) => /^前\s*\d/.test(text));
+  const schoolPctRaw = schoolHints.find((text) => /^前\s*\d/.test(text));
+  const schoolPct = schoolPctRaw?.split("·")[0]?.trim() || null;
   const classStrong = v41Text(clazz?.querySelector("strong"));
   const total = v41Text(card.querySelector(".latest-score strong"));
   const exam = v41Text(card.querySelector(".latest-score span"));
