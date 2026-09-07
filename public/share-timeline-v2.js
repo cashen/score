@@ -35,6 +35,20 @@ function tMount(exams,anchor){
   requestAnimationFrame(()=>section.querySelector(".share-timeline-node.is-current")?.scrollIntoView({block:"nearest",inline:"end"}));
 }
 
+function tMountWhenReady(exams){
+  const tryMount=()=>{
+    const anchor=document.querySelector("[data-trajectory-v2]")||document.querySelector(".public-shell > .card");
+    if(!anchor)return false;
+    tMount(exams,anchor);
+    return true;
+  };
+  if(tryMount())return;
+  const root=document.querySelector("#app");
+  if(!root)return;
+  const observer=new MutationObserver(()=>{if(tryMount())observer.disconnect();});
+  observer.observe(root,{childList:true});
+}
+
 async function tBoot(){
   const path=location.pathname;let kind=null,locator=null;
   if(path.startsWith("/share/")){kind="secret";locator=path.slice(7);}else if(path.startsWith("/p/")){kind="public";locator=path.slice(3);}else return;
@@ -42,8 +56,7 @@ async function tBoot(){
     const result=await tApi(`/api/share/${kind}/${encodeURIComponent(locator)}`);
     if(result.share?.scope!=="trajectory")return;
     const exams=result.data?.exams||[];
-    const anchor=document.querySelector("[data-trajectory-v2]")||document.querySelector(".public-shell > .card");
-    if(anchor)tMount(exams,anchor);
+    tMountWhenReady(exams);
   }catch{}
 }
 
