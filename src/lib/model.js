@@ -94,6 +94,7 @@ export function normalizeExam(input, existing = null) {
     const score = subjects[key].finalScore ?? subjects[key].rawScore;
     return score == null ? sum : sum + score;
   }, 0);
+  const comparison = input.comparison === undefined ? (existing?.comparison || null) : normalizeComparison(input.comparison);
   return {
     schemaVersion: 1,
     id,
@@ -107,7 +108,7 @@ export function normalizeExam(input, existing = null) {
       classLabel: safeText(input.context?.classLabel, 60),
       schoolLabel: safeText(input.context?.schoolLabel, 100)
     },
-    comparison: normalizeComparison(input.comparison),
+    comparison,
     overall: {
       officialScore,
       calculatedScore: Math.round(calculatedScore * 10) / 10,
