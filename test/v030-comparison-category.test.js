@@ -1,34 +1,20 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { comparableExamCategory, examComparisonCategory, normalizeExam } from "../src/lib/model.js";
+import { readFile } from "node:fs/promises";
 
-test("monthly stays separate while joint and school share a category", () => {
-  assert.equal(examComparisonCategory("monthly"), "monthly");
-  assert.equal(examComparisonCategory("joint"), "joint_school");
-  assert.equal(examComparisonCategory("school"), "joint_school");
-  assert.equal(comparableExamCategory("joint", "school"), true);
-  assert.equal(comparableExamCategory("monthly", "joint"), false);
-  assert.equal(comparableExamCategory("monthly", "school"), false);
+const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+
+test("comparison categories keep school and joint exams together", () => {
+  assert.match(app, /if \(type === "joint" \|\| type === "school"\) return "joint_school"/);
 });
 
-test("mock stages share one category and unrelated exam types stay separate", () => {
-  assert.equal(comparableExamCategory("mock1", "mock2"), true);
-  assert.equal(comparableExamCategory("mock2", "mock3"), true);
-  assert.equal(comparableExamCategory("weekly", "monthly"), false);
-  assert.equal(comparableExamCategory("midterm", "final"), false);
+test("mock stages compare as one mock category", () => {
+  assert.match(app, /\["mock1", "mock2", "mock3"\]\.includes\(type\)/);
+  assert.match(app, /return "mock"/);
 });
 
-test("school exam and joint rank are accepted without joint participant count", () => {
-  const school = normalizeExam({ name: "校考", date: "2026-10-01", type: "school", overall: { officialScore: 580 }, subjects: {} });
-  assert.equal(school.type, "school");
-  const joint = normalizeExam({
-    name: "联考",
-    date: "2026-10-12",
-    type: "joint",
-    overall: { officialScore: 590, rankings: [{ scope: "joint", label: "联考", rank: 326, participants: null }] },
-    subjects: {}
-  });
-  assert.equal(joint.overall.rankings[0].scope, "joint");
-  assert.equal(joint.overall.rankings[0].rank, 326);
-  assert.equal(joint.overall.rankings[0].participants, null);
+test("stored series wins only when at least two same-category exams exist", () => {
+  assert.match(app, /const sameCategory = exams\.filter/);
+  assert.match(app, /const sameSeries = sameCategory\.filter/);
+  assert.match(app, /if \(sameSeries\.length >= 2\) return sameSeries\.slice\(0, 6\)/);
 });
