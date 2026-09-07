@@ -76,3 +76,41 @@ test("percentile and comparison require coherent ranking scope", () => {
   assert.equal(comparableRanking({ scope: "school", label: "物理类", basis: "final_score" }, { scope: "school", label: "物理类", basis: "final_score" }), true);
   assert.equal(comparableRanking({ scope: "school", label: "物理类", basis: "final_score" }, { scope: "school", label: "物化生", basis: "final_score" }), false);
 });
+
+test("optional comparison metadata is normalized without breaking schema-v1 exams", () => {
+  const input = baseExam();
+  input.comparison = { series: " 2027届辽宁模考 ", level: "province" };
+  const exam = normalizeExam(input);
+  assert.equal(exam.schemaVersion, 1);
+  assert.deepEqual(exam.comparison, { series: "2027届辽宁模考", level: "province" });
+
+  const legacy = normalizeExam(baseExam());
+  assert.equal(legacy.comparison, null);
+});
+
+test("legacy edit requests preserve existing comparison metadata when the field is absent", () => {
+  const originalInput = baseExam();
+  originalInput.comparison = { series: "高三校内月考", level: "school" };
+  const original = normalizeExam(originalInput);
+  const edit = baseExam();
+  edit.name = "9月联考（补录排名）";
+  delete edit.comparison;
+  const updated = normalizeExam(edit, original);
+  assert.deepEqual(updated.comparison, original.comparison);
+  assert.equal(updated.revision, 2);
+});
+
+test("comparison metadata can be deliberately cleared and is safe in public projection", () => {
+  const input = baseExam();
+  input.comparison = { series: "2027届辽宁模考", level: "province" };
+  const exam = normalizeExam(input);
+  const student = { displayName: "小王", graduationYear: 2027 };
+  const projection = publicProjection(student, [exam], normalizeShareFields({ school: false, className: false }));
+  assert.deepEqual(projection.exams[0].comparison, { series: "2027届辽宁模考", level: "province" });
+  assert.equal("notes" in projection.exams[0], false);
+
+  const clearedInput = baseExam();
+  clearedInput.comparison = {};
+  const cleared = normalizeExam(clearedInput, exam);
+  assert.equal(cleared.comparison, null);
+});
