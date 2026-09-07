@@ -18,6 +18,7 @@ import {
   sessionCookie,
   withSecurity
 } from "./lib/http.js";
+import { handleFamilyMemberPatch, handleFamilyMembers, handleFamilyStudentCreate } from "./family.js";
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_EXAMS = 80;
@@ -422,6 +423,14 @@ async function routeApi(request, env) {
   if (request.method === "GET" && path === "/api/me") return handleMe(request, env, session);
   if (request.method === "POST" && path === "/api/me/password") return handleChangePassword(request, env, session);
   if (request.method === "POST" && path === "/api/me/logout-all") return handleLogoutAll(request, env, session);
+
+  if ((request.method === "GET" || request.method === "POST") && path === "/api/family/members") {
+    const response = await handleFamilyMembers(request, env, session);
+    if (response) return response;
+  }
+  const familyMemberMatch = path.match(/^\/api\/family\/members\/([^/]+)$/);
+  if (request.method === "PATCH" && familyMemberMatch) return handleFamilyMemberPatch(request, env, session, familyMemberMatch[1]);
+  if (request.method === "POST" && path === "/api/family/students") return handleFamilyStudentCreate(request, env, session);
 
   const profileMatch = path.match(/^\/api\/students\/([^/]+)\/profile$/);
   if (request.method === "PATCH" && profileMatch) return handleProfilePatch(request, env, session, profileMatch[1]);
