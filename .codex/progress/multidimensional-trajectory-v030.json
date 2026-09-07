@@ -18,7 +18,8 @@
     "一模、二模、三模统一归入模考类别。",
     "同一类别内若至少有两次同考试系列记录，可优先使用该系列；否则回到类别级比较。",
     "单科历史展示保留所有考试；可比类别只决定哪些考试进入趋势判断，不隐藏其他历史考试。",
-    "联考支持独立联考位次及可选联考人数；不知道人数时只保留位次，不伪造百分位。"
+    "联考支持独立联考位次及可选联考人数；不知道人数时只保留位次，不伪造百分位。",
+    "联考与校考合并趋势时，只比较两边共有且口径一致的学校/班级位置，不能拿联考位次和校排名直接混算。"
   ],
   "nonGoals": [
     "No high-stakes prediction of Gaokao score or admission outcome.",
@@ -56,7 +57,7 @@
       "id": "S4",
       "name": "exam comparability and joint-exam position",
       "status": "completed",
-      "evidence": "Comparison is category-gated: monthly-only, joint+school combined, mock1+mock2+mock3 combined, other types isolated by category. Optional series refines only within a category. School exam is a first-class type. Joint exams accept joint rank with optional participant count and expose it on trajectory summary/share timeline."
+      "evidence": "Comparison is category-gated: monthly-only, joint+school combined, mock1+mock2+mock3 combined, other types isolated by category. Optional series refines only within a category. School exam is a first-class type. Joint exams accept joint rank with optional participant count and expose it on trajectory summary/share timeline. Joint rank is not mixed numerically with school rank when joint and school exams are compared."
     },
     {
       "id": "S5",
