@@ -101,4 +101,4 @@ npm run verify
 
 ## 数据隐私
 
-默认状态是 Private。Public 并不等于 Searchable：即使家庭主动创建公开主页，也会返回 `noindex, nofollow,noarchive`，不会提供公开学生目录、搜索或排行榜。
+默认状态是 Private。Public 并不等于 Searchable：即使家庭主动创建公开主页，也会返回 `noindex, nofollow, noarchive`，不会提供公开学生目录、搜索或排行榜。
