@@ -3,6 +3,7 @@ import {
   assertPassword,
   assertUsername,
   normalizeExam,
+  normalizePublicSlug,
   normalizeShareFields,
   normalizeUsername,
   publicProjection,
@@ -359,8 +360,7 @@ async function handleShareCreate(request, env, session, studentId) {
     locator = await sha256(rawToken);
     lookupKey = `share:secret:${locator}`;
   } else {
-    locator = String(body.slug || "").trim().toLowerCase();
-    if (!/^[a-z0-9][a-z0-9-]{2,48}[a-z0-9]$/.test(locator)) throw new Error("公开地址需为 4–50 位小写字母、数字或连字符");
+    locator = normalizePublicSlug(body.slug);
     lookupKey = `share:public:${locator}`;
     if (await env.SCORE_KV.get(lookupKey)) return errorJson("这个公开地址已被占用", 409, "slug_exists");
   }

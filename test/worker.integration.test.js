@@ -36,6 +36,21 @@ function cookieFrom(response) {
   return (response.headers.get("set-cookie") || "").split(";")[0];
 }
 
+async function provisionAndLogin(e, username, password = "very-long-test-password") {
+  let response = await call(e, "/api/admin/provision", {
+    method: "POST",
+    headers: { authorization: "Bearer admin-secret" },
+    body: JSON.stringify({ username, password, student: { displayName: "学生", graduationYear: 2027, className: "03班", schoolLabel: "某高中" } })
+  });
+  assert.equal(response.status, 201);
+  const provision = await response.json();
+  response = await call(e, "/api/login", { method: "POST", body: JSON.stringify({ username, password }) });
+  assert.equal(response.status, 200);
+  const cookie = cookieFrom(response);
+  const login = await response.json();
+  return { provision, cookie, csrf: login.csrf };
+}
+
 test("provision -> login -> create exam -> secret share keeps notes private", async () => {
   const e = env();
   let response = await call(e, "/api/admin/provision", {
@@ -103,6 +118,46 @@ test("provision -> login -> create exam -> secret share keeps notes private", as
   assert.equal(external.data.student.schoolLabel, null);
   assert.equal(external.data.exams[0].overallScore, 598);
   assert.equal("notes" in external.data.exams[0], false);
+});
+
+test("three-character public share carries multiple exams and rank-only data", async () => {
+  const e = env();
+  const { provision, cookie, csrf } = await provisionAndLogin(e, "family003");
+  for (const exam of [
+    { name: "9月月考", date: "2026-09-01", score: 570, rank: 182, math: 112 },
+    { name: "10月联考", date: "2026-10-01", score: 586, rank: 151, math: 121 }
+  ]) {
+    const response = await call(e, `/api/students/${provision.studentId}/exams`, {
+      method: "POST",
+      headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+      body: JSON.stringify({
+        name: exam.name,
+        date: exam.date,
+        type: "monthly",
+        overall: { officialScore: exam.score, rankings: [{ scope: "school", label: "学校", rank: exam.rank }] },
+        subjects: { math: { fullScore: 150, rawScore: exam.math, finalScore: exam.math, scoreMode: "raw" } }
+      })
+    });
+    assert.equal(response.status, 201);
+  }
+
+  let response = await call(e, `/api/students/${provision.studentId}/shares`, {
+    method: "POST",
+    headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+    body: JSON.stringify({ kind: "public", slug: "ABC", mode: "live", fields: { history: true, overallRank: true, overallScore: true, subjectScores: true } })
+  });
+  assert.equal(response.status, 201);
+  const createdShare = await response.json();
+  assert.equal(createdShare.share.locator, "abc");
+
+  response = await call(e, "/api/share/public/abc");
+  assert.equal(response.status, 200);
+  const external = await response.json();
+  assert.equal(external.data.exams.length, 2);
+  assert.equal(external.data.exams[0].name, "10月联考");
+  assert.equal(external.data.exams[0].overallRankings[0].rank, 151);
+  assert.equal(external.data.exams[0].overallRankings[0].participants, null);
+  assert.equal(external.data.exams[1].subjects.math.finalScore, 112);
 });
 
 test("mutations reject missing CSRF", async () => {
