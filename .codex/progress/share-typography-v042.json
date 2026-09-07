@@ -1,0 +1,41 @@
+{
+  "project": "cashen/score",
+  "release": "0.4.2",
+  "branch": "feat/share-typography-v042",
+  "base": {
+    "branch": "main",
+    "sha": "f6750e90d04519cabeef31acaddcbd56ba7d1b8c"
+  },
+  "status": "planned",
+  "resume_protocol": [
+    "Fetch latest main SHA, PR exact head, changed files/diff, CI and this checkpoint before editing.",
+    "Treat only committed code with passing tests as completed; never infer completion from chat history.",
+    "If main moved, compare and reconcile explicitly; never force-reset or overwrite unverified work.",
+    "Keep all v0.4.2 functional changes on this branch until the release gate passes.",
+    "Do not reintroduce subtree:true broad MutationObserver or documentElement-wide observers.",
+    "After each completed stage, update this checkpoint with commit SHA and CI evidence."
+  ],
+  "product_principle": "分享页首先是可连续阅读的考试坐标报告，不是排名海报；字号、留白、色差共同建立层级，不靠超大数字压住页面。",
+  "stages": {
+    "S0": {"name":"Recovery baseline","status":"in_progress","requirements":["Draft PR early","Preserve API/KV/auth/share-token/exam data contracts","Baseline main=f6750e90d04519cabeef31acaddcbd56ba7d1b8c and no open PRs"]},
+    "S1": {"name":"Typography hierarchy","status":"pending","requirements":["Desktop name 28-32px","Desktop primary school rank 40-44px, never above 48px","Mobile primary rank 34-38px","Class rank/score 18-20px desktop, 17-18px mobile","Subject score 24-28px desktop and 22-24px mobile"]},
+    "S2": {"name":"Compact coordinate summary","status":"pending","requirements":["Replace field-label + giant rank pattern with complete semantic unit such as 校第7名","Group school rank, class rank and total score as one exam-coordinate cluster","Keep exam name/date close to the coordinate summary"]},
+    "S3": {"name":"Reduce redundant labels","status":"pending","requirements":["Avoid 学校相对位置 -> 第7名 two-step reading when a direct 校第7名 label is possible","Do not make identity metadata compete with the coordinate summary","Do not expose internal identifiers that add no reading value"]},
+    "S4": {"name":"Subject density","status":"pending","requirements":["Desktop keeps 3x2 subject data units without card chrome","Target subject unit height about 90-105px","Mobile uses six compact rows rather than 2x3 large tiles","Subject rows remain easy to scan and tap targets remain >=44px where interactive"]},
+    "S5": {"name":"Surface and width","status":"pending","requirements":["Current exam summary keeps restrained light brand-green surface","Subject area visually steps down to white/warm-neutral","Public share content max width about 960-1040px","No oversized whitespace or page-level horizontal scroll"]},
+    "S6": {"name":"Responsive behavior","status":"pending","requirements":["PC, Pad and Android layouts have intentional rather than scaled-down behavior","360-430px preserves identity -> exam -> coordinate -> subjects reading order","Weak network must not flash legacy giant-rank layout before the compact layer applies"]},
+    "S7": {"name":"Regression and release","status":"pending","requirements":["Version exactly 0.4.2 across package.json, package-lock.json and wrangler.toml","UI contract tests lock typography caps, compact coordinate semantics, subject density and responsive rules","No backend/data-contract changes","Final exact-head CI success before Ready and merge","Main CI and Cloudflare exact-SHA deploy success","Production /api/health attests appVersion=0.4.2"]}
+  },
+  "release_gate": [
+    "S0-S7 completed with repository evidence.",
+    "Final PR exact head passes npm run verify.",
+    "No regression to giant rank hero, oversized subject cards or broad DOM observers.",
+    "Merge with expected_head_sha only after final-head CI success.",
+    "Production must attest 0.4.2 before completion."
+  ],
+  "last_verified": {
+    "main_sha": "f6750e90d04519cabeef31acaddcbd56ba7d1b8c",
+    "open_prs_before_start": 0,
+    "production_baseline": "0.4.1"
+  }
+}
