@@ -41,9 +41,9 @@ function rankPair(label, rankInput, participantsInput) {
   title.textContent = label;
 
   rankInput.placeholder = "名次";
-  participantsInput.placeholder = "总人数";
+  participantsInput.placeholder = "人数可空";
   rankInput.setAttribute("aria-label", `${label}名次`);
-  participantsInput.setAttribute("aria-label", `${label}总人数`);
+  participantsInput.setAttribute("aria-label", `${label}总人数（可不填）`);
 
   const pair = document.createElement("div");
   pair.className = "exam-rank-pair";
@@ -70,7 +70,7 @@ function buildOverview(form, oldGrid) {
   }
   overview.append(grid);
 
-  const overall = section("总分与整体位置", "总分是结果，排名更适合观察孩子在同一群体里的相对位置。");
+  const overall = section("总分与整体位置", "排名可以只填名次；班级/学校总人数不知道时直接留空。");
   const summary = document.createElement("div");
   summary.className = "exam-overall-grid";
 
@@ -164,7 +164,7 @@ function buildSubjects(form, subjectEditor) {
   title.textContent = "六科成绩与排名";
   const hint = document.createElement("p");
   hint.className = "exam-section-hint";
-  hint.textContent = "按科目逐个填：先成绩，再排名。没有公布的排名直接留空。";
+  hint.textContent = "按科目逐个填：先成绩，再排名。排名可只填名次，总人数不知道就留空。";
   title.after(hint);
 
   const cards = document.createElement("div");
