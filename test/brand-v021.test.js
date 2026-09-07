@@ -34,10 +34,9 @@ test("brand layer only observes top-level app rerenders", () => {
   assert.doesNotMatch(brand, /document\.documentElement/);
 });
 
-test("v0.2.1 is consistent across package and Worker runtime", () => {
-  assert.equal(pkg.version, "0.2.1");
-  assert.equal(lock.version, "0.2.1");
-  assert.equal(lock.packages[""].version, "0.2.1");
-  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.2\.1"/);
+test("brand contract survives later releases and version files remain consistent", () => {
+  assert.equal(pkg.version, lock.version);
+  assert.equal(lock.packages[""].version, pkg.version);
+  assert.match(wrangler, new RegExp(`APP_VERSION\\s*=\\s*"${pkg.version.replaceAll(".", "\\.")}"`));
   assert.match(pkg.scripts.check, /public\/brand-v021\.js/);
 });

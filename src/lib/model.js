@@ -1,7 +1,19 @@
 export const SUBJECTS = ["chinese", "math", "english", "physics", "chemistry", "biology"];
 export const ROLES = new Set(["owner", "editor", "viewer"]);
-export const EXAM_TYPES = new Set(["weekly", "monthly", "midterm", "final", "joint", "mock1", "mock2", "mock3", "other"]);
+export const EXAM_TYPES = new Set(["weekly", "monthly", "midterm", "final", "school", "joint", "mock1", "mock2", "mock3", "other"]);
 export const SCORE_MODES = new Set(["raw", "converted", "raw_and_converted"]);
+export const COMPARISON_LEVELS = new Set(["school", "alliance", "district", "city", "province", "other"]);
+
+export function examComparisonCategory(value) {
+  const type = typeof value === "string" ? value : value?.type;
+  if (type === "joint" || type === "school") return "joint_school";
+  if (["mock1", "mock2", "mock3"].includes(type)) return "mock";
+  return EXAM_TYPES.has(type) ? type : "other";
+}
+
+export function comparableExamCategory(a, b) {
+  return examComparisonCategory(a) === examComparisonCategory(b);
+}
 
 export function normalizeUsername(value) {
   return String(value || "").trim().normalize("NFKC").toLowerCase();
@@ -75,6 +87,12 @@ export function normalizeSubject(value = {}) {
   return { scoreMode, fullScore, rawScore, finalScore, rankings: normalizeRankings(value.rankings) };
 }
 
+export function normalizeComparison(value = {}) {
+  const series = safeText(value?.series, 60);
+  const level = COMPARISON_LEVELS.has(value?.level) ? value.level : null;
+  return series || level ? { series, level } : null;
+}
+
 export function normalizeExam(input, existing = null) {
   const id = existing?.id || safeText(input.id, 80) || crypto.randomUUID();
   const subjects = {};
@@ -87,6 +105,7 @@ export function normalizeExam(input, existing = null) {
     const score = subjects[key].finalScore ?? subjects[key].rawScore;
     return score == null ? sum : sum + score;
   }, 0);
+  const comparison = input.comparison === undefined ? (existing?.comparison || null) : normalizeComparison(input.comparison);
   return {
     schemaVersion: 1,
     id,
@@ -100,6 +119,7 @@ export function normalizeExam(input, existing = null) {
       classLabel: safeText(input.context?.classLabel, 60),
       schoolLabel: safeText(input.context?.schoolLabel, 100)
     },
+    comparison,
     overall: {
       officialScore,
       calculatedScore: Math.round(calculatedScore * 10) / 10,
@@ -153,7 +173,14 @@ export function publicProjection(student, exams, fields) {
     exams: []
   };
   for (const exam of exams) {
-    const projected = { id: exam.id, name: exam.name, date: exam.date, type: exam.type, status: exam.status };
+    const projected = {
+      id: exam.id,
+      name: exam.name,
+      date: exam.date,
+      type: exam.type,
+      status: exam.status,
+      comparison: exam.comparison ? { series: exam.comparison.series || null, level: exam.comparison.level || null } : null
+    };
     if (fields.overallScore) projected.overallScore = exam.overall?.officialScore ?? exam.overall?.calculatedScore ?? null;
     if (fields.overallRank) projected.overallRankings = exam.overall?.rankings || [];
     if (fields.subjectScores || fields.subjectRanks) {

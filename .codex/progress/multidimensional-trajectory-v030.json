@@ -1,0 +1,65 @@
+{
+  "project": "cashen/score",
+  "branch": "feat/multidimensional-trajectory-v030",
+  "baseMainSha": "6e3f8e1d2d3bafefcb89ed240c322c5de3c13c60",
+  "targetVersion": "0.3.0",
+  "product": "高三坐标",
+  "goal": "Build multidimensional senior-year trajectory analysis for students, parents and teacher-facing shares without turning the product into a generic score table.",
+  "productPrinciple": [
+    "孩子现在在哪",
+    "最近有没有变化",
+    "变化来自哪一科",
+    "再回到具体考试和分数核对"
+  ],
+  "comparisonRules": [
+    "趋势先按考试类别判断是否可比，类别不一致不进入同一趋势结论。",
+    "月考只与月考比较，不与联考或校考合并。",
+    "联考与校考属于同一可比类别，可以合并观察。",
+    "一模、二模、三模统一归入模考类别。",
+    "同一类别内若至少有两次同考试系列记录，可优先使用该系列；否则回到类别级比较。",
+    "单科历史展示保留所有考试；可比类别只决定哪些考试进入趋势判断，不隐藏其他历史考试。",
+    "联考支持独立联考位次及可选联考人数；不知道人数时只保留位次，不伪造百分位。",
+    "联考与校考合并趋势时，只比较两边共有且口径一致的学校/班级位置，不能拿联考位次和校排名直接混算。"
+  ],
+  "nonGoals": [
+    "No high-stakes prediction of Gaokao score or admission outcome.",
+    "No alarmist AI judgement copy.",
+    "No radar chart as the primary comparison UI.",
+    "No teacher account system in v0.3.0; teacher use is a privacy-scoped share preset.",
+    "No third-party analytics or new paid storage dependency."
+  ],
+  "stages": [
+    { "id": "S0", "name": "release safety and weak-network recovery", "status": "completed" },
+    { "id": "S1", "name": "single-subject historical trajectory", "status": "completed" },
+    { "id": "S2", "name": "six-subject change map", "status": "completed" },
+    { "id": "S3", "name": "multidimensional trajectory sharing", "status": "completed" },
+    { "id": "S4", "name": "exam comparability and joint-exam position", "status": "completed" },
+    { "id": "S5", "name": "student-parent-teacher reading perspectives", "status": "completed" },
+    {
+      "id": "S6",
+      "name": "release gate",
+      "status": "in_progress",
+      "acceptance": [
+        "Version is 0.3.0 across package, lockfile and Worker APP_VERSION.",
+        "npm run verify passes on the final PR head after this checkpoint commit.",
+        "Regression tests cover rank-only data, category-gated trend comparison, joint rank, multi-exam subject comparison, sharing privacy, Android-friendly interaction and observer safety.",
+        "PR is merged only with expected_head_sha after final CI is green.",
+        "main CI passes.",
+        "Cloudflare deploy checks out the exact tested SHA.",
+        "Production /api/health attests appVersion=0.3.0 before declaring complete."
+      ]
+    }
+  ],
+  "restartProtocol": [
+    "1. Fetch current main SHA and PR #12 head; never assume chat-state is current.",
+    "2. Read this checkpoint and PR body completely.",
+    "3. Inspect PR changed files/diff and latest CI before changing code.",
+    "4. Treat only committed code + passing tests as completed; never mark a stage complete from prose alone.",
+    "5. Resume the first stage whose status is not completed, preserving already-committed work.",
+    "6. If main advanced, compare/reconcile deliberately; do not force-reset the feature branch.",
+    "7. Do not merge until final-head CI is green; then use expected_head_sha and verify main plus production health."
+  ],
+  "lastGreenHeadBeforeFinalDocs": "32d0c815d4b3a19810c4195eebdaa8576ed8f8f3",
+  "lastGreenRunBeforeFinalDocs": 34098035243,
+  "status": "implementation_complete_release_gate_pending"
+}

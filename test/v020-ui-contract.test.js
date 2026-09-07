@@ -12,7 +12,7 @@ const sharing = await readFile(new URL("../src/sharing-v2.js", import.meta.url),
 const worker = await readFile(new URL("../src/v020.js", import.meta.url), "utf8");
 const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
 
-test("v0.2 assets are actually wired into the shell", () => {
+test("v0.2 foundation assets remain wired into the shell", () => {
   assert.match(index, /router-v2\.js/);
   assert.match(index, /trajectory-v2\.js/);
   assert.match(index, /trajectory-v2\.css/);
@@ -69,9 +69,9 @@ test("invitation and recovery UI never asks for bootstrap/admin secrets", () => 
   assert.match(onboarding, /恢复码只显示这一次|新的恢复码只显示一次/);
 });
 
-test("deployment entrypoint remains on the v0.2 runtime family", () => {
+test("deployment entrypoint stays on the stable v020 worker while app releases advance", () => {
   assert.match(wrangler, /main\s*=\s*"src\/v020\.js"/);
-  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.2\.\d+"/);
+  assert.match(wrangler, /APP_VERSION\s*=\s*"\d+\.\d+\.\d+"/);
   assert.match(worker, /routePublicOnboarding/);
   assert.match(worker, /routePrivateOnboarding/);
   assert.match(worker, /routePublicSharingV2/);
