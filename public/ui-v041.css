@@ -1,0 +1,267 @@
+:root {
+  --v41-position-bg: #f2f7f5;
+  --v41-position-border: #d4e3dd;
+  --v41-change-bg: #f3f6f8;
+  --v41-change-border: #dce5e9;
+  --v41-history-bg: #f7f7f5;
+  --v41-neutral-bg: #fafaf8;
+  --v41-attention-bg: #fbf7ed;
+  --v41-attention-border: #eadfbe;
+}
+
+/* Remove persona-like choices before JS finishes so weak networks never flash a fake decision. */
+.v4-audience,
+[data-v4-audience-step],
+.v3-teacher-preset,
+.v3-perspective-bar { display: none !important; }
+
+.v41-share-title {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 10px;
+}
+.v41-share-title strong { font-size: 16px; }
+.v41-share-title small { color: var(--muted); line-height: 1.5; }
+
+.v41-share-summary {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--v41-neutral-bg);
+}
+.v41-share-summary > div {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+.v41-share-summary strong { font-size: 13px; }
+.v41-share-summary span { color: var(--muted); font-size: 13px; line-height: 1.55; }
+
+/* Public share: one hero surface, then progressively lighter information. */
+.public-shell > .card.v41-current-coordinate {
+  padding: 18px;
+  border-color: var(--v41-position-border);
+  background: var(--v41-position-bg);
+  box-shadow: none;
+}
+.v41-coordinate-primary {
+  display: grid;
+  gap: 5px;
+  margin: 16px 0 10px;
+}
+.v41-coordinate-primary small { color: var(--muted); font-size: 12px; font-weight: 700; }
+.v41-coordinate-primary strong {
+  font-size: clamp(34px, 6vw, 52px);
+  line-height: 1;
+  letter-spacing: -.035em;
+}
+.v41-coordinate-primary span { color: var(--text); font-size: 13px; }
+.v41-coordinate-primary em { color: var(--muted); font-size: 12px; font-style: normal; }
+.v41-source-hidden { display: none !important; }
+
+.v41-current-coordinate .subject-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin-top: 12px;
+  border-top: 1px solid var(--v41-position-border);
+}
+.v41-current-coordinate .subject-card {
+  min-width: 0;
+  padding: 10px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--v41-position-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.v41-current-coordinate .subject-card .score { font-size: 20px; }
+.v41-current-coordinate .subject-card .meta { font-size: 11px; }
+
+.v41-change-surface {
+  padding: 14px !important;
+  border: 1px solid var(--v41-change-border) !important;
+  border-radius: var(--radius-md) !important;
+  background: var(--v41-change-bg) !important;
+  box-shadow: none !important;
+}
+.v41-change-surface .section-head { margin-bottom: 0; }
+.v41-change-surface .section-head .badge { display: none; }
+.v41-change-surface .v3-summary-grid {
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin-top: 8px;
+}
+.v41-change-surface .v3-summary-grid article {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.v41-summary-hidden { display: none !important; }
+
+.public-shell .v3-external-trajectory { gap: 10px; margin: 14px 0; }
+.public-shell .v3-external-nav { margin-bottom: 2px; }
+.public-shell .v3-subject-history,
+.public-shell .v3-six-map {
+  padding: 14px;
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+.public-shell .v3-six-summary {
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: var(--v41-neutral-bg);
+}
+.public-shell .v3-six-grid {
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.public-shell .v3-six-item {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  align-items: center;
+  padding: 10px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.public-shell .v3-six-title { display: contents; }
+.public-shell .v3-six-title > strong { grid-column: 1; grid-row: 1; }
+.public-shell .v3-six-title > .v3-direction { grid-column: 3; grid-row: 1; }
+.public-shell .v3-six-position { grid-column: 2; grid-row: 1; font-size: 15px; }
+.public-shell .v3-six-item > small,
+.public-shell .v3-six-item > em { grid-column: 1 / -1; }
+.public-shell .v3-six-item > em { background: var(--v41-neutral-bg); }
+.public-shell .v3-direction.is-down { padding: 2px 6px; border-radius: 999px; background: var(--v41-attention-bg); }
+
+.public-shell .v3-subject-history-scroll {
+  grid-auto-flow: row;
+  grid-auto-columns: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: visible;
+  scroll-snap-type: none;
+  gap: 0 14px;
+  padding-top: 8px;
+}
+.public-shell .v3-subject-point {
+  padding: 10px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.public-shell .v3-current-grid > div,
+.public-shell .v3-latest-compare {
+  border-radius: 10px;
+  background: var(--v41-neutral-bg);
+}
+
+/* The old comparison dashboard is a transitional renderer. Hide it before JS so weak networks never flash oversized legacy cards. */
+.public-shell .share-comparison-section,
+.v41-legacy-comparison-hidden { display: none !important; }
+
+/* Timeline: history, viewing, latest are intentionally different states. */
+.public-shell .share-timeline-v2 {
+  margin-top: 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.public-shell .share-timeline-head { margin-bottom: 8px; }
+.public-shell .share-timeline-scroll { padding-bottom: 8px; }
+.public-shell .share-timeline-track { gap: 7px; }
+.public-shell .share-timeline-node {
+  min-width: 104px;
+  max-width: 138px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--v41-history-bg);
+  box-shadow: none;
+}
+.public-shell .share-timeline-node.is-latest,
+.public-shell .share-timeline-node.is-current {
+  background: var(--v41-position-bg);
+  border-color: var(--v41-position-border);
+}
+.public-shell .share-timeline-node.is-viewing:not(.is-latest) {
+  background: var(--surface);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.public-shell .share-timeline-node[aria-selected="true"] { box-shadow: none; }
+.public-shell .share-timeline-node.is-viewing[aria-selected="true"] { box-shadow: 0 0 0 1px var(--accent); }
+.public-shell .share-timeline-node.is-latest span { color: var(--accent); font-weight: 750; }
+.public-shell .share-timeline-node.is-viewing span { color: var(--accent); font-weight: 750; }
+
+.public-shell .share-timeline-detail { padding-top: 12px; }
+.public-shell .share-timeline-metrics {
+  gap: 0;
+  margin-bottom: 10px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.public-shell .share-timeline-metric {
+  padding: 9px 10px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.public-shell .share-timeline-metric:last-child { border-right: 0; }
+.public-shell .share-timeline-subjects {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+.public-shell .share-timeline-subject {
+  padding: 9px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.public-shell .share-timeline-subject strong { font-size: 16px; }
+
+@media (max-width: 620px) {
+  .v41-share-summary { padding: 11px 12px; }
+  .v41-share-summary > div { grid-template-columns: 64px minmax(0, 1fr); }
+
+  .public-shell { overflow-x: clip; }
+  .public-shell > .card.v41-current-coordinate { padding: 14px; border-radius: 16px; }
+  .v41-coordinate-primary { margin-top: 12px; }
+  .v41-coordinate-primary strong { font-size: 38px; }
+  .v41-current-coordinate .subject-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .v41-current-coordinate .subject-card { padding: 9px 6px; min-height: 50px; }
+
+  .v41-change-surface,
+  .public-shell .v3-subject-history,
+  .public-shell .v3-six-map { padding: 12px !important; border-radius: 12px !important; }
+
+  .public-shell .v3-subject-history-scroll { grid-template-columns: 1fr; gap: 0; }
+  .public-shell .v3-six-item { min-height: 50px; }
+
+  .public-shell .share-timeline-node { min-width: 100px; max-width: 122px; padding: 8px 9px; }
+  .public-shell .share-timeline-subjects { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .public-shell .share-timeline-metric { padding: 9px 8px; }
+}
+
+@media (max-width: 380px) {
+  .public-shell > .card.v41-current-coordinate { padding: 12px; }
+  .v41-current-coordinate .subject-card { padding-inline: 4px; }
+  .public-shell .share-timeline-node { min-width: 96px; max-width: 112px; }
+}
+
+@media (hover: none) {
+  .public-shell .share-timeline-node,
+  .v41-share-summary + details > summary { min-height: 44px; }
+}

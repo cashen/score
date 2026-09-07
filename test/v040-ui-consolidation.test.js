@@ -9,7 +9,7 @@ const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url
 const lock = JSON.parse(await readFile(new URL("../package-lock.json", import.meta.url), "utf8"));
 const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
 
-test("v0.4 consolidated UI assets are wired last and syntax-checked", () => {
+test("v0.4 consolidated UI assets are wired last within the v0.4 foundation", () => {
   assert.match(index, /ui-v040\.css/);
   assert.match(index, /ui-v040\.js/);
   assert.ok(index.indexOf("ui-v040.css") > index.indexOf("trajectory-v3.css"));
@@ -37,7 +37,7 @@ test("trajectory deep dive is distinct from the overview and mobile six-subject 
   assert.match(css, /\.v4-deep-dive \.v3-subject-history-scroll[\s\S]*grid-template-columns: repeat\(2/);
 });
 
-test("normal sharing flow is scope then audience then generate-and-copy with advanced fields secondary", () => {
+test("v0.4 baseline sharing used audience presets before v0.4.1 refinement", () => {
   assert.match(ui, /想分享什么？/);
   assert.match(ui, /准备给谁看？/);
   assert.match(ui, /家人/);
@@ -89,9 +89,9 @@ test("v0.4 coordinator only uses top-level or bounded local childList observers"
   assert.match(ui, /setTimeout\(\(\) => observer\.disconnect\(\), 2500\)/);
 });
 
-test("release version is exactly 0.4.0 across package lockfile and Worker", () => {
-  assert.equal(pkg.version, "0.4.0");
-  assert.equal(lock.version, "0.4.0");
-  assert.equal(lock.packages[""].version, "0.4.0");
-  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.4\.0"/);
+test("v0.4 foundation remains valid as patch releases advance", () => {
+  assert.match(pkg.version, /^0\.4\.\d+$/);
+  assert.equal(lock.version, pkg.version);
+  assert.equal(lock.packages[""].version, pkg.version);
+  assert.match(wrangler, new RegExp(`APP_VERSION\\s*=\\s*"${pkg.version.replaceAll(".", "\\.")}"`));
 });

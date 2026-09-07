@@ -1,0 +1,148 @@
+{
+  "project": "cashen/score",
+  "release": "0.4.1",
+  "branch": "feat/share-reading-v041",
+  "base": {
+    "branch": "main",
+    "sha": "79d958c3f832e6685cad299b3b2cee4f4e418621"
+  },
+  "status": "release_gate",
+  "resume_protocol": [
+    "Fetch latest main SHA and verify whether main moved from the recorded base.",
+    "Fetch PR metadata, exact head SHA, changed files/diff, CI status, and this checkpoint before editing.",
+    "Treat only committed code with passing tests as completed; never infer completion from chat history.",
+    "If main moved, compare and reconcile explicitly; never force-reset or overwrite unverified work.",
+    "Keep all v0.4.1 functional changes on this branch until release gate passes.",
+    "Never reintroduce subtree:true broad MutationObserver patterns or documentElement-wide observers.",
+    "After this seal commit, do not change functional code unless exact-head CI or release audit finds a concrete defect."
+  ],
+  "product_principle": "少卡片、轻色差、强层级、连续阅读；不问用户是谁，优先问用户想分享什么。",
+  "implementation": {
+    "primary_assets": [
+      "public/ui-v041.js",
+      "public/ui-v041.css",
+      "test/v041-share-reading.test.js"
+    ],
+    "data_boundary": "No Worker API, KV schema, auth, share-token or exam-data model files changed in PR #14.",
+    "weak_network_boundary": "Persona-like audience controls and legacy multi-card comparison are hidden by the final CSS before the v0.4.1 coordinator runs. Runtime observers are direct-child childList observers only and are bounded where local waiting is required.",
+    "compatibility_boundary": "Single-exam shares remain pinned by the existing v2 examId contract; trajectory scope and server-side share allow-list remain unchanged."
+  },
+  "stages": {
+    "S0": {
+      "name": "Recovery contract and baseline",
+      "status": "completed",
+      "evidence": [
+        "Draft PR #14 created from main 79d958c3f832e6685cad299b3b2cee4f4e418621.",
+        "This checkpoint is the authoritative interruption-recovery source.",
+        "There were no open PRs at task start.",
+        "main was re-verified unchanged immediately before sealing this checkpoint."
+      ]
+    },
+    "S1": {
+      "name": "Remove audience false-choice",
+      "status": "completed",
+      "evidence": [
+        "ui-v041 removes v0.4 audience step and legacy v3 teacher preset from private and public share cards.",
+        "Visible normal flow asks only 想分享什么 and keeps field customization under 修改分享内容.",
+        "ui-v041.css pre-hides audience/persona controls so weak-network users do not see 家人/老师 choices flash before JS refinement."
+      ]
+    },
+    "S2": {
+      "name": "Default share contract",
+      "status": "completed",
+      "evidence": [
+        "Default fields: nickname, overall score/rank, subject scores/ranks; graduation year, school and class remain off by default.",
+        "Trajectory scope keeps history enabled through the existing v2 contract.",
+        "Natural-language 将分享 / 不会分享 summary is rendered for both private and public share composers.",
+        "家庭备注、登录账号、家庭成员和安全信息 remain outside share output and are explicitly named as not shared."
+      ]
+    },
+    "S3": {
+      "name": "Card density reduction",
+      "status": "completed",
+      "evidence": [
+        "External share keeps one v41-current-coordinate hero surface.",
+        "Recent change is reduced to a v41-change-surface with only the comparable-change item visible.",
+        "Six-subject and single-subject history presentations use divider rows rather than full card chrome.",
+        "Legacy share-comparison dashboard is hidden in v0.4.1 to prevent duplicate oversized history cards."
+      ]
+    },
+    "S4": {
+      "name": "Restrained semantic color",
+      "status": "completed",
+      "evidence": [
+        "Current coordinate uses #f2f7f5 light brand green.",
+        "Recent change uses #f3f6f8 cool blue-gray.",
+        "History uses #f7f7f5 and neutral content uses #fafaf8.",
+        "值得留意 uses #fbf7ed pale amber; no red/green good-bad academic judgment was introduced."
+      ]
+    },
+    "S5": {
+      "name": "Timeline state semantics",
+      "status": "completed",
+      "evidence": [
+        "v0.4.1 explicitly labels timeline nodes 最新 / 正在查看 / 历史.",
+        "Latest uses the light brand-green state; a selected older exam uses neutral surface plus brand outline.",
+        "Timeline nodes are reduced to 104-138px desktop, 100-122px mobile and 96-112px at <=380px instead of near-screen-width cards.",
+        "Existing horizontal touch scrolling and click behavior are preserved."
+      ]
+    },
+    "S6": {
+      "name": "Card size and responsive density",
+      "status": "completed",
+      "evidence": [
+        "Public coordinate hero uses 18px desktop padding, 14px mobile and 12px <=380px.",
+        "Section surfaces use 12-14px mobile/desktop padding and medium radius; rows rely on dividers rather than nested card borders.",
+        "Mobile six-subject rows are at least 50px and touch targets retain >=44px contracts.",
+        "Public shell clips accidental page-level horizontal overflow while timeline itself remains horizontally scrollable."
+      ]
+    },
+    "S7": {
+      "name": "Persona cleanup audit",
+      "status": "completed",
+      "evidence": [
+        "Visible 学生/家长 perspective selector is removed because it changed copy rather than permissions/data/task architecture.",
+        "Stored student perspective is cleared so the existing trajectory renderer falls back to one common reading baseline.",
+        "Deep-dive and six-subject headings are normalized to identity-neutral language: 单科历史、六科变化和可比考试 / 六科变化怎么走.",
+        "External teacher-specific presentation labels are normalized and no teacher identity choice is exposed."
+      ]
+    },
+    "S8": {
+      "name": "Weak-network, privacy and regression",
+      "status": "completed",
+      "evidence": [
+        "PR #14 changed only checkpoint/version/index/v0.4.1 UI+CSS/tests; no backend/API/KV/auth/share-token files changed.",
+        "CSS immediately suppresses persona controls and the transitional large share-comparison section before JS enhancement.",
+        "ui-v041 has no subtree:true or documentElement-wide observer; card wait disconnects after 2500ms and public-shell wait after 4000ms.",
+        "v041 UI contract covers privacy, semantic color, compact density, three timeline states, <=380px sizing and observer guards."
+      ]
+    }
+  },
+  "test_evidence_before_seal": {
+    "pr_head": "742465de1f4ddb1e4388da5fb3aab43d9947fb5d",
+    "ci_run": 34162838359,
+    "conclusion": "success",
+    "verified_command": "npm run verify"
+  },
+  "release_gate": {
+    "stage_completion": "passed",
+    "version": "0.4.1 across package.json, package-lock.json and wrangler.toml",
+    "changed_file_audit": "9 changed files; no backend/API/KV/auth/share-token model files",
+    "privacy": "no runtime/server secrets added to browser assets; server allow-list contract unchanged",
+    "observer_guard": "no subtree:true or documentElement-wide observer in ui-v041",
+    "weak_network": "persona controls and legacy comparison dashboard pre-hidden by CSS; no blocking continuous mutation loop",
+    "next": [
+      "Require CI success on this exact sealed checkpoint head.",
+      "If green, mark PR #14 ready without further code changes.",
+      "Re-verify main SHA and merge with expected_head_sha.",
+      "Require main CI success.",
+      "Require Cloudflare deploy to checkout the exact tested main SHA and production /api/health appVersion=0.4.1."
+    ]
+  },
+  "last_verified": {
+    "main_sha": "79d958c3f832e6685cad299b3b2cee4f4e418621",
+    "production_baseline": "0.4.0",
+    "pr": 14,
+    "pre_seal_pr_head": "742465de1f4ddb1e4388da5fb3aab43d9947fb5d"
+  }
+}
