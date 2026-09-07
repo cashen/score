@@ -65,7 +65,7 @@ function serialize(form) {
 }
 
 function apply(form, draft) {
-  if (!draft?.values?.length) return;
+  if (!draft?.values?.length) return false;
   for (const [name, value] of draft.values) {
     const field = form.elements.namedItem(name);
     if (!field || typeof field.value === "undefined") continue;
@@ -75,6 +75,9 @@ function apply(form, draft) {
   note.className = "notice-box";
   note.textContent = `已恢复本机未同步草稿 · ${new Date(draft.savedAt).toLocaleString()}`;
   form.querySelector(".dialog-head")?.after(note);
+  form.dataset.draftRestored = "1";
+  form.dispatchEvent(new CustomEvent("score:draft-restored", { bubbles: true }));
+  return true;
 }
 
 async function attach(form) {
@@ -91,7 +94,7 @@ async function attach(form) {
   form.addEventListener("submit", () => { submittedAt = Date.now(); });
 }
 
-const observer = new MutationObserver(() => {
+function scanDialogLifecycle() {
   const form = document.querySelector("#exam-form");
   if (form) attach(form);
   if (!form && activeForm) {
@@ -103,6 +106,8 @@ const observer = new MutationObserver(() => {
     if (wasSubmittedRecently && key) deleteDraft(key).catch(() => {});
     submittedAt = 0;
   }
-});
+}
 
-observer.observe(document.documentElement, { childList: true, subtree: true });
+const observer = new MutationObserver(scanDialogLifecycle);
+observer.observe(document.body, { childList: true });
+scanDialogLifecycle();
