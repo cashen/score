@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const index = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
 const v3 = await readFile(new URL("../public/trajectory-v3.js", import.meta.url), "utf8");
+const coord = await readFile(new URL("../public/trajectory-v3-coordination.js", import.meta.url), "utf8");
 const css = await readFile(new URL("../public/trajectory-v3.css", import.meta.url), "utf8");
 const model = await readFile(new URL("../src/lib/model.js", import.meta.url), "utf8");
 const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
@@ -13,7 +14,9 @@ const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "u
 test("v0.3 multidimensional trajectory assets are wired into the shell", () => {
   assert.match(index, /trajectory-v3\.css/);
   assert.match(index, /trajectory-v3\.js/);
+  assert.match(index, /trajectory-v3-coordination\.js/);
   assert.match(pkg.scripts.check, /public\/trajectory-v3\.js/);
+  assert.match(pkg.scripts.check, /public\/trajectory-v3-coordination\.js/);
 });
 
 test("single-subject history supports all six subjects and position-first comparison", () => {
@@ -46,13 +49,16 @@ test("trajectory share exposes overview subject comparison and keeps the exam ti
   assert.match(index, /share-timeline-v2\.js/);
 });
 
-test("teacher preset is privacy-scoped and academic-only by default", () => {
+test("teacher preset is privacy-scoped and survives async v2 share control mounting", () => {
   assert.match(v3, /给老师看/);
   assert.match(v3, /老师查看预设已应用/);
   assert.match(v3, /默认不带学校、班级身份信息/);
   assert.match(v3, /家庭备注永不分享/);
   assert.match(v3, /\["school", "className"\]/);
-  assert.doesNotMatch(v3, /ADMIN_BOOTSTRAP_SECRET|AUTH_PEPPER|SESSION_SECRET/);
+  assert.match(coord, /v3CoordWatchShareCard/);
+  assert.match(coord, /observer\.observe\(card, \{ childList: true \}\)/);
+  assert.match(coord, /v3CoordAttachTeacherPreset/);
+  assert.doesNotMatch(v3 + coord, /ADMIN_BOOTSTRAP_SECRET|AUTH_PEPPER|SESSION_SECRET/);
 });
 
 test("exam comparability is optional, backwards compatible and sent through the normal exam API", () => {
@@ -66,6 +72,8 @@ test("exam comparability is optional, backwards compatible and sent through the 
   assert.match(model, /COMPARISON_LEVELS/);
   assert.match(model, /input\.comparison === undefined/);
   assert.match(model, /comparison: exam\.comparison/);
+  assert.match(coord, /subjectEditor\.insertAdjacentElement\("beforebegin", block\)/);
+  assert.match(coord, /form\.dataset\.v3Comparison = "1"/);
 });
 
 test("v0.3 interaction remains Android-friendly and never reintroduces broad DOM observation", () => {
@@ -75,8 +83,17 @@ test("v0.3 interaction remains Android-friendly and never reintroduces broad DOM
   assert.match(css, /@media \(max-width: 620px\)/);
   assert.match(v3, /observe\(v3App, \{ childList: true \}\)/);
   assert.match(v3, /observe\(v3Body, \{ childList: true \}\)/);
-  assert.doesNotMatch(v3, /subtree\s*:\s*true/);
-  assert.doesNotMatch(v3, /document\.documentElement/);
+  assert.match(coord, /observe\(v3CoordApp, \{ childList: true \}\)/);
+  assert.match(coord, /observe\(document\.body, \{ childList: true \}\)/);
+  assert.doesNotMatch(v3 + coord, /subtree\s*:\s*true/);
+  assert.doesNotMatch(v3 + coord, /document\.documentElement/);
+});
+
+test("v0.3 suppresses late legacy trajectory summaries without broad observation", () => {
+  assert.match(coord, /v3CoordRemoveLegacySummary/);
+  assert.match(coord, /root\.querySelectorAll\("\[data-trajectory-v2\]"\)/);
+  assert.match(coord, /observer\.observe\(root, \{ childList: true \}\)/);
+  assert.match(coord, /setTimeout\(\(\) => observer\.disconnect\(\), 2000\)/);
 });
 
 test("release version is exactly 0.3.0 across package lockfile and Worker", () => {
