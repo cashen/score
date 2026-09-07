@@ -61,18 +61,20 @@ test("teacher preset is privacy-scoped and survives async v2 share control mount
   assert.doesNotMatch(v3 + coord, /ADMIN_BOOTSTRAP_SECRET|AUTH_PEPPER|SESSION_SECRET/);
 });
 
-test("exam comparability is optional, backwards compatible and sent through the normal exam API", () => {
-  assert.match(v3, /可比组（可不填）/);
-  assert.match(v3, /2027届辽宁模考/);
-  assert.match(v3, /comparisonSeries/);
-  assert.match(v3, /comparisonLevel/);
+test("exam comparability is optional, backwards compatible and category-gated", () => {
+  assert.match(coord, /考试系列（可不填）/);
+  assert.match(coord, /2027届辽宁模考/);
+  assert.match(coord, /comparisonSeries/);
+  assert.match(coord, /comparisonLevel/);
   assert.match(v3, /body\.comparison = \{ series, level: level \|\| null \}/);
-  assert.match(v3, /优先比较同一可比组/);
-  assert.match(v3, /考试口径可能不同/);
+  assert.match(coord, /sameSeriesCount >= 2/);
+  assert.match(coord, /joint_school: "联考\/校考"/);
+  assert.match(coord, /monthly: "月考"/);
   assert.match(model, /COMPARISON_LEVELS/);
+  assert.match(model, /examComparisonCategory/);
   assert.match(model, /input\.comparison === undefined/);
   assert.match(model, /comparison: exam\.comparison/);
-  assert.match(coord, /subjectEditor\.insertAdjacentElement\("beforebegin", block\)/);
+  assert.match(coord, /subjectEditor\.insertAdjacentElement\("beforebegin", comparison\)/);
   assert.match(coord, /form\.dataset\.v3Comparison = "1"/);
 });
 
@@ -93,7 +95,7 @@ test("v0.3 suppresses late legacy trajectory summaries without broad observation
   assert.match(coord, /v3CoordRemoveLegacySummary/);
   assert.match(coord, /root\.querySelectorAll\("\[data-trajectory-v2\]"\)/);
   assert.match(coord, /observer\.observe\(root, \{ childList: true \}\)/);
-  assert.match(coord, /setTimeout\(\(\) => observer\.disconnect\(\), 2000\)/);
+  assert.match(coord, /setTimeout\(\(\) => observer\.disconnect\(\), 2500\)/);
 });
 
 test("release version is exactly 0.3.0 across package lockfile and Worker", () => {
