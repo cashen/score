@@ -75,5 +75,6 @@ function scan() {
   enhancePublicShareRows();
 }
 
-new MutationObserver(scan).observe(document.documentElement, { childList: true, subtree: true });
+const root = document.querySelector("#app");
+if (root) new MutationObserver(scan).observe(root, { childList: true });
 scan();
