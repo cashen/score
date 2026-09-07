@@ -218,7 +218,8 @@ summary:focus-visible,
 }
 .v4-public-details > .v4-public-card { margin: 0 14px 14px; box-shadow: none; }
 .v4-public-card .v3-teacher-preset,
-.v4-secret-card .v3-teacher-preset { display: none; }
+.v4-secret-card .v3-teacher-preset,
+.share-card[data-v4-share="1"] .v3-teacher-preset { display: none; }
 .share-grid { grid-template-columns: 1fr; }
 
 .exam-context-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
