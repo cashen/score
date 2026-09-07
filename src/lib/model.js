@@ -1,8 +1,19 @@
 export const SUBJECTS = ["chinese", "math", "english", "physics", "chemistry", "biology"];
 export const ROLES = new Set(["owner", "editor", "viewer"]);
-export const EXAM_TYPES = new Set(["weekly", "monthly", "midterm", "final", "joint", "mock1", "mock2", "mock3", "other"]);
+export const EXAM_TYPES = new Set(["weekly", "monthly", "midterm", "final", "school", "joint", "mock1", "mock2", "mock3", "other"]);
 export const SCORE_MODES = new Set(["raw", "converted", "raw_and_converted"]);
 export const COMPARISON_LEVELS = new Set(["school", "alliance", "district", "city", "province", "other"]);
+
+export function examComparisonCategory(value) {
+  const type = typeof value === "string" ? value : value?.type;
+  if (type === "joint" || type === "school") return "joint_school";
+  if (["mock1", "mock2", "mock3"].includes(type)) return "mock";
+  return EXAM_TYPES.has(type) ? type : "other";
+}
+
+export function comparableExamCategory(a, b) {
+  return examComparisonCategory(a) === examComparisonCategory(b);
+}
 
 export function normalizeUsername(value) {
   return String(value || "").trim().normalize("NFKC").toLowerCase();
