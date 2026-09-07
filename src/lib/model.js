@@ -28,6 +28,14 @@ export function safeText(value, max = 120) {
   return text.slice(0, max);
 }
 
+export function normalizePublicSlug(value) {
+  const slug = String(value || "").trim().toLowerCase();
+  if (slug.length < 3 || slug.length > 50 || !/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(slug)) {
+    throw new Error("公开地址需为 3–50 位字母、数字或短横线，短横线不要放在开头或结尾");
+  }
+  return slug;
+}
+
 function integerOrNull(value, min = 0, max = 10000000) {
   if (value === "" || value == null) return null;
   const n = Number(value);
@@ -47,8 +55,7 @@ export function normalizeRankings(rankings) {
   return rankings.slice(0, 8).map((item) => {
     const rank = integerOrNull(item?.rank, 1);
     const participants = integerOrNull(item?.participants, 1);
-    if ((rank == null) !== (participants == null)) throw new Error("排名和参与人数需要同时填写");
-    if (rank != null && rank > participants) throw new Error("排名不能大于参与人数");
+    if (rank != null && participants != null && rank > participants) throw new Error("排名不能大于参与人数");
     return {
       scope: safeText(item?.scope, 32) || "school",
       label: safeText(item?.label, 60),
