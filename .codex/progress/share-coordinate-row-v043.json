@@ -3,20 +3,26 @@
   "release": "0.4.3",
   "branch": "feat/share-coordinate-row-v043",
   "base_sha": "b62cce596aeea46b8acda0c1759f1bdc7826e245",
-  "status": "planned",
+  "status": "ready_for_release_gate",
   "resume_protocol": [
     "Fetch latest main SHA, PR exact head, diff, CI and this checkpoint before editing.",
     "Treat only committed code and passing tests as completed; never infer completion from chat history.",
     "If main moved, compare/reconcile explicitly; never force-reset or overwrite unverified work."
   ],
   "goal": "Keep exam context on the line above, then render school rank, class rank and total score as one compact coordinate row using flex-wrap. Desktop/Pad should usually stay on one line; narrow phones may wrap naturally without overflow.",
-  "requirements": [
-    "Coordinate line reads: 校第 7 名　班第 1 名 · 509.5 分.",
-    "Use flex + wrap, not a hard-coded desktop/mobile line break.",
-    "School rank remains primary but no giant typography regression.",
-    "No page-level horizontal scrolling on 360-430px widths.",
-    "No backend/KV/auth/share-token/data-model changes.",
-    "No subtree:true broad MutationObserver.",
-    "Version exactly 0.4.3; final exact-head CI success before expected_head_sha merge; main CI + Cloudflare production attestation required."
+  "completed": [
+    "Coordinate container changed to display:flex + flex-wrap:wrap + baseline alignment.",
+    "Exam context reserves a full line; school rank and meta values share the following line when space allows.",
+    "School rank stays primary at 38-44px desktop, 36px mobile and 34px <=380px.",
+    "No white-space:nowrap; narrow phones can wrap naturally without page-level horizontal overflow.",
+    "No backend/KV/auth/share-token/data-model changes and no broad subtree observer changes.",
+    "Version bumped exactly to 0.4.3 across package.json, package-lock.json and wrangler.toml.",
+    "Functional PR head 48287b82c420144a440d7bfeaa40f86609fb3b3f passed CI run 34164917008."
+  ],
+  "release_gate": [
+    "This checkpoint commit becomes the final candidate head; no more functional commits after sealing.",
+    "Final exact-head CI must succeed before Ready and expected_head_sha merge.",
+    "Post-merge main CI must succeed.",
+    "Cloudflare deploy must checkout the exact tested main SHA and production /api/health must attest 0.4.3."
   ]
 }
