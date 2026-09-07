@@ -14,26 +14,47 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.event.workflow_run.head_sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Deploy with required Worker secrets
+      - name: Deploy exact tested commit with required Worker secrets
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           SCORE_SESSION_SECRET: ${{ secrets.SCORE_SESSION_SECRET }}
           SCORE_AUTH_PEPPER: ${{ secrets.SCORE_AUTH_PEPPER }}
           SCORE_ADMIN_BOOTSTRAP_SECRET: ${{ secrets.SCORE_ADMIN_BOOTSTRAP_SECRET }}
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
-          for name in CLOUDFLARE_API_TOKEN SCORE_SESSION_SECRET SCORE_AUTH_PEPPER SCORE_ADMIN_BOOTSTRAP_SECRET; do
+          for name in CLOUDFLARE_API_TOKEN SCORE_SESSION_SECRET SCORE_AUTH_PEPPER SCORE_ADMIN_BOOTSTRAP_SECRET TESTED_SHA; do
             if [ -z "${!name:-}" ]; then
               echo "::error::$name is not configured"
               exit 1
             fi
           done
+
+          CHECKED_OUT_SHA="$(git rev-parse HEAD)"
+          if [ "$CHECKED_OUT_SHA" != "$TESTED_SHA" ]; then
+            echo "::error::Checked out $CHECKED_OUT_SHA but CI validated $TESTED_SHA"
+            exit 1
+          fi
+
+          EXPECTED_VERSION="$(node - <<'NODE'
+          const fs = require('node:fs');
+          const text = fs.readFileSync('wrangler.toml', 'utf8');
+          const match = text.match(/^APP_VERSION\s*=\s*"([^"]+)"/m);
+          if (!match) process.exit(2);
+          process.stdout.write(match[1]);
+          NODE
+          )"
+          if [ -z "$EXPECTED_VERSION" ]; then
+            echo "::error::APP_VERSION is missing from wrangler.toml"
+            exit 1
+          fi
+          export EXPECTED_VERSION
 
           umask 077
           node <<'NODE'
@@ -47,5 +68,37 @@ jobs:
           trap 'rm -f .runtime-secrets.json' EXIT
 
           npx --yes wrangler@4 deploy --keep-vars --secrets-file .runtime-secrets.json
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 \
-            https://score-track.cashen.workers.dev/api/health
+
+          node <<'NODE'
+          const expected = process.env.EXPECTED_VERSION;
+          const sha = process.env.TESTED_SHA;
+          const base = 'https://score-track.cashen.workers.dev/api/health';
+          const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+          let last = 'no response';
+
+          for (let attempt = 1; attempt <= 30; attempt += 1) {
+            try {
+              const url = `${base}?deploy=${encodeURIComponent(sha)}&attempt=${attempt}&t=${Date.now()}`;
+              const response = await fetch(url, {
+                headers: {
+                  'cache-control': 'no-cache, no-store, max-age=0',
+                  pragma: 'no-cache'
+                }
+              });
+              const payload = await response.json();
+              last = JSON.stringify(payload);
+              console.log(`Production attestation ${attempt}/30: HTTP ${response.status}, appVersion=${payload.appVersion ?? 'missing'}, expected=${expected}`);
+              if (response.ok && payload.ok === true && payload.appVersion === expected) {
+                console.log(`Production version attested: ${expected}`);
+                process.exit(0);
+              }
+            } catch (error) {
+              last = String(error?.message || error);
+              console.log(`Production attestation ${attempt}/30 failed: ${last}`);
+            }
+            await delay(3000);
+          }
+
+          console.error(`Production never converged to appVersion ${expected}. Last response: ${last}`);
+          process.exit(1);
+          NODE
