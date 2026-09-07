@@ -1,0 +1,52 @@
+{
+  "project": "cashen/score",
+  "release": "0.4.2",
+  "branch": "feat/share-typography-v042",
+  "base": {"branch":"main","sha":"f6750e90d04519cabeef31acaddcbd56ba7d1b8c"},
+  "status": "release_candidate",
+  "resume_protocol": [
+    "Fetch latest main SHA, PR exact head, changed files/diff, CI and this checkpoint before any action.",
+    "Treat only committed code with passing tests as completed; never infer completion from chat history.",
+    "If main moved, compare and reconcile explicitly; never force-reset or overwrite unverified work.",
+    "Do not reintroduce subtree:true broad MutationObserver or documentElement-wide observers.",
+    "After this checkpoint commit, do not change functional code unless final-head CI fails or a release-blocking defect is found."
+  ],
+  "product_principle": "分享页首先是可连续阅读的考试坐标报告，不是排名海报；字号、留白、色差共同建立层级，不靠超大数字压住页面。",
+  "stages": {
+    "S0": {"name":"Recovery baseline","status":"completed"},
+    "S1": {"name":"Typography hierarchy","status":"completed","evidence":"姓名桌面30px；主坐标桌面clamp(38px,4.4vw,44px)，手机36px，<=380px为34px；次级坐标19/17px；六科26/23px。"},
+    "S2": {"name":"Compact coordinate summary","status":"completed","evidence":"v42CompactRank 将第7名语义化为校第 7 名；班排名和总分进入同一坐标组；考试名称/日期排在坐标前。"},
+    "S3": {"name":"Reduce redundant labels","status":"completed","evidence":"v0.4.2 CSS 在 JS 前隐藏旧 学校相对位置 小标题；保留用户主动分享的身份字段，不新增内部标识输出。"},
+    "S4": {"name":"Subject density","status":"completed","evidence":"PC 六科保持3x2无卡片镀铬，单元最小92px；<=620px变为六行 compact row，最小52px。"},
+    "S5": {"name":"Surface and width","status":"completed","evidence":"当前坐标继续浅品牌绿；六科区域降为白色；public-shell max-width=960px。"},
+    "S6": {"name":"Responsive and weak-network behavior","status":"completed","evidence":"CSS 直接覆盖 v41 既有 DOM，因此慢网无需等待 v42 JS 即可限制主排名<=44px并切换移动端六行；无页面级新增横向滚动。"},
+    "S7": {"name":"Regression and release","status":"premerge_ready","evidence":"版本0.4.2已统一；v042 UI contract 已覆盖字号、语义、六科密度、移动端、observer guard；功能 head bb4bba2dd1a648dec26837f373ccf8138b5c870b CI run 34164373582 success。最终 checkpoint head 仍需再次 CI 后才允许 Ready/merge。"}
+  },
+  "changed_files_scope": [
+    ".codex/progress/share-typography-v042.json",
+    "package.json",
+    "package-lock.json",
+    "wrangler.toml",
+    "public/index.html",
+    "public/ui-v042.css",
+    "public/ui-v042.js",
+    "test/v041-share-reading.test.js",
+    "test/v042-share-typography.test.js"
+  ],
+  "release_gate": [
+    "Final checkpoint exact head passes PR CI.",
+    "main remains f6750e90d04519cabeef31acaddcbd56ba7d1b8c before merge, or any movement is explicitly reconciled.",
+    "PR Ready only after final-head CI success.",
+    "Merge with expected_head_sha.",
+    "Main CI passes and Cloudflare deploy checks out exact tested main SHA.",
+    "Production /api/health attests appVersion=0.4.2."
+  ],
+  "last_verified": {
+    "main_sha": "f6750e90d04519cabeef31acaddcbd56ba7d1b8c",
+    "open_prs_before_start": 0,
+    "production_baseline": "0.4.1",
+    "functional_head": "bb4bba2dd1a648dec26837f373ccf8138b5c870b",
+    "functional_ci_run": 34164373582,
+    "functional_ci_conclusion": "success"
+  }
+}

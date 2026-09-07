@@ -98,9 +98,9 @@ test("v0.4.1 keeps observers bounded and preserves touch/mobile density", () => 
   assert.match(css, /\.v3-six-item \{ min-height: 50px; \}/);
 });
 
-test("release version is exactly 0.4.1 across package lockfile and Worker", () => {
-  assert.equal(pkg.version, "0.4.1");
-  assert.equal(lock.version, "0.4.1");
-  assert.equal(lock.packages[""].version, "0.4.1");
-  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.4\.1"/);
+test("v0.4.1 contracts remain valid across later 0.4.x patch releases", () => {
+  assert.match(pkg.version, /^0\.4\./);
+  assert.match(lock.version, /^0\.4\./);
+  assert.match(lock.packages[""].version, /^0\.4\./);
+  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.4\.[0-9]+"/);
 });
