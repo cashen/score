@@ -6,7 +6,7 @@
     "branch": "main",
     "sha": "9dab7d1d3ff8a03db24163f113dcb5bed98ac105"
   },
-  "status": "planned",
+  "status": "release_gate",
   "resume_protocol": [
     "Fetch latest main SHA and verify whether main moved from the recorded base.",
     "Fetch PR metadata, exact head SHA, changed files/diff, CI status, and this checkpoint before editing.",
@@ -14,109 +14,132 @@
     "If main moved, compare and reconcile explicitly; never force-reset or overwrite unverified work.",
     "Keep all v0.4.0 functional changes on this branch until release gate passes.",
     "Never reintroduce broad subtree:true MutationObserver patterns or documentElement-wide observers.",
-    "After each completed stage, update this checkpoint with evidence: commit SHA and CI run when available."
+    "After this checkpoint commit, do not change functional code unless final-head CI or release audit finds a concrete defect."
   ],
   "product_principle": "首页10秒回答：孩子现在在哪 -> 最近有没有变化 -> 变化来自哪里；再进入具体考试/分数。学生不被审判，家长知道要看什么，老师能快速读懂分享。",
+  "implementation": {
+    "strategy": "Keep the v0.3 API/KV/data contract intact and place one final v0.4 UI coordinator/design-token layer after the proven v2/v3 modules. Hide duplicated legacy overview output, bound all asynchronous enhancement waits, and avoid broad DOM observation.",
+    "primary_assets": [
+      "public/ui-v040.js",
+      "public/ui-v040.css",
+      "test/v040-ui-consolidation.test.js"
+    ],
+    "intentional_boundary": "The sharing/privacy workflow remains a top-level main tab instead of being duplicated as a settings tile. Settings task navigation covers children, family members, independent-family invitations, and account recovery.",
+    "weak_network_boundary": "The coordinator still waits for existing data-driven renderers where necessary, but legacy duplicates are suppressed once v0.4 data is available; there is no continuous mutation loop or subtree observer, and exam entry is not blocked by the v0.4 overview fetch."
+  },
   "stages": {
     "S0": {
       "name": "UI baseline and recovery contract",
-      "status": "in_progress",
-      "requirements": [
-        "Create draft PR early and keep this checkpoint authoritative.",
-        "Audit PC/Pad/Android hierarchy from current v0.3.0 code.",
-        "Preserve weak-network stability and existing exam-entry performance fixes."
+      "status": "completed",
+      "evidence": [
+        "Draft PR #13 created from main 9dab7d1d3ff8a03db24163f113dcb5bed98ac105.",
+        "This checkpoint is the authoritative interruption-recovery source.",
+        "main re-verified unchanged immediately before sealing release checkpoint."
       ]
     },
     "S1": {
       "name": "Design-system consolidation",
-      "status": "pending",
-      "requirements": [
-        "Unify radius tokens to small/medium/large, spacing rhythm, typography hierarchy, focus states and button hierarchy.",
-        "Keep current restrained green/neutral palette; do not use red/green as academic judgment.",
-        "One primary action per visual region."
+      "status": "completed",
+      "evidence": [
+        "ui-v040.css defines radius-sm=10px, radius-md=14px, radius-lg=20px, spacing rhythm and two shadow levels.",
+        "Common focus-visible treatment added; restrained existing green/neutral palette retained.",
+        "Academic direction is expressed with text/arrows rather than red/green value judgment."
       ]
     },
     "S2": {
       "name": "Homepage hierarchy",
-      "status": "pending",
-      "requirements": [
-        "Make school-relative position the largest visual datum; total score becomes supporting context.",
-        "First screen order: 现在在哪 -> 最近变化 -> 变化来源 -> 最近考试.",
-        "Remove duplicate overview/trajectory summaries and avoid dashboard-card accumulation."
+      "status": "completed",
+      "evidence": [
+        "v4-overview has exactly three primary zones: 现在在哪 / 最近变化 / 变化来自哪里.",
+        "School-relative position is the largest visual datum; total score is supporting context only.",
+        "Legacy hero and old six-subject summary are suppressed after the consolidated overview mounts."
       ]
     },
     "S3": {
       "name": "Trajectory information architecture",
-      "status": "pending",
-      "requirements": [
-        "Overview tells what happened; trajectory explains why.",
-        "Keep overall/single-subject/six-subject/time-axis roles distinct.",
-        "On mobile, six-subject scan becomes compact rows rather than six oversized cards.",
-        "Single-subject history remains complete while only category-compatible exams drive trend conclusions."
+      "status": "completed",
+      "evidence": [
+        "Detailed v3 trajectory is moved under native 深入看轨迹 disclosure and its duplicate overall summary is hidden.",
+        "Mobile six-subject display is compact row scanning rather than six oversized cards.",
+        "Single-subject history and category-gated trend logic from v0.3 remain intact."
       ]
     },
     "S4": {
       "name": "Human exam-entry semantics",
-      "status": "pending",
-      "requirements": [
-        "Use human fields: 考试类型, 考试范围, optional 更多比较信息; hide implementation language such as comparisonSeries from normal users.",
-        "Show 联考位次/人数 inside overall position only when relevant; participants remain optional.",
-        "Retain two subject cards per row on desktop and one per row on tablet/mobile."
+      "status": "completed",
+      "evidence": [
+        "comparisonLevel is presented as 考试范围（可选）.",
+        "comparisonSeries is moved behind 更多比较信息（可选） as 属于同一个考试系列（可选）.",
+        "联考位次/人数 use the existing saved input names and are moved into overall position; fields are visible/enabled only for joint exams.",
+        "Existing exam-humanize subject-card structure and save contract are unchanged."
       ]
     },
     "S5": {
       "name": "Sharing flow redesign",
-      "status": "pending",
-      "requirements": [
-        "Default flow: 分享什么 -> 给谁看 -> 隐私摘要 -> 生成并复制链接.",
-        "Presets: family, teacher, custom; advanced field checkboxes collapsed by default.",
-        "Single-exam share stays pinned; trajectory share keeps multidimensional tabs and touchable timeline.",
-        "Family notes/account/member data remain impossible to share."
+      "status": "completed",
+      "evidence": [
+        "Primary private sharing flow is 分享什么 -> 给谁看 -> 隐私摘要 -> 生成并复制链接.",
+        "Audience presets: 家人 / 老师 / 自定义; advanced fields/mode/expiry are secondary native-details content.",
+        "Public homepage creation is moved to an explicit advanced disclosure.",
+        "Duplicate legacy teacher preset is hidden once v0.4 sharing is active; family notes/account/member data remain outside share output."
       ]
     },
     "S6": {
       "name": "Settings/onboarding simplification",
-      "status": "pending",
-      "requirements": [
-        "Turn settings into task navigation: family members, children, invite new family, account recovery, sharing/privacy.",
-        "Onboarding becomes staged instead of one dense form; recovery code step requires explicit save acknowledgement.",
-        "Do not expose server secrets or admin bootstrap credentials in browser UI."
+      "status": "completed",
+      "evidence": [
+        "Settings gains task navigation for 孩子资料 / 家庭成员 / 邀请新家庭 / 账号与恢复; 分享与隐私 intentionally remains a top-level main tab.",
+        "Independent-family acceptance is staged into 建立家庭 -> 创建登录账号 -> 孩子资料.",
+        "Recovery-code completion requires an explicit 已保存 checkbox before continuing."
       ]
     },
     "S7": {
       "name": "Renderer consolidation and weak-network behavior",
-      "status": "pending",
-      "requirements": [
-        "Reduce post-render patching where safe; stable UI should render correctly once rather than visibly morphing on weak networks.",
-        "Do not sacrifice the v0.3.0 data/API contract or draft recovery.",
-        "No broad DOM observer, no continuous mutation loop, no layout flash that blocks exam entry."
+      "status": "completed",
+      "evidence": [
+        "One final ui-v040 coordinator replaces additional feature-specific patches for this release and is loaded last.",
+        "Only top-level or short-lived local childList observers are used; no subtree:true and no documentElement observer.",
+        "All local waiting observers disconnect after 2500ms; no continuous exam-dialog mutation loop is introduced.",
+        "v0.3 API/KV, draft recovery and exam save contracts are unchanged."
       ]
     },
     "S8": {
       "name": "Cross-device and accessibility acceptance",
-      "status": "pending",
-      "requirements": [
-        "At 360px: no page-level horizontal scroll, main tap targets >=44px, first screen exposes position + recent change.",
-        "PC: no more than three primary information zones in the first screen; total score must not dominate relative position.",
-        "Sharing should reach a copied link through at most three normal decisions; advanced privacy controls are secondary.",
-        "Keyboard focus-visible, touch scrolling, dialog scrolling, weak-network loading and Android regressions covered."
+      "status": "completed",
+      "evidence": [
+        "v040 UI contract covers 620px/380px responsive breakpoints and hover:none touch targets >=44px.",
+        "Desktop overview is capped at three primary information zones.",
+        "Mobile overview stacks to one column; six-subject scan becomes compact rows; settings/onboarding collapse responsively.",
+        "Keyboard focus-visible states cover form fields, buttons, disclosures, source rows and navigation tiles."
       ]
     }
   },
-  "release_gate": [
-    "S0-S8 marked completed with repository evidence.",
-    "Version exactly 0.4.0 across package.json, package-lock.json and wrangler.toml.",
-    "npm run verify passes on the final PR head.",
-    "UI contract tests cover hierarchy, share flow, responsive/touch rules, observer performance guard and privacy.",
-    "Final self-review finds no duplicate legacy UI visible beside v0.4 UI.",
-    "PR marked ready only after final head CI success.",
-    "Merge with expected_head_sha; then main CI must pass.",
-    "Cloudflare deploy must checkout the exact tested main SHA.",
-    "Production /api/health must attest appVersion=0.4.0 before declaring completion."
-  ],
+  "test_evidence_before_seal": {
+    "pr_head": "649adc26930be5b153cc9adadf993b0caf68e04c",
+    "ci_run": 34101123978,
+    "ci_job": 101675577500,
+    "conclusion": "success",
+    "verified_command": "npm run verify"
+  },
+  "release_gate": {
+    "stage_completion": "passed",
+    "version": "0.4.0 across package.json, package-lock.json and wrangler.toml",
+    "ui_contract": "passed on pre-seal head; final checkpoint head must rerun CI",
+    "privacy": "no server/admin secrets added to browser UI; share presets only manipulate existing allow-listed fields",
+    "observer_guard": "no subtree:true or documentElement-wide observer in ui-v040",
+    "legacy_duplicate_review": "homepage legacy overview hidden; v3 duplicate overall summary hidden; legacy teacher preset hidden when v0.4 share flow active",
+    "next": [
+      "Wait for CI success on this exact checkpoint commit head.",
+      "Mark PR #13 ready without further code changes.",
+      "Re-verify main SHA and merge with expected_head_sha.",
+      "Require main CI success.",
+      "Require Cloudflare deploy to checkout exact tested main SHA and production /api/health appVersion=0.4.0."
+    ]
+  },
   "last_verified": {
     "main_sha": "9dab7d1d3ff8a03db24163f113dcb5bed98ac105",
-    "open_prs_before_start": 0,
-    "production_baseline": "0.3.0"
+    "production_baseline": "0.3.0",
+    "pr": 13,
+    "pre_seal_pr_head": "649adc26930be5b153cc9adadf993b0caf68e04c"
   }
 }
