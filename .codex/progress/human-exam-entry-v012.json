@@ -1,0 +1,25 @@
+{
+  "project": "cashen/score",
+  "workstream": "human-exam-entry-v012",
+  "branch": "feat/human-exam-entry-v012",
+  "targetVersion": "0.1.2",
+  "trigger": "User production screenshot shows the six-subject editor becoming an unreadable wide matrix with column/subject misalignment.",
+  "principles": [
+    "Follow the human entry order: exam context, overall result, each subject, notes.",
+    "Remove horizontal score tables and horizontal scrolling from exam entry.",
+    "Keep existing field names and API payload contract so stored data remains compatible.",
+    "Desktop uses two subject cards per row; narrow screens use one card per row.",
+    "Within a subject: score first, then class/school relative position.",
+    "Show converted-score input only when the scoring mode needs it.",
+    "Do not make missing rankings mandatory; incomplete data remains valid.",
+    "Preserve local IndexedDB draft recovery and existing submit/delete behavior."
+  ],
+  "tasks": [
+    {"id":"T1","status":"in_progress","text":"Add a DOM enhancement layer that reorganizes the existing exam form without changing API field names."},
+    {"id":"T2","status":"pending","text":"Replace the 8-column score matrix styling with responsive exam sections and subject cards."},
+    {"id":"T3","status":"pending","text":"Verify raw vs raw+converted mode behavior, rank pairs, keyboard/mobile layout, sticky actions, and draft compatibility."},
+    {"id":"T4","status":"pending","text":"Bump app/package/runtime version to 0.1.2 and include the new browser module in syntax checks."},
+    {"id":"T5","status":"pending","text":"Run CI, review PR diff, merge with expected head SHA only when green, then verify production deploy and health."}
+  ],
+  "resumeRule": "Read this checkpoint and the latest PR before continuing. Never revert the runtime-secret hardening from v0.1.1. Do not merge until CI and production deploy are verified."
+}
