@@ -1,0 +1,27 @@
+{
+  "project": "cashen/score",
+  "workstream": "human-exam-entry-v012",
+  "branch": "feat/human-exam-entry-v012",
+  "targetVersion": "0.1.2",
+  "trigger": "User production screenshot shows the six-subject editor becoming an unreadable wide matrix with column/subject misalignment.",
+  "principles": [
+    "Follow the human entry order: exam context, overall result, each subject, notes.",
+    "Remove horizontal score tables and horizontal scrolling from exam entry.",
+    "Keep existing field names and API payload contract so stored data remains compatible.",
+    "Desktop uses two subject cards per row; narrow screens use one card per row.",
+    "Within a subject: score first, then class/school relative position.",
+    "Show converted-score input only when the scoring mode needs it.",
+    "Do not make missing rankings mandatory; incomplete data remains valid.",
+    "Preserve local IndexedDB draft recovery and existing submit/delete behavior."
+  ],
+  "tasks": [
+    {"id":"T1","status":"completed","text":"Added a DOM enhancement layer that reorganizes the existing exam form without changing API field names."},
+    {"id":"T2","status":"completed","text":"Replaced the effective 8-column matrix with responsive exam sections and subject cards; horizontal score-table UI is hidden in enhanced mode."},
+    {"id":"T3","status":"completed","text":"Reviewed raw vs raw+converted behavior, paired rankings, responsive breakpoints, sticky actions, Escape close, and async IndexedDB draft mode resync."},
+    {"id":"T4","status":"completed","text":"Bumped app/package/runtime version to 0.1.2, added enhancer syntax check and UI contract regression tests."},
+    {"id":"T5","status":"in_progress","text":"Latest PR-head CI is green; next gate is Ready → expected-head merge → main CI → Cloudflare deploy → production health verification."}
+  ],
+  "latestGreenHead": "0f01a98bfcb63b50bd501c726675103ec676c45b",
+  "latestGreenCiRun": 34076057013,
+  "resumeRule": "Read this checkpoint and PR #4 before continuing. Never revert the v0.1.1 Worker-secret hardening. Merge only with the current expected head SHA after CI is green, then verify production appVersion 0.1.2."
+}
