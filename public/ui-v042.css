@@ -1,0 +1,170 @@
+:root {
+  --v42-report-max: 960px;
+}
+
+/* v0.4.2: a shared exam should read like a compact report, not a ranking poster. */
+.public-shell {
+  max-width: var(--v42-report-max);
+}
+
+.public-shell > .card.v41-current-coordinate.v42-current-coordinate {
+  padding: 16px;
+}
+
+.v42-current-coordinate > h1 {
+  margin: 10px 0 4px;
+  font-size: 30px;
+  line-height: 1.2;
+  letter-spacing: -.02em;
+}
+
+.v42-current-coordinate > .muted {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.v42-coordinate-compact {
+  gap: 6px;
+  margin: 14px 0 12px;
+}
+
+.v42-coordinate-compact > small {
+  display: none;
+}
+
+.v42-coordinate-compact > em {
+  order: 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.v42-coordinate-compact > strong {
+  order: 1;
+  font-size: clamp(38px, 4.4vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -.025em;
+  font-weight: 820;
+}
+
+.v42-coordinate-compact > span {
+  order: 2;
+  color: var(--text);
+  font-size: 19px;
+  line-height: 1.5;
+}
+
+.v42-current-coordinate .subject-grid {
+  margin: 14px -16px -16px;
+  padding: 0 16px 8px;
+  background: var(--surface);
+  border-top: 1px solid var(--v41-position-border);
+  border-radius: 0 0 18px 18px;
+}
+
+.v42-current-coordinate .subject-card {
+  min-height: 92px;
+  display: grid;
+  align-content: center;
+  padding: 11px 10px;
+}
+
+.v42-current-coordinate .subject-card .eyebrow {
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.v42-current-coordinate .subject-card .score {
+  margin: 4px 0 3px;
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.v42-current-coordinate .subject-card .meta {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+@media (max-width: 620px) {
+  .public-shell {
+    padding-inline: 12px;
+  }
+
+  .public-shell > .card.v41-current-coordinate.v42-current-coordinate {
+    padding: 13px;
+    border-radius: 15px;
+  }
+
+  .v42-current-coordinate > h1 {
+    margin-top: 8px;
+    font-size: 26px;
+  }
+
+  .v42-current-coordinate > .muted {
+    font-size: 14px;
+  }
+
+  .v42-coordinate-compact {
+    margin: 12px 0 10px;
+  }
+
+  .v42-coordinate-compact > em {
+    font-size: 15px;
+  }
+
+  .v42-coordinate-compact > strong {
+    font-size: 36px;
+  }
+
+  .v42-coordinate-compact > span {
+    font-size: 17px;
+  }
+
+  .v42-current-coordinate .subject-grid {
+    grid-template-columns: 1fr;
+    margin: 12px -13px -13px;
+    padding: 0 13px 5px;
+  }
+
+  .v42-current-coordinate .subject-card {
+    min-height: 52px;
+    grid-template-columns: 64px 68px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+    align-content: initial;
+    padding: 8px 2px;
+  }
+
+  .v42-current-coordinate .subject-card .eyebrow,
+  .v42-current-coordinate .subject-card .score,
+  .v42-current-coordinate .subject-card .meta {
+    margin: 0;
+  }
+
+  .v42-current-coordinate .subject-card .eyebrow {
+    grid-column: 1;
+    font-size: 14px;
+  }
+
+  .v42-current-coordinate .subject-card .score {
+    grid-column: 2;
+    font-size: 23px;
+  }
+
+  .v42-current-coordinate .subject-card .meta {
+    grid-column: 3;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 380px) {
+  .v42-coordinate-compact > strong {
+    font-size: 34px;
+  }
+
+  .v42-current-coordinate .subject-card {
+    grid-template-columns: 56px 62px minmax(0, 1fr);
+    gap: 6px;
+  }
+}
