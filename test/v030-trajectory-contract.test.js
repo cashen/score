@@ -98,9 +98,10 @@ test("v0.3 suppresses late legacy trajectory summaries without broad observation
   assert.match(coord, /setTimeout\(\(\) => observer\.disconnect\(\), 2500\)/);
 });
 
-test("release version is exactly 0.3.0 across package lockfile and Worker", () => {
-  assert.equal(pkg.version, "0.3.0");
-  assert.equal(lock.version, "0.3.0");
-  assert.equal(lock.packages[""].version, "0.3.0");
-  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.3\.0"/);
+test("v0.3 feature contract remains active while the app release advances", () => {
+  assert.equal(pkg.version, lock.version);
+  assert.equal(lock.packages[""].version, pkg.version);
+  const escaped = pkg.version.replace(/\./g, "\\.");
+  assert.match(wrangler, new RegExp(`APP_VERSION\\s*=\\s*"${escaped}"`));
+  assert.ok(Number(pkg.version.split(".")[1]) >= 3);
 });
