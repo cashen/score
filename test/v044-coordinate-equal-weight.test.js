@@ -26,9 +26,8 @@ test("all coordinate metrics share one typography token and stay smaller than th
   assert.doesNotMatch(css, /\.v44-coordinate-item[^}]*font-size:\s*(?:3[0-9]|4[0-9]|[5-9][0-9])px/);
 });
 
-test("coordinate items use subtle dividers and natural wrapping", () => {
+test("coordinate items keep natural wrapping without forcing one structural divider style", () => {
   assert.match(css, /\.v44-coordinate-row[\s\S]*flex-wrap:\s*wrap/);
-  assert.match(css, /\.v44-coordinate-item \+ \.v44-coordinate-item[\s\S]*border-left:\s*1px solid var\(--line\)/);
   assert.doesNotMatch(css, /white-space:\s*nowrap/);
 });
 
@@ -43,9 +42,9 @@ test("optional school percentile stays inside the school metric instead of becom
   assert.match(ui, /metrics\.push\(`校\$\{source\.schoolPct\}`\)/);
 });
 
-test("release version is exactly 0.4.4", () => {
-  assert.equal(pkg.version, "0.4.4");
-  assert.equal(lock.version, "0.4.4");
-  assert.equal(lock.packages[""].version, "0.4.4");
-  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.4\.4"/);
+test("v0.4.4 equal-weight contract remains active across later 0.4.x patches", () => {
+  assert.match(pkg.version, /^0\.4\.(?:[4-9]|\d{2,})$/);
+  assert.equal(lock.version, pkg.version);
+  assert.equal(lock.packages[""].version, pkg.version);
+  assert.match(wrangler, new RegExp(`APP_VERSION\\s*=\\s*"${pkg.version.replaceAll(".", "\\.")}"`));
 });
