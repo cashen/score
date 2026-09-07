@@ -1,0 +1,129 @@
+{
+  "project": "cashen/score",
+  "release": "0.4.1",
+  "branch": "feat/share-reading-v041",
+  "base": {
+    "branch": "main",
+    "sha": "79d958c3f832e6685cad299b3b2cee4f4e418621"
+  },
+  "status": "planned",
+  "resume_protocol": [
+    "Fetch latest main SHA and verify whether main moved from the recorded base.",
+    "Fetch PR metadata, exact head SHA, changed files/diff, CI status, and this checkpoint before editing.",
+    "Treat only committed code with passing tests as completed; never infer completion from chat history.",
+    "If main moved, compare and reconcile explicitly; never force-reset or overwrite unverified work.",
+    "Keep all v0.4.1 functional changes on this branch until release gate passes.",
+    "Never reintroduce subtree:true broad MutationObserver patterns or documentElement-wide observers.",
+    "After each completed stage, update this checkpoint with commit SHA and CI evidence when available."
+  ],
+  "product_principle": "少卡片、轻色差、强层级、连续阅读；不问用户是谁，优先问用户想分享什么。",
+  "stages": {
+    "S0": {
+      "name": "Recovery contract and baseline",
+      "status": "in_progress",
+      "requirements": [
+        "Create draft PR early and keep this checkpoint authoritative.",
+        "Verify main=79d958c3f832e6685cad299b3b2cee4f4e418621 and no open PRs at start.",
+        "Preserve v0.4.0 API/KV/share-token contracts and exam-entry performance baseline."
+      ]
+    },
+    "S1": {
+      "name": "Remove audience false-choice",
+      "status": "pending",
+      "requirements": [
+        "Remove 家人/老师/自定义 as a primary sharing decision.",
+        "Normal flow becomes 分享什么 -> 查看将分享内容 -> 生成并复制链接.",
+        "自定义 becomes 修改分享内容 advanced disclosure rather than a peer persona option.",
+        "No teacher preset that merely toggles existing checkboxes."
+      ]
+    },
+    "S2": {
+      "name": "Default share contract",
+      "status": "pending",
+      "requirements": [
+        "Single exam defaults to nickname, exam name/date, overall score/rank, six-subject scores/ranks.",
+        "Trajectory defaults to the same plus exam history, overall-position changes and subject changes.",
+        "School/class remain hidden by default unless explicitly selected under 修改分享内容.",
+        "Natural-language summary states 将分享 and 不会分享; notes/account/member/security data remain impossible to share."
+      ]
+    },
+    "S3": {
+      "name": "Card density reduction",
+      "status": "pending",
+      "requirements": [
+        "Only current coordinate keeps Hero Surface visual weight.",
+        "Recent change becomes medium Section Surface.",
+        "Sources, six subjects and history become compact rows/timeline items rather than full cards.",
+        "Historical exams must not visually compete with current/latest exam."
+      ]
+    },
+    "S4": {
+      "name": "Restrained semantic color",
+      "status": "pending",
+      "requirements": [
+        "Current coordinate uses very light brand green.",
+        "Recent change uses very light cool blue-gray.",
+        "Concrete data uses white/warm-neutral surfaces; history uses gray-white.",
+        "Attention uses very light amber only for 值得留意, never as bad/fail semantics.",
+        "No red=bad or green=good academic judgment."
+      ]
+    },
+    "S5": {
+      "name": "Timeline state semantics",
+      "status": "pending",
+      "requirements": [
+        "Visually distinguish historical exam, currently viewed exam, and latest exam.",
+        "Latest exam uses light brand-green state.",
+        "Viewing an older exam uses neutral surface plus brand outline, never masquerading as latest.",
+        "PC click/hover and Android horizontal-scroll/click behavior remain equivalent."
+      ]
+    },
+    "S6": {
+      "name": "Card size and responsive density",
+      "status": "pending",
+      "requirements": [
+        "Hero Surface may remain prominent; Section Surface uses roughly 12-16px padding and 12-14px radius.",
+        "Row/item content avoids full-card chrome when separators and spacing are sufficient.",
+        "At 360-430px use roughly 12-14px ordinary horizontal padding, around 8px gaps, and six-subject rows around 48-56px.",
+        "Historical timeline nodes must not approach full-screen card width.",
+        "No page-level horizontal scroll; main tap targets >=44px."
+      ]
+    },
+    "S7": {
+      "name": "Persona cleanup audit",
+      "status": "pending",
+      "requirements": [
+        "Audit existing 学生/家长 reading perspective for the same persona-overdesign problem.",
+        "If it only changes copy without changing data/task architecture, consolidate to one universally readable trajectory.",
+        "Identity modes are allowed only when permissions, data contract or reading architecture materially differ."
+      ]
+    },
+    "S8": {
+      "name": "Weak-network, privacy and regression",
+      "status": "pending",
+      "requirements": [
+        "Do not change v0.4.0 API/KV/share-token contracts.",
+        "Single-exam shares stay permanently pinned; trajectory shares retain overview/subject/six-subject/touch timeline.",
+        "No continuous DOM mutation or exam-entry performance regression.",
+        "Weak network must not create blocking old-UI to new-UI morphing.",
+        "PC/Pad/Android/keyboard focus/touch/scroll regressions covered."
+      ]
+    }
+  },
+  "release_gate": [
+    "S0-S8 marked completed with repository evidence.",
+    "Version exactly 0.4.1 across package.json, package-lock.json and wrangler.toml.",
+    "npm run verify passes on the final PR exact head.",
+    "UI contract tests prove there is no 家人/老师 persona split, default share summary is correct, semantic color and compact-density contracts exist, timeline has three states, 360px/touch rules hold, observer guard and privacy hold.",
+    "Final self-review finds no duplicate legacy audience UI and no oversized-card regression in share reading.",
+    "PR marked ready only after final-head CI success.",
+    "Merge with expected_head_sha; then main CI must pass.",
+    "Cloudflare deploy must checkout the exact tested main SHA.",
+    "Production /api/health must attest appVersion=0.4.1 before declaring completion."
+  ],
+  "last_verified": {
+    "main_sha": "79d958c3f832e6685cad299b3b2cee4f4e418621",
+    "open_prs_before_start": 0,
+    "production_baseline": "0.4.0"
+  }
+}
