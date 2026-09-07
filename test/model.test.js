@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { comparableRanking, normalizeExam, normalizeShareFields, percentile, publicProjection } from "../src/lib/model.js";
+import { comparableRanking, normalizeExam, normalizePublicSlug, normalizeShareFields, percentile, publicProjection } from "../src/lib/model.js";
 
 function baseExam() {
   return {
@@ -31,10 +31,31 @@ test("normalizes an exam and preserves raw/final score modes", () => {
   assert.equal(exam.revision, 1);
 });
 
-test("rejects impossible ranking", () => {
+test("allows a useful rank when participant count is unknown", () => {
+  const input = baseExam();
+  input.overall.rankings = [{ scope: "school", label: "学校", rank: 127, participants: null }];
+  input.subjects.math.rankings = [{ scope: "class", label: "03班", rank: 6 }];
+  const exam = normalizeExam(input);
+  assert.equal(exam.overall.rankings[0].rank, 127);
+  assert.equal(exam.overall.rankings[0].participants, null);
+  assert.equal(exam.subjects.math.rankings[0].rank, 6);
+  assert.equal(exam.subjects.math.rankings[0].participants, null);
+  assert.equal(percentile(127, null), null);
+});
+
+test("rejects impossible ranking when both rank and participant count are known", () => {
   const input = baseExam();
   input.overall.rankings = [{ scope: "school", rank: 1400, participants: 1320 }];
   assert.throws(() => normalizeExam(input), /排名不能大于参与人数/);
+});
+
+test("accepts short human public slugs and normalizes case", () => {
+  assert.equal(normalizePublicSlug("ABC"), "abc");
+  assert.equal(normalizePublicSlug("a-b"), "a-b");
+  assert.equal(normalizePublicSlug("Family-2027"), "family-2027");
+  assert.throws(() => normalizePublicSlug("ab"), /3–50/);
+  assert.throws(() => normalizePublicSlug("-abc"), /短横线/);
+  assert.throws(() => normalizePublicSlug("abc-"), /短横线/);
 });
 
 test("public projection is allow-listed and never leaks notes", () => {
