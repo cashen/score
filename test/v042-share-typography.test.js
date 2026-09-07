@@ -27,18 +27,19 @@ test("coordinate becomes one direct semantic unit instead of a field label plus 
   assert.match(ui, /source\.exam/);
 });
 
-test("typography caps prevent a ranking-poster hierarchy", () => {
-  assert.match(css, /\.v42-current-coordinate > h1[\s\S]*font-size: 30px/);
-  assert.match(css, /\.v42-coordinate-compact > strong[\s\S]*font-size: clamp\(38px, 4\.4vw, 44px\)/);
-  assert.match(css, /\.v42-coordinate-compact > span[\s\S]*font-size: 19px/);
+test("typography caps prevent a ranking-poster hierarchy before JS finishes", () => {
+  assert.match(css, /\.v41-current-coordinate > h1[\s\S]*font-size: 30px/);
+  assert.match(css, /\.v41-coordinate-primary > small[\s\S]*display: none/);
+  assert.match(css, /\.v41-coordinate-primary > strong[\s\S]*font-size: clamp\(38px, 4\.4vw, 44px\)/);
+  assert.match(css, /\.v41-coordinate-primary > span[\s\S]*font-size: 19px/);
   assert.match(css, /\.subject-card \.score[\s\S]*font-size: 26px/);
-  assert.doesNotMatch(css, /v42-coordinate-compact[^}]*font-size:\s*(?:5[0-9]|[6-9][0-9])px/);
+  assert.doesNotMatch(css, /v41-coordinate-primary[^}]*font-size:\s*(?:5[0-9]|[6-9][0-9])px/);
 });
 
 test("subject area steps down from the coordinate surface and mobile becomes six compact rows", () => {
-  assert.match(css, /\.v42-current-coordinate \.subject-grid[\s\S]*background: var\(--surface\)/);
-  assert.match(css, /\.v42-current-coordinate \.subject-card[\s\S]*min-height: 92px/);
-  assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.v42-current-coordinate \.subject-grid[\s\S]*grid-template-columns: 1fr/);
+  assert.match(css, /\.v41-current-coordinate \.subject-grid[\s\S]*background: var\(--surface\)/);
+  assert.match(css, /\.v41-current-coordinate \.subject-card[\s\S]*min-height: 92px/);
+  assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.v41-current-coordinate \.subject-grid[\s\S]*grid-template-columns: 1fr/);
   assert.match(css, /grid-template-columns: 64px 68px minmax\(0, 1fr\)/);
   assert.match(css, /min-height: 52px/);
 });
@@ -47,6 +48,8 @@ test("public report width and mobile reading order are intentionally bounded", (
   assert.match(css, /--v42-report-max: 960px/);
   assert.match(css, /\.public-shell[\s\S]*max-width: var\(--v42-report-max\)/);
   assert.match(css, /@media \(max-width: 620px\)[\s\S]*padding-inline: 12px/);
+  assert.match(css, /\.v41-coordinate-primary > em[\s\S]*order: 0/);
+  assert.match(css, /\.v41-coordinate-primary > strong[\s\S]*order: 1/);
   assert.match(css, /font-size: 36px/);
   assert.match(css, /@media \(max-width: 380px\)[\s\S]*font-size: 34px/);
 });
