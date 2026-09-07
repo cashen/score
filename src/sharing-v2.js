@@ -53,13 +53,12 @@ async function loadExams(env, studentId) {
 
 async function selectExams(env, studentId, scope, examId = null) {
   if (scope === "single") {
-    let exam = null;
-    if (examId) exam = await getJson(env, `exam:${studentId}:${examId}`);
-    if (!exam) {
-      const all = await loadExams(env, studentId);
-      exam = all[0] || null;
+    if (examId) {
+      const exam = await getJson(env, `exam:${studentId}:${examId}`);
+      return exam ? [exam] : [];
     }
-    return exam ? [exam] : [];
+    const all = await loadExams(env, studentId);
+    return all[0] ? [all[0]] : [];
   }
   return loadExams(env, studentId);
 }
@@ -80,11 +79,17 @@ async function handleCreate(request, env, session, studentId) {
   const mode = body.mode === "snapshot" ? "snapshot" : "live";
   const fields = normalizeShareFields(body.fields);
   const requestedScope = body.scope === "single" || body.scope === "trajectory" ? body.scope : null;
-  const scope = requestedScope || (fields.history ? "trajectory" : "single");
+  let scope = requestedScope;
+  if (!scope) {
+    const available = await loadExams(env, studentId);
+    scope = fields.history && available.length >= 2 ? "trajectory" : "single";
+  }
   fields.history = scope === "trajectory";
   const expiresAt = validExpiry(body.expiresAt);
   const exams = await selectExams(env, studentId, scope, body.examId || null);
-  if (!exams.length) return errorJson("还没有可分享的考试记录", 400, "no_exam_to_share");
+  if (!exams.length) {
+    return errorJson(body.examId ? "指定的考试不存在" : "还没有可分享的考试记录", 400, body.examId ? "exam_not_found" : "no_exam_to_share");
+  }
   if (scope === "trajectory" && exams.length < 2) return errorJson("至少记录 2 次考试后才能分享高三轨迹", 400, "trajectory_needs_two_exams");
 
   const selectedExam = scope === "single" ? exams[0] : null;
