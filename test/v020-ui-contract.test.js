@@ -6,6 +6,8 @@ const index = await readFile(new URL("../public/index.html", import.meta.url), "
 const router = await readFile(new URL("../public/router-v2.js", import.meta.url), "utf8");
 const onboarding = await readFile(new URL("../public/onboarding-v2.js", import.meta.url), "utf8");
 const trajectory = await readFile(new URL("../public/trajectory-v2.js", import.meta.url), "utf8");
+const timeline = await readFile(new URL("../public/share-timeline-v2.js", import.meta.url), "utf8");
+const timelineCss = await readFile(new URL("../public/share-timeline-v2.css", import.meta.url), "utf8");
 const sharing = await readFile(new URL("../src/sharing-v2.js", import.meta.url), "utf8");
 const worker = await readFile(new URL("../src/v020.js", import.meta.url), "utf8");
 const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
@@ -14,6 +16,8 @@ test("v0.2.0 assets are actually wired into the shell", () => {
   assert.match(index, /router-v2\.js/);
   assert.match(index, /trajectory-v2\.js/);
   assert.match(index, /trajectory-v2\.css/);
+  assert.match(index, /share-timeline-v2\.js/);
+  assert.match(index, /share-timeline-v2\.css/);
   assert.match(index, /onboarding-v2\.js/);
   assert.match(index, /onboarding-v2\.css/);
   assert.doesNotMatch(index, /src="\/app\.js"/);
@@ -41,6 +45,20 @@ test("trajectory copy follows product hierarchy: position, change, subject cause
   assert.match(trajectory, /最近有没有变化/);
   assert.match(trajectory, /变化来自哪一科/);
   assert.match(trajectory, /不能推断百分位/);
+});
+
+test("shared trajectory has a touch/click timeline with distinct current and past states", () => {
+  assert.match(timeline, /考试时间轴/);
+  assert.match(timeline, /手机可左右滑动后点选/);
+  assert.match(timeline, /data-timeline-exam/);
+  assert.match(timeline, /addEventListener\("click"/);
+  assert.match(timeline, /aria-selected/);
+  assert.match(timeline, /当前/);
+  assert.match(timeline, /已完成/);
+  assert.match(timelineCss, /overflow-x:auto/);
+  assert.match(timelineCss, /-webkit-overflow-scrolling:touch/);
+  assert.match(timelineCss, /\.share-timeline-node\.is-current/);
+  assert.match(timelineCss, /@media\(hover:none\)/);
 });
 
 test("invitation and recovery UI never asks for bootstrap/admin secrets", () => {
