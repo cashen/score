@@ -1,0 +1,36 @@
+{
+  "task": "frontend-consolidation-v050",
+  "version": "0.5.0",
+  "branch": "feat/frontend-consolidation-v050",
+  "baseMain": "c510eaaebf6b71be4eb26ee9e8f777aab42a4944",
+  "status": "planning",
+  "authoritativePlan": "docs/plan/frontend-v050.md",
+  "baselineAudit": "docs/audit/frontend-v050-baseline.md",
+  "phases": {
+    "S0": {"status": "done", "note": "baseline, plan and recovery protocol committed"},
+    "S1": {"status": "pending"},
+    "S2": {"status": "pending"},
+    "S3": {"status": "pending"},
+    "S4": {"status": "pending"},
+    "S5": {"status": "pending"},
+    "S6": {"status": "pending"},
+    "S7": {"status": "pending"},
+    "S8": {"status": "pending"},
+    "S9": {"status": "pending"},
+    "S10": {"status": "pending"},
+    "S11": {"status": "pending"},
+    "S12": {"status": "pending"},
+    "S13": {"status": "pending"},
+    "S14": {"status": "pending"},
+    "S15": {"status": "pending"}
+  },
+  "recovery": [
+    "Fetch latest main and compare with baseMain.",
+    "Fetch PR exact head, changed files/diff and CI.",
+    "Read this checkpoint and docs/plan/frontend-v050.md.",
+    "Only committed work with matching passing tests counts as done.",
+    "Never force reset user work; reconcile main drift explicitly.",
+    "Before merge require exact-head CI success and use expected_head_sha.",
+    "After merge require main CI, exact-SHA Cloudflare deploy and production appVersion=0.5.0."
+  ]
+}
