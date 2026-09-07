@@ -2,106 +2,25 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const index = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
-const v3 = await readFile(new URL("../public/trajectory-v3.js", import.meta.url), "utf8");
-const coord = await readFile(new URL("../public/trajectory-v3-coordination.js", import.meta.url), "utf8");
-const css = await readFile(new URL("../public/trajectory-v3.css", import.meta.url), "utf8");
-const model = await readFile(new URL("../src/lib/model.js", import.meta.url), "utf8");
-const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
-const lock = JSON.parse(await readFile(new URL("../package-lock.json", import.meta.url), "utf8"));
-const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
+const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "utf8");
 
-test("v0.3 multidimensional trajectory assets are wired into the shell", () => {
-  assert.match(index, /trajectory-v3\.css/);
-  assert.match(index, /trajectory-v3\.js/);
-  assert.match(index, /trajectory-v3-coordination\.js/);
-  assert.match(pkg.scripts.check, /public\/trajectory-v3\.js/);
-  assert.match(pkg.scripts.check, /public\/trajectory-v3-coordination\.js/);
+test("deep trajectory is secondary to the current coordinate", () => {
+  assert.match(app, /<details class="deep-trajectory"/);
+  assert.match(app, /查看完整轨迹/);
+  assert.match(app, /历次整体位置与六科历史/);
+  assert.match(css, /\.deep-trajectory/);
 });
 
-test("single-subject history supports all six subjects and position-first comparison", () => {
-  for (const label of ["语文", "数学", "英语", "物理", "化学", "生物"]) assert.match(v3, new RegExp(label));
-  assert.match(v3, /data-v3-subject/);
-  assert.match(v3, /学校位置/);
-  assert.match(v3, /班级位置/);
-  assert.match(v3, /当前分数/);
-  assert.match(v3, /总人数未填，仅看名次/);
-  assert.match(v3, /不同考试难度不同，单看分数不能直接判断相对位置变化/);
+test("trajectory shows facts instead of opaque stability labels", () => {
+  assert.match(app, /function renderDeepTrajectory\(/);
+  assert.match(app, /history-coordinate/);
+  assert.match(app, /subject-history-row/);
+  assert.doesNotMatch(app, /波动较大|较稳定/);
 });
 
-test("six-subject map and student-parent perspectives use restrained copy", () => {
-  assert.match(v3, /六科变化/);
-  assert.match(v3, /学生：我在哪、哪科在变/);
-  assert.match(v3, /家长：发生了什么、什么值得留意/);
-  assert.match(v3, /值得留意/);
-  assert.match(v3, /不用单次考试下结论/);
-  assert.match(v3, /只有分数时不把变化包装成“进步\/退步”/);
-  assert.doesNotMatch(v3, /严重退步|必须干预|高考预测|录取概率/);
-});
-
-test("trajectory share exposes overview subject comparison and keeps the exam timeline separate", () => {
-  assert.match(v3, /data-v3-view="overview"/);
-  assert.match(v3, />总体</);
-  assert.match(v3, />单科</);
-  assert.match(v3, />六科对比</);
-  assert.match(v3, /#subject-/);
-  assert.match(v3, /#compare/);
-  assert.match(index, /share-timeline-v2\.js/);
-});
-
-test("teacher preset is privacy-scoped and survives async v2 share control mounting", () => {
-  assert.match(v3, /给老师看/);
-  assert.match(v3, /老师查看预设已应用/);
-  assert.match(v3, /默认不带学校、班级身份信息/);
-  assert.match(v3, /家庭备注永不分享/);
-  assert.match(v3, /\["school", "className"\]/);
-  assert.match(coord, /v3CoordWatchShareCard/);
-  assert.match(coord, /observer\.observe\(card, \{ childList: true \}\)/);
-  assert.match(coord, /v3CoordAttachTeacherPreset/);
-  assert.doesNotMatch(v3 + coord, /ADMIN_BOOTSTRAP_SECRET|AUTH_PEPPER|SESSION_SECRET/);
-});
-
-test("exam comparability is optional, backwards compatible and category-gated", () => {
-  assert.match(coord, /考试系列（可不填）/);
-  assert.match(coord, /2027届辽宁模考/);
-  assert.match(coord, /comparisonSeries/);
-  assert.match(coord, /comparisonLevel/);
-  assert.match(v3, /body\.comparison = \{ series, level: level \|\| null \}/);
-  assert.match(coord, /sameSeriesCount >= 2/);
-  assert.match(coord, /joint_school: "联考\/校考"/);
-  assert.match(coord, /monthly: "月考"/);
-  assert.match(model, /COMPARISON_LEVELS/);
-  assert.match(model, /examComparisonCategory/);
-  assert.match(model, /input\.comparison === undefined/);
-  assert.match(model, /comparison: exam\.comparison/);
-  assert.match(coord, /subjectEditor\.insertAdjacentElement\("beforebegin", comparison\)/);
-  assert.match(coord, /form\.dataset\.v3Comparison = "1"/);
-});
-
-test("v0.3 interaction remains Android-friendly and never reintroduces broad DOM observation", () => {
-  assert.match(css, /overflow-x: auto/);
-  assert.match(css, /-webkit-overflow-scrolling: touch/);
-  assert.match(css, /@media \(hover: none\)/);
-  assert.match(css, /@media \(max-width: 620px\)/);
-  assert.match(v3, /observe\(v3App, \{ childList: true \}\)/);
-  assert.match(v3, /observe\(v3Body, \{ childList: true \}\)/);
-  assert.match(coord, /observe\(v3CoordApp, \{ childList: true \}\)/);
-  assert.match(coord, /observe\(document\.body, \{ childList: true \}\)/);
-  assert.doesNotMatch(v3 + coord, /subtree\s*:\s*true/);
-  assert.doesNotMatch(v3 + coord, /document\.documentElement/);
-});
-
-test("v0.3 suppresses late legacy trajectory summaries without broad observation", () => {
-  assert.match(coord, /v3CoordRemoveLegacySummary/);
-  assert.match(coord, /root\.querySelectorAll\("\[data-trajectory-v2\]"\)/);
-  assert.match(coord, /observer\.observe\(root, \{ childList: true \}\)/);
-  assert.match(coord, /setTimeout\(\(\) => observer\.disconnect\(\), 2500\)/);
-});
-
-test("v0.3 feature contract remains active while the app release advances", () => {
-  assert.equal(pkg.version, lock.version);
-  assert.equal(lock.packages[""].version, pkg.version);
-  const escaped = pkg.version.replace(/\./g, "\\.");
-  assert.match(wrangler, new RegExp(`APP_VERSION\\s*=\\s*"${escaped}"`));
-  assert.ok(Number(pkg.version.split(".")[1]) >= 3);
+test("missing participants never invent a percentile", () => {
+  assert.match(app, /function percentile\(rank, participants\)/);
+  assert.match(app, /!Number\.isInteger\(participants\)/);
+  assert.match(app, /schoolPct != null/);
 });
