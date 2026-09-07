@@ -23,13 +23,8 @@
   line-height: 1.55;
 }
 
-/* Exam context stays on its own line; school rank + class rank + score form one coordinate row. */
+/* Exam context stays above a peer-metric coordinate row. */
 .v41-coordinate-primary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: 12px;
-  row-gap: 6px;
   margin: 14px 0 12px;
 }
 
@@ -38,29 +33,50 @@
 }
 
 .v41-coordinate-primary > em {
-  order: 0;
-  flex: 0 0 100%;
+  display: block;
+  margin-bottom: 6px;
   color: var(--muted);
   font-size: 16px;
   line-height: 1.45;
 }
 
+/* Weak-network guard: legacy strong/span are already equal-weight before JS enhances the DOM. */
+.v41-coordinate-primary > strong,
+.v41-coordinate-primary > span,
+.v44-coordinate-item {
+  color: var(--text);
+  font-size: 24px;
+  line-height: 1.35;
+  font-weight: 650;
+  letter-spacing: -.012em;
+}
+
 .v41-coordinate-primary > strong {
-  order: 1;
-  flex: 0 0 auto;
-  font-size: clamp(38px, 4.4vw, 44px);
-  line-height: 1.05;
-  letter-spacing: -.025em;
-  font-weight: 820;
+  display: inline;
 }
 
 .v41-coordinate-primary > span {
-  order: 2;
+  display: inline;
+  margin-left: 14px;
+}
+
+.v44-coordinate-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  row-gap: 8px;
+  min-width: 0;
+}
+
+.v44-coordinate-item {
   flex: 0 1 auto;
   min-width: 0;
-  color: var(--text);
-  font-size: 19px;
-  line-height: 1.5;
+}
+
+.v44-coordinate-item + .v44-coordinate-item {
+  margin-left: 14px;
+  padding-left: 14px;
+  border-left: 1px solid var(--line);
 }
 
 .v41-current-coordinate .subject-grid {
@@ -115,21 +131,27 @@
   }
 
   .v41-coordinate-primary {
-    column-gap: 10px;
-    row-gap: 4px;
     margin: 12px 0 10px;
   }
 
   .v41-coordinate-primary > em {
+    margin-bottom: 5px;
     font-size: 15px;
   }
 
-  .v41-coordinate-primary > strong {
-    font-size: 36px;
+  .v41-coordinate-primary > strong,
+  .v41-coordinate-primary > span,
+  .v44-coordinate-item {
+    font-size: 20px;
   }
 
-  .v41-coordinate-primary > span {
-    font-size: 17px;
+  .v44-coordinate-row {
+    row-gap: 7px;
+  }
+
+  .v44-coordinate-item + .v44-coordinate-item {
+    margin-left: 10px;
+    padding-left: 10px;
   }
 
   .v41-current-coordinate .subject-grid {
@@ -170,8 +192,15 @@
 }
 
 @media (max-width: 380px) {
-  .v41-coordinate-primary > strong {
-    font-size: 34px;
+  .v41-coordinate-primary > strong,
+  .v41-coordinate-primary > span,
+  .v44-coordinate-item {
+    font-size: 19px;
+  }
+
+  .v44-coordinate-item + .v44-coordinate-item {
+    margin-left: 8px;
+    padding-left: 8px;
   }
 
   .v41-current-coordinate .subject-card {
