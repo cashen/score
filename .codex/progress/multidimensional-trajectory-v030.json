@@ -29,42 +29,12 @@
     "No third-party analytics or new paid storage dependency."
   ],
   "stages": [
-    {
-      "id": "S0",
-      "name": "release safety and weak-network recovery",
-      "status": "completed",
-      "evidence": "PR #12 contains this checkpoint and restart protocol; all work remained on the feature branch and broad subtree observers are prohibited by tests."
-    },
-    {
-      "id": "S1",
-      "name": "single-subject historical trajectory",
-      "status": "completed",
-      "evidence": "Six subjects support history views with score, school position, class position, rank-only degradation, current-vs-previous analysis and Android-friendly switching. Full history stays visible while category-compatible exams drive trend conclusions."
-    },
-    {
-      "id": "S2",
-      "name": "six-subject change map",
-      "status": "completed",
-      "evidence": "Six-subject map prioritizes percentile/rank over score and uses restrained direction/stability wording."
-    },
-    {
-      "id": "S3",
-      "name": "multidimensional trajectory sharing",
-      "status": "completed",
-      "evidence": "Trajectory shares expose Overview / Subject / Six-subject comparison plus the existing clickable/touch exam timeline; single-exam shares remain pinned and projection stays allow-listed."
-    },
-    {
-      "id": "S4",
-      "name": "exam comparability and joint-exam position",
-      "status": "completed",
-      "evidence": "Comparison is category-gated: monthly-only, joint+school combined, mock1+mock2+mock3 combined, other types isolated by category. Optional series refines only within a category. School exam is a first-class type. Joint exams accept joint rank with optional participant count and expose it on trajectory summary/share timeline. Joint rank is not mixed numerically with school rank when joint and school exams are compared."
-    },
-    {
-      "id": "S5",
-      "name": "student-parent-teacher reading perspectives",
-      "status": "completed",
-      "evidence": "Student and parent reading perspectives are implemented; teacher use is a privacy-scoped share preset and does not create a teacher account system."
-    },
+    { "id": "S0", "name": "release safety and weak-network recovery", "status": "completed" },
+    { "id": "S1", "name": "single-subject historical trajectory", "status": "completed" },
+    { "id": "S2", "name": "six-subject change map", "status": "completed" },
+    { "id": "S3", "name": "multidimensional trajectory sharing", "status": "completed" },
+    { "id": "S4", "name": "exam comparability and joint-exam position", "status": "completed" },
+    { "id": "S5", "name": "student-parent-teacher reading perspectives", "status": "completed" },
     {
       "id": "S6",
       "name": "release gate",
@@ -89,7 +59,7 @@
     "6. If main advanced, compare/reconcile deliberately; do not force-reset the feature branch.",
     "7. Do not merge until final-head CI is green; then use expected_head_sha and verify main plus production health."
   ],
-  "lastGreenHeadBeforeCheckpoint": "32d0c815d4b3a19810c4195eebdaa8576ed8f8f3",
-  "lastGreenRunBeforeCheckpoint": 34098035243,
+  "lastGreenHeadBeforeFinalDocs": "32d0c815d4b3a19810c4195eebdaa8576ed8f8f3",
+  "lastGreenRunBeforeFinalDocs": 34098035243,
   "status": "implementation_complete_release_gate_pending"
 }
