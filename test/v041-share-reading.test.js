@@ -21,6 +21,7 @@ test("sharing removes audience persona as a primary decision", () => {
   assert.match(ui, /想分享什么？/);
   assert.match(ui, /只需要决定分享这一次，还是分享一段轨迹/);
   assert.match(ui, /\[data-v4-audience-step\], \.v3-teacher-preset/);
+  assert.match(ui, /v41WatchShareCard\(publicCard, "public"\)/);
   assert.doesNotMatch(ui, /准备给谁看？|>家人<|>老师<|data-v4-audience="family"|data-v4-audience="teacher"/);
   assert.match(css, /\.v4-audience,[\s\S]*\[data-v4-audience-step\],[\s\S]*\.v3-teacher-preset,[\s\S]*\.v3-perspective-bar[\s\S]*display: none !important/);
 });
@@ -51,6 +52,7 @@ test("share result uses one coordinate hero and lighter section-row hierarchy", 
   assert.match(css, /\.v41-change-surface[\s\S]*background: var\(--v41-change-bg\)/);
   assert.match(css, /\.public-shell \.v3-six-item[\s\S]*border: 0[\s\S]*border-bottom: 1px solid var\(--line\)/);
   assert.match(css, /\.public-shell \.v3-subject-point[\s\S]*border: 0[\s\S]*border-bottom: 1px solid var\(--line\)/);
+  assert.match(css, /\.public-shell \.share-comparison-section,[\s\S]*display: none !important/);
 });
 
 test("semantic color is restrained and attention is not a red-green grade judgment", () => {
