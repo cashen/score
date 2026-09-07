@@ -1,0 +1,15 @@
+{
+  "project": "cashen/score",
+  "workstream": "share-copy-v013",
+  "branch": "feat/share-copy-v013",
+  "targetVersion": "0.1.3",
+  "trigger": "User requested an explicit one-click copy action for share links.",
+  "scope": [
+    "Add an explicit copy button next to the newly generated secret share URL while the raw token is still present in the page.",
+    "Add an always-available copy button for public share URLs in the current shares list.",
+    "Do not persist or re-expose raw secret tokens after creation.",
+    "Keep the existing three-letter public slug behavior and multi-exam comparison behavior intact.",
+    "Bump runtime/package version to 0.1.3 and verify CI/deploy/health before completion."
+  ],
+  "resumeRule": "Resume from latest PR head. Do not weaken secret-token storage semantics and do not revert v0.1.1 secret deployment hardening or v0.1.2 exam-entry UX."
+}
