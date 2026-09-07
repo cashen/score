@@ -1,33 +1,28 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 
-const html = readFileSync(new URL("../public/index.html", import.meta.url), "utf8");
-const app = readFileSync(new URL("../public/app.js", import.meta.url), "utf8");
-const css = readFileSync(new URL("../public/share-comparison.css", import.meta.url), "utf8");
-const enhancer = readFileSync(new URL("../public/exam-humanize.js", import.meta.url), "utf8");
+const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "utf8");
+const index = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
 
-test("sharing UI accepts a three-character public slug and names comparison explicitly", () => {
-  assert.match(app, /minlength="3"/);
-  assert.match(app, /历次考试对比/);
-  assert.match(app, /例如 abc/);
+test("external sharing is rendered as a calm report from the source renderer", () => {
+  assert.match(app, /function renderExternal\(/);
+  assert.match(app, /public-coordinate/);
+  assert.match(app, /publicSubjectRows/);
+  assert.match(app, /publicHistory/);
+  assert.doesNotMatch(index, /share-comparison\.css/);
+  assert.doesNotMatch(index, /share-timeline-v2\.js/);
 });
 
-test("rank participant count is visibly optional in exam entry", () => {
-  assert.match(enhancer, /人数可空/);
-  assert.match(enhancer, /总人数不知道时直接留空/);
-  assert.match(app, /第 \$\{ranking\.rank\} 名/);
-  assert.match(app, /总人数未填/);
+test("shared report keeps identity above equal-weight coordinates", () => {
+  assert.match(app, /coordinate-row/);
+  assert.match(css, /\.public-coordinate h1[\s\S]*font-size:\s*31px/);
+  assert.match(css, /\.coordinate-row > span[\s\S]*font-size:\s*24px/);
 });
 
-test("shared multi-exam history is rendered as a comparison, not a history dump", () => {
-  assert.match(html, /share-comparison\.css/);
-  assert.match(app, /function sharedComparisonHtml/);
-  assert.match(app, /学校相对位置/);
-  assert.match(app, /从较早到最近/);
-  assert.match(app, /单科分数轨迹/);
-  assert.match(app, /不同考试难度可能不同/);
-  assert.match(css, /\.share-position-track/);
-  assert.match(css, /\.share-exam-compare-grid/);
-  assert.match(css, /@media \(max-width: 520px\)/);
+test("history states stay factual rather than gamified", () => {
+  assert.match(app, /历次轨迹/);
+  assert.match(app, /不同考试难度可能不同，优先看相对位置；分数只作辅助/);
+  assert.doesNotMatch(app, /排行榜/);
 });
