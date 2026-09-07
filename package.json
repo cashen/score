@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "check": "node --check src/index.js && node --check src/v020.js && node --check src/family.js && node --check src/onboarding.js && node --check src/sharing-v2.js && node --check src/lib/crypto.js && node --check src/lib/model.js && node --check src/lib/http.js && node --check public/app.js && node --check public/brand-v021.js && node --check public/router-v2.js && node --check public/draft.js && node --check public/exam-humanize.js && node --check public/share-copy.js && node --check public/family-management.js && node --check public/trajectory-v2.js && node --check public/share-timeline-v2.js && node --check public/onboarding-v2.js && node --check public/trajectory-v3.js",
+    "check": "node --check src/index.js && node --check src/v020.js && node --check src/family.js && node --check src/onboarding.js && node --check src/sharing-v2.js && node --check src/lib/crypto.js && node --check src/lib/model.js && node --check src/lib/http.js && node --check public/app.js && node --check public/brand-v021.js && node --check public/router-v2.js && node --check public/draft.js && node --check public/exam-humanize.js && node --check public/share-copy.js && node --check public/family-management.js && node --check public/trajectory-v2.js && node --check public/share-timeline-v2.js && node --check public/onboarding-v2.js && node --check public/trajectory-v3.js && node --check public/trajectory-v3-coordination.js",
     "verify": "npm run check && npm test",
     "dev": "npx --yes wrangler@4 dev",
     "deploy": "npx --yes wrangler@4 deploy"
