@@ -165,6 +165,8 @@
   background: var(--v41-neutral-bg);
 }
 
+/* The old comparison dashboard is a transitional renderer. Hide it before JS so weak networks never flash oversized legacy cards. */
+.public-shell .share-comparison-section,
 .v41-legacy-comparison-hidden { display: none !important; }
 
 /* Timeline: history, viewing, latest are intentionally different states. */
