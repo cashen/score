@@ -1,8 +1,8 @@
-# Architecture — 高三轨迹 v0.1
+# Architecture — 高三坐标
 
 ## 目标
 
-一个家庭级、高三一年期、低频写入的成绩轨迹应用。核心观察对象是“相对位置变化”，而不是把模拟考绝对分数机械地当成能力变化。
+一个家庭级、高三一年期、低频写入的考试轨迹应用。核心观察对象是“相对位置变化”，而不是把模拟考绝对分数机械地当成能力变化。
 
 ## 运行架构
 
@@ -57,14 +57,14 @@ Family
       └─ Exam[]
 ```
 
-v0.1 的建户入口默认创建一个 owner + 一个 student；模型已支持未来多个孩子。
+一个家庭可以有多个成员和多个孩子；独立家庭邀请会创建全新的 Family 命名空间，不继承邀请人的成绩数据权限。
 
 ## Session
 
 - 密码：PBKDF2-SHA256 + per-user salt + Worker Secret pepper，参数带版本。
 - Session：HMAC 签名的 HttpOnly / Secure / SameSite=Strict Cookie。
 - Session 无状态，不把每次登录写入 KV。
-- `sessionVersion` 用于“改密码 / 退出所有设备”时统一撤销旧 Session。
+- `sessionVersion` 用于“改密码 / 退出所有设备 / 恢复密码”时统一撤销旧 Session。
 - 写操作另需 `X-Score-CSRF`，防止同站点兄弟子域场景的 CSRF。
 
 ## 分享模型
@@ -80,4 +80,9 @@ v0.1 的建户入口默认创建一个 owner + 一个 student；模型已支持�
 - `live`：按当前数据实时投影。
 - `snapshot`：创建时冻结服务端投影。
 
-公开数据使用 allow-list projection；新字段默认不公开。`notes` 在 v0.1 没有任何对外分享开关。
+分享范围明确区分：
+
+- `single`：固定到某一次指定考试。
+- `trajectory`：展示多次考试，用相对位置变化作为主要观察线索。
+
+公开数据使用 allow-list projection；新字段默认不公开。家庭内部 `notes` 没有任何对外分享开关。
