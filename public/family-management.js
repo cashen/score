@@ -159,6 +159,9 @@ async function mount() {
   }
 }
 
-const observer = new MutationObserver(mount);
-observer.observe(document.documentElement, { childList: true, subtree: true });
+const appRoot = document.querySelector("#app");
+if (appRoot) {
+  const observer = new MutationObserver(mount);
+  observer.observe(appRoot, { childList: true });
+}
 mount();

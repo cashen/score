@@ -1,0 +1,17 @@
+{
+  "project": "cashen/score",
+  "branch": "feat/v020-trajectory-invite-recovery",
+  "targetVersion": "0.2.0",
+  "releaseMode": "single consolidated release; nothing reaches main until all stages pass",
+  "status": "release-head-frozen",
+  "releaseHead": "01b098211e706a61244637d896b19041aaabe210",
+  "prCiRun": 34088659449,
+  "prCiConclusion": "success",
+  "stages": {
+    "S1": "complete: exam interaction freeze removed; observer storm regression tests green",
+    "S2": "complete: trajectory-first analysis; single vs trajectory sharing; touch/click timeline with current/past distinction",
+    "S3": "complete: independent-family invitation; recovery code; assisted one-time password reset; family isolation",
+    "S4": "PR exact-head CI green; next actions are Ready, expected_head_sha merge, main CI, Cloudflare deploy and production /api/health=0.2.0"
+  },
+  "resumeRule": "Do not create more commits on this PR unless a gate fails. Merge only head 01b098211e706a61244637d896b19041aaabe210 after Ready. After merge, require main CI, deploy success, and production health attestation before completion."
+}
