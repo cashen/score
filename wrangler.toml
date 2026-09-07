@@ -1,5 +1,6 @@
 name = "score-track"
 main = "src/index.js"
+account_id = "f0a06e40a722f0c0f7af4fe8944881e9"
 compatibility_date = "2026-09-07"
 
 [assets]
