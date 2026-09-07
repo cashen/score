@@ -19,6 +19,7 @@
     "server-side share allow-list projection",
     "JSON export",
     "responsive SPA",
+    "IndexedDB local draft recovery for unsynced new exam forms",
     "CI and conditional deploy workflow"
   ],
   "externalDeploymentRequirements": [
@@ -27,6 +28,12 @@
     "AUTH_PEPPER",
     "ADMIN_BOOTSTRAP_SECRET",
     "optional GitHub CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID for automatic deployment"
+  ],
+  "auditNotes": [
+    "Workers KV eventual consistency is explicitly treated as a product boundary, not a transaction guarantee",
+    "Share responses use server-side allow-list projection and never return notes",
+    "GitHub repository must never contain real student scores, passwords or Cloudflare secrets",
+    "Cloud deployment cannot be claimed complete until the external Cloudflare bindings/secrets exist"
   ],
   "resumeRule": "Read docs/ARCHITECTURE.md, docs/SECURITY.md and this file before changing storage or auth. Do not introduce D1 or R2 into v0.1 without an explicit new decision."
 }
