@@ -20,12 +20,32 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Deploy when Cloudflare API token is configured
+      - name: Deploy with required Worker secrets
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SCORE_SESSION_SECRET: ${{ secrets.SCORE_SESSION_SECRET }}
+          SCORE_AUTH_PEPPER: ${{ secrets.SCORE_AUTH_PEPPER }}
+          SCORE_ADMIN_BOOTSTRAP_SECRET: ${{ secrets.SCORE_ADMIN_BOOTSTRAP_SECRET }}
         run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "Cloudflare deployment skipped: CLOUDFLARE_API_TOKEN is not configured."
-            exit 0
-          fi
-          npx --yes wrangler@4 deploy
+          set -euo pipefail
+          for name in CLOUDFLARE_API_TOKEN SCORE_SESSION_SECRET SCORE_AUTH_PEPPER SCORE_ADMIN_BOOTSTRAP_SECRET; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::$name is not configured"
+              exit 1
+            fi
+          done
+
+          umask 077
+          node <<'NODE'
+          const fs = require("node:fs");
+          fs.writeFileSync(".runtime-secrets.json", JSON.stringify({
+            SESSION_SECRET: process.env.SCORE_SESSION_SECRET,
+            AUTH_PEPPER: process.env.SCORE_AUTH_PEPPER,
+            ADMIN_BOOTSTRAP_SECRET: process.env.SCORE_ADMIN_BOOTSTRAP_SECRET
+          }), { mode: 0o600 });
+          NODE
+          trap 'rm -f .runtime-secrets.json' EXIT
+
+          npx --yes wrangler@4 deploy --keep-vars --secrets-file .runtime-secrets.json
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 \
+            https://score-track.cashen.workers.dev/api/health

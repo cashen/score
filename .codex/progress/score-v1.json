@@ -1,12 +1,12 @@
 {
   "project": "cashen/score",
   "workstream": "score-v1-kv",
-  "branch": "feat/score-v1",
+  "branch": "fix/deploy-runtime-config",
   "storage": "workers-kv",
   "r2": "not-used",
   "d1": "not-used",
   "schemaVersion": 1,
-  "appVersion": "0.1.0",
+  "appVersion": "0.1.1",
   "completed": [
     "family/member/student data model",
     "one-exam-per-key contract",
@@ -20,20 +20,41 @@
     "JSON export",
     "responsive SPA",
     "IndexedDB local draft recovery for unsynced new exam forms",
-    "CI and conditional deploy workflow"
+    "Cloudflare account and production KV binding pinned in wrangler.toml",
+    "runtime secret deployment hardening prepared with required secret contract and --secrets-file"
   ],
-  "externalDeploymentRequirements": [
-    "Cloudflare KV namespace id",
-    "SESSION_SECRET",
-    "AUTH_PEPPER",
-    "ADMIN_BOOTSTRAP_SECRET",
-    "optional GitHub CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID for automatic deployment"
+  "deploymentState": {
+    "worker": "score-track",
+    "url": "https://score-track.cashen.workers.dev",
+    "kvNamespaceId": "7341ae0c8a5b43e8a249f5429691b9d0",
+    "cloudflareAccountId": "f0a06e40a722f0c0f7af4fe8944881e9",
+    "apiTokenConfiguredInGitHub": true,
+    "runtimeSecretsConfigured": false,
+    "runtimeSecretsRequiredGitHubNames": [
+      "SCORE_SESSION_SECRET",
+      "SCORE_AUTH_PEPPER",
+      "SCORE_ADMIN_BOOTSTRAP_SECRET"
+    ]
+  },
+  "incident": {
+    "date": "2026-09-07",
+    "summary": "The first three authentication values were created as plaintext Worker variables rather than encrypted secrets. A later Wrangler deploy reported the remote values as configuration differences and removed them from the deployed Worker.",
+    "securityAction": "Treat the old values as compromised and never reuse them. Rotate all three with new values stored as GitHub Actions repository secrets and upload them using Wrangler --secrets-file.",
+    "dataImpact": "KV remained empty at the time of verification; no family account or student data had been written."
+  },
+  "nextRequiredActions": [
+    "User creates three new GitHub Actions repository secrets: SCORE_SESSION_SECRET, SCORE_AUTH_PEPPER, SCORE_ADMIN_BOOTSTRAP_SECRET. Do not paste values into chat.",
+    "PR must pass CI before merge.",
+    "Merge with expected head SHA only after the three GitHub secrets exist.",
+    "Main CI triggers deploy; deployment must succeed with required Worker secrets and /api/health smoke check.",
+    "Verify Cloudflare Worker shows the three entries as encrypted Secret type and then create the first family account."
   ],
   "auditNotes": [
     "Workers KV eventual consistency is explicitly treated as a product boundary, not a transaction guarantee",
     "Share responses use server-side allow-list projection and never return notes",
-    "GitHub repository must never contain real student scores, passwords or Cloudflare secrets",
-    "Cloud deployment cannot be claimed complete until the external Cloudflare bindings/secrets exist"
+    "GitHub repository must never contain real student scores, passwords or Cloudflare secret values",
+    "Plaintext dashboard variables must never be used for SESSION_SECRET, AUTH_PEPPER or ADMIN_BOOTSTRAP_SECRET",
+    "Do not claim runtime authentication is healthy until production deployment and login/provision checks pass"
   ],
-  "resumeRule": "Read docs/ARCHITECTURE.md, docs/SECURITY.md and this file before changing storage or auth. Do not introduce D1 or R2 into v0.1 without an explicit new decision."
+  "resumeRule": "Read docs/ARCHITECTURE.md, docs/SECURITY.md, docs/DEPLOYMENT.md and this file before continuing. Do not reuse the three old 2026-09-07 secret values. Do not introduce D1 or R2 into v0.1 without an explicit new decision."
 }
