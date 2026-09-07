@@ -141,9 +141,18 @@ function buildSubjectCard(form, key, label, fullScore) {
     rawWrap.querySelector(".exam-control-label").textContent = converted ? "原始分" : "成绩";
   };
   mode.addEventListener("change", syncMode);
+  mode.dataset.examModeBound = "1";
+  mode.syncExamMode = syncMode;
   syncMode();
 
   return card;
+}
+
+function syncSubjectModes(form) {
+  for (const [key] of SUBJECTS) {
+    const mode = controlByName(form, `${key}-mode`);
+    if (mode?.dataset.examModeBound === "1" && typeof mode.syncExamMode === "function") mode.syncExamMode();
+  }
 }
 
 function buildSubjects(form, subjectEditor) {
@@ -200,8 +209,12 @@ function enhanceExamForm(form) {
 
 function scan() {
   const form = document.querySelector("#exam-form");
-  if (form) enhanceExamForm(form);
-  else document.documentElement.classList.remove("exam-dialog-open");
+  if (form) {
+    enhanceExamForm(form);
+    if (form.querySelector(".notice-box")?.textContent?.includes("已恢复本机未同步草稿")) syncSubjectModes(form);
+  } else {
+    document.documentElement.classList.remove("exam-dialog-open");
+  }
 }
 
 const observer = new MutationObserver(scan);
