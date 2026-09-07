@@ -1,0 +1,16 @@
+{
+  "project": "cashen/score",
+  "workstream": "exam-freeze-v017",
+  "targetVersion": "0.1.7",
+  "severity": "T0 interaction freeze",
+  "rootCause": "Global MutationObservers in exam-humanize.js and family-management.js react to broad subtree mutations. After local draft restoration adds a notice, exam-humanize repeatedly re-syncs subject mode UI; text-node rewrites can recursively retrigger the observer and saturate the main thread.",
+  "plan": [
+    "Narrow exam enhancement observation to exam dialog lifecycle instead of every subtree mutation.",
+    "Emit and consume a dedicated draft-restored event so mode synchronization runs exactly when needed.",
+    "Make subject-mode synchronization idempotent so repeated calls do not rewrite unchanged DOM.",
+    "Narrow family-management observation to dashboard/settings lifecycle so exam dialog DOM changes do not trigger settings scans.",
+    "Add regression contract tests for observer scope and draft restoration behavior.",
+    "Bump package/runtime to 0.1.7, require PR CI green, expected-head merge, main CI, Cloudflare deploy and production health attestation."
+  ],
+  "resumeRule": "Resume from the latest exam-freeze-v017 PR head. Do not mix invitation/recovery-account work into this hotfix. Invitation mode is deferred to v0.1.8 after production stability is restored."
+}
