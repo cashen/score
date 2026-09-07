@@ -3,51 +3,58 @@
   "branch": "feat/v020-trajectory-invite-recovery",
   "targetVersion": "0.2.0",
   "releaseMode": "single consolidated release; nothing reaches main until all stages pass",
+  "status": "implementation-complete-final-ci-before-merge",
   "stages": [
     {
       "id": "S1",
       "name": "Exam interaction stability",
-      "mustPassBeforeNext": true,
-      "work": [
-        "Eliminate broad DOM observer loops in exam, draft and family-management enhancements.",
-        "Use explicit draft-restored signaling and idempotent score-mode synchronization.",
-        "Regression-test opening, restoring draft, typing, scrolling, closing and reopening the exam dialog without callback storms."
+      "status": "complete",
+      "evidence": [
+        "Exam/draft lifecycle observers only watch direct body children.",
+        "Family/share/trajectory/onboarding enhancements avoid document-wide subtree observers.",
+        "Draft restoration dispatches score:draft-restored explicitly.",
+        "Score-mode synchronization is idempotent.",
+        "Observer regression tests are in test/observer-stability.test.js."
       ]
     },
     {
       "id": "S2",
-      "name": "Trajectory-first multi-exam analysis",
-      "work": [
-        "Treat rank/percentile trajectory as primary and raw score as supporting evidence.",
-        "For 2+ exams show latest-vs-previous movement, recent trend, subject contributors and comparable-data caveats.",
-        "Do not fake percentile when participant counts are missing; rank-only comparisons remain rank-only.",
-        "Separate single-exam share from trajectory share so users deliberately choose what story is being shared.",
-        "Trajectory share must make multiple exams visually comparable rather than merely list records."
+      "name": "Trajectory-first multi-exam analysis and sharing",
+      "status": "complete",
+      "evidence": [
+        "For 2+ exams the UI answers current position, recent movement, and subject contributors before raw scores.",
+        "Percentile is only used when both rank and participants exist; otherwise comparisons remain rank-only with caveats.",
+        "Share creation explicitly separates single-exam and trajectory scope; a single live share remains pinned to the chosen exam ID.",
+        "Trajectory shares include an interactive chronological exam timeline: past exams are visually distinct from the current exam, desktop click/hover affordances are present, and Android/touch uses horizontal scrolling plus tap selection.",
+        "Selecting a timeline node shows that exam's total score, school/class rank and six subject details.",
+        "Integration and UI-contract tests cover scoped sharing and the timeline contract."
       ]
     },
     {
       "id": "S3",
       "name": "Independent-family invitation and recovery",
-      "work": [
-        "Only the designated bootstrap/owner account can issue one-time independent-family invitations by default.",
-        "Invitation is high-entropy, one-time, expiring, and creates a completely separate family/member/student namespace.",
-        "New family owner sets their own username/password; inviter cannot read that family's grades or private data.",
-        "Issue a one-time recovery code after account creation; store only its hash.",
-        "Forgot-password supports username + recovery code and rotates the recovery code while revoking old sessions.",
-        "If recovery code is lost, inviter can issue a short-lived one-time password-reset link without learning old/new password.",
-        "Record minimal security audit metadata for invitation/recovery issuance and consumption."
+      "status": "complete",
+      "evidence": [
+        "Eligible owner can create an expiring high-entropy invitation for a completely separate family.",
+        "Invitee chooses family name, username, password and first student; invitation-created families cannot recursively invite new families.",
+        "Family isolation is tested: inviter cannot read the invited family's student data.",
+        "Account creation returns a one-time recovery code while KV stores only its hash.",
+        "Username + recovery code resets password, rotates the recovery code and invalidates prior sessions.",
+        "Inviter can issue a 15-minute one-time recovery link only for a family they invited; inviter never receives old/new password.",
+        "Invitation and recovery indexes store minimal issuance/usage metadata."
       ]
     },
     {
       "id": "S4",
       "name": "Full release gate",
-      "work": [
-        "Bump package, lockfile and Worker APP_VERSION to 0.2.0.",
-        "Run syntax, unit, integration, security and UI-contract regression tests.",
-        "Review final PR diff for secrets/privacy/data isolation/performance regressions.",
-        "Mark Ready only when all checks are green, merge with expected head SHA, run main CI, Cloudflare deploy and production health attestation for 0.2.0."
+      "status": "awaiting-final-ci-and-production",
+      "evidence": [
+        "package.json, package-lock.json and Worker APP_VERSION are 0.2.0.",
+        "Worker entrypoint is src/v020.js and onboarding/share v2 routes are wired.",
+        "Latest implementation CI was green before this checkpoint-only commit.",
+        "Next gate: CI for this exact head, Ready, expected_head_sha merge, main CI, Cloudflare deploy, production /api/health appVersion=0.2.0."
       ]
     }
   ],
-  "resumeRule": "Resume from the latest open v0.2.0 PR head and this file. Do not merge a partially completed stage. The old PR #9 is closed and its hotfix commits are already inherited into this branch."
+  "resumeRule": "Resume from PR #10 latest head. Do not modify main directly. If final PR CI is green, mark Ready and merge only with exact expected_head_sha; then require main CI, Cloudflare deploy and production health attestation for 0.2.0 before declaring completion."
 }
