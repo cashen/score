@@ -40,27 +40,19 @@ function v42CompactCoordinate(card) {
   const source = v42CoordinateSource(card);
   const schoolRank = v42CompactRank("校", source.schoolStrong);
   const classRank = v42CompactRank("班", source.classStrong);
-  let primary = "位置未分享";
-  let primaryKind = "none";
+  const metrics = [];
 
-  if (source.schoolPct) {
-    primary = `校${source.schoolPct}`;
-    primaryKind = "school-percentile";
-  } else if (schoolRank) {
-    primary = schoolRank;
-    primaryKind = "school-rank";
-  } else if (classRank) {
-    primary = classRank;
-    primaryKind = "class-rank";
+  if (schoolRank) {
+    metrics.push(source.schoolPct ? `${schoolRank} · ${source.schoolPct}` : schoolRank);
+  } else if (source.schoolPct) {
+    metrics.push(`校${source.schoolPct}`);
   }
+  if (classRank) metrics.push(classRank);
+  if (source.total && source.total !== "—") metrics.push(`${source.total} 分`);
+  if (!metrics.length) metrics.push("位置未分享");
 
-  const meta = [];
-  if (primaryKind === "school-percentile" && schoolRank) meta.push(schoolRank);
-  if (primaryKind !== "class-rank" && classRank) meta.push(classRank);
-  if (source.total && source.total !== "—") meta.push(`${source.total} 分`);
-
-  summary.classList.add("v42-coordinate-compact");
-  summary.innerHTML = `${source.exam ? `<em>${v42Esc(source.exam)}</em>` : ""}<strong>${v42Esc(primary)}</strong>${meta.length ? `<span>${v42Esc(meta.join(" · "))}</span>` : ""}`;
+  summary.classList.add("v42-coordinate-compact", "v44-coordinate-equal");
+  summary.innerHTML = `${source.exam ? `<em>${v42Esc(source.exam)}</em>` : ""}<div class="v44-coordinate-row">${metrics.map((metric) => `<span class="v44-coordinate-item">${v42Esc(metric)}</span>`).join("")}</div>`;
   card.classList.add("v42-current-coordinate");
   card.dataset.v42Coordinate = "1";
 }
