@@ -1,46 +1,53 @@
 # Cloudflare Free 部署
 
-本项目的第一版只依赖 **Workers + Workers KV + Static Assets**，不需要 R2 / D1。
+本项目第一版只依赖 **Workers + Workers KV + Static Assets**，不使用 R2 / D1。
 
-## 1. 创建 KV Namespace
+## 已绑定资源
 
-Cloudflare Dashboard → Workers & Pages → KV，创建：
+`wrangler.toml` 已固定到当前 Cloudflare 账户与 KV namespace：
 
-- `score-production`
-- 可选：`score-preview`
+- Worker: `score-track`
+- Account ID: `f0a06e40a722f0c0f7af4fe8944881e9`
+- KV binding: `SCORE_KV`
+- KV namespace ID: `7341ae0c8a5b43e8a249f5429691b9d0`
 
-记下 namespace id。
+Account ID 与 KV namespace ID 都是资源标识，不是认证凭据。API Token、密码与 Worker Secrets 不得提交仓库。
 
-## 2. 配置 `wrangler.toml`
+## 第一次自动部署
 
-将：
+GitHub 仓库只需要配置一个 Actions secret：
 
-```toml
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
-preview_id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
+- `CLOUDFLARE_API_TOKEN`
+
+路径：GitHub → `cashen/score` → Settings → Secrets and variables → Actions → New repository secret。
+
+Token 建议在 Cloudflare 使用 `Edit Cloudflare Workers` 模板创建，并限制到当前账户。配置完成后，重新运行 Deploy workflow 或推送一次 `main` 即可创建/更新 Worker。
+
+## Worker 运行时 Secrets
+
+Worker 首次部署出来以后，在 Cloudflare Dashboard：
+
+Workers & Pages → `score-track` → Settings → Variables and Secrets
+
+新增以下三个 **Secret**：
+
+- `SESSION_SECRET`
+- `AUTH_PEPPER`
+- `ADMIN_BOOTSTRAP_SECRET`
+
+请分别使用高熵随机值，不要复用 Cloudflare、GitHub 或家庭账号密码。它们只存 Cloudflare，不提交 GitHub。
+
+## 验证部署
+
+部署完成后访问：
+
+```text
+https://<你的 workers.dev 域名>/api/health
 ```
 
-替换为真实 id。若不单独创建 preview namespace，可在本地开发时使用 Wrangler local persistence；正式部署仍必须填写 production id。
+应返回 `ok: true`、应用版本、schemaVersion 与 `storage: workers-kv`。
 
-## 3. 设置 Secrets
-
-```bash
-npx wrangler secret put SESSION_SECRET
-npx wrangler secret put AUTH_PEPPER
-npx wrangler secret put ADMIN_BOOTSTRAP_SECRET
-```
-
-请使用密码管理器生成随机值，不要复用 GitHub/Cloudflare 登录密码。
-
-## 4. 部署
-
-```bash
-npm ci
-npm run verify
-npx wrangler deploy
-```
-
-## 5. 创建第一个家庭账户
+## 创建第一个家庭账户
 
 建户接口只接受 `ADMIN_BOOTSTRAP_SECRET`：
 
@@ -62,18 +69,4 @@ curl -X POST 'https://YOUR-WORKER.workers.dev/api/admin/provision' \
   }'
 ```
 
-建户后建议继续保留管理员 secret 以便人工建第二个家庭；如果仅自己使用，也可以从 Worker 中移除该 secret，使接口返回 404。
-
-## 6. GitHub Actions 自动部署（可选）
-
-仓库 workflow 支持在以下配置存在时，`main` 通过 CI 后自动 deploy：
-
-Repository variables:
-- `CLOUDFLARE_ACCOUNT_ID`
-- `SCORE_KV_NAMESPACE_ID`
-- `SCORE_KV_PREVIEW_NAMESPACE_ID`
-
-Repository secret:
-- `CLOUDFLARE_API_TOKEN`
-
-Worker runtime secrets 仍应通过 `wrangler secret put` 或 Cloudflare Dashboard 设置，不写入 GitHub Actions 配置。
+建户后可以继续保留管理员 Secret 供人工创建其他家庭；如果只创建一次，也可以之后删除 `ADMIN_BOOTSTRAP_SECRET`，此时建户接口会返回 404。
