@@ -1,5 +1,6 @@
 :root {
   --v42-report-max: 960px;
+  --v45-separator: rgba(31, 41, 46, .34);
 }
 
 /* v0.4.2+: cap hierarchy immediately from CSS so weak networks never flash a ranking poster. */
@@ -73,10 +74,22 @@
   min-width: 0;
 }
 
-.v44-coordinate-item + .v44-coordinate-item {
-  margin-left: 14px;
-  padding-left: 14px;
-  border-left: 1px solid var(--line);
+/* v0.4.5: punctuation, not a structural rule. Keep it neutral and quieter than the metrics. */
+@media (min-width: 621px) {
+  .v44-coordinate-item + .v44-coordinate-item {
+    position: relative;
+    margin-left: 26px;
+  }
+
+  .v44-coordinate-item + .v44-coordinate-item::before {
+    content: "·";
+    position: absolute;
+    left: -16px;
+    top: 0;
+    color: var(--v45-separator);
+    font-size: .9em;
+    font-weight: 400;
+  }
 }
 
 .v41-current-coordinate .subject-grid {
@@ -146,12 +159,8 @@
   }
 
   .v44-coordinate-row {
+    column-gap: 12px;
     row-gap: 7px;
-  }
-
-  .v44-coordinate-item + .v44-coordinate-item {
-    margin-left: 10px;
-    padding-left: 10px;
   }
 
   .v41-current-coordinate .subject-grid {
@@ -198,9 +207,8 @@
     font-size: 19px;
   }
 
-  .v44-coordinate-item + .v44-coordinate-item {
-    margin-left: 8px;
-    padding-left: 8px;
+  .v44-coordinate-row {
+    column-gap: 10px;
   }
 
   .v41-current-coordinate .subject-card {
