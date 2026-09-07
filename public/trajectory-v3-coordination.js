@@ -25,6 +25,7 @@ async function v3CoordEnsureComparisonFields() {
   block.className = "v3-comparison-fields";
   block.innerHTML = `<div class="field"><label>可比组（可不填）</label><input name="comparisonSeries" maxlength="60" placeholder="例如 2027届辽宁模考"><small>同一系列考试填写同一个名字，系统会优先在这一组里比较。</small></div><div class="field"><label>考试层级（可不填）</label><select name="comparisonLevel"><option value="">未标注</option>${V3_COORD_LEVELS.map(([value, label]) => `<option value="${value}">${label}</option>`).join("")}</select><small>用于提醒不同口径考试不要机械横比。</small></div>`;
   subjectEditor.insertAdjacentElement("beforebegin", block);
+  form.dataset.v3Comparison = "1";
 
   try {
     v3CoordMe = v3CoordMe || await v3CoordJson("/api/me");
