@@ -1,0 +1,53 @@
+{
+  "project": "cashen/score",
+  "branch": "feat/v020-trajectory-invite-recovery",
+  "targetVersion": "0.2.0",
+  "releaseMode": "single consolidated release; nothing reaches main until all stages pass",
+  "stages": [
+    {
+      "id": "S1",
+      "name": "Exam interaction stability",
+      "mustPassBeforeNext": true,
+      "work": [
+        "Eliminate broad DOM observer loops in exam, draft and family-management enhancements.",
+        "Use explicit draft-restored signaling and idempotent score-mode synchronization.",
+        "Regression-test opening, restoring draft, typing, scrolling, closing and reopening the exam dialog without callback storms."
+      ]
+    },
+    {
+      "id": "S2",
+      "name": "Trajectory-first multi-exam analysis",
+      "work": [
+        "Treat rank/percentile trajectory as primary and raw score as supporting evidence.",
+        "For 2+ exams show latest-vs-previous movement, recent trend, subject contributors and comparable-data caveats.",
+        "Do not fake percentile when participant counts are missing; rank-only comparisons remain rank-only.",
+        "Separate single-exam share from trajectory share so users deliberately choose what story is being shared.",
+        "Trajectory share must make multiple exams visually comparable rather than merely list records."
+      ]
+    },
+    {
+      "id": "S3",
+      "name": "Independent-family invitation and recovery",
+      "work": [
+        "Only the designated bootstrap/owner account can issue one-time independent-family invitations by default.",
+        "Invitation is high-entropy, one-time, expiring, and creates a completely separate family/member/student namespace.",
+        "New family owner sets their own username/password; inviter cannot read that family's grades or private data.",
+        "Issue a one-time recovery code after account creation; store only its hash.",
+        "Forgot-password supports username + recovery code and rotates the recovery code while revoking old sessions.",
+        "If recovery code is lost, inviter can issue a short-lived one-time password-reset link without learning old/new password.",
+        "Record minimal security audit metadata for invitation/recovery issuance and consumption."
+      ]
+    },
+    {
+      "id": "S4",
+      "name": "Full release gate",
+      "work": [
+        "Bump package, lockfile and Worker APP_VERSION to 0.2.0.",
+        "Run syntax, unit, integration, security and UI-contract regression tests.",
+        "Review final PR diff for secrets/privacy/data isolation/performance regressions.",
+        "Mark Ready only when all checks are green, merge with expected head SHA, run main CI, Cloudflare deploy and production health attestation for 0.2.0."
+      ]
+    }
+  ],
+  "resumeRule": "Resume from the latest open v0.2.0 PR head and this file. Do not merge a partially completed stage. The old PR #9 is closed and its hotfix commits are already inherited into this branch."
+}
