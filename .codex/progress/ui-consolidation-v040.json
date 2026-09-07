@@ -1,0 +1,122 @@
+{
+  "project": "cashen/score",
+  "release": "0.4.0",
+  "branch": "feat/ui-consolidation-v040",
+  "base": {
+    "branch": "main",
+    "sha": "9dab7d1d3ff8a03db24163f113dcb5bed98ac105"
+  },
+  "status": "planned",
+  "resume_protocol": [
+    "Fetch latest main SHA and verify whether main moved from the recorded base.",
+    "Fetch PR metadata, exact head SHA, changed files/diff, CI status, and this checkpoint before editing.",
+    "Treat only committed code with passing tests as completed; never infer completion from chat history.",
+    "If main moved, compare and reconcile explicitly; never force-reset or overwrite unverified work.",
+    "Keep all v0.4.0 functional changes on this branch until release gate passes.",
+    "Never reintroduce broad subtree:true MutationObserver patterns or documentElement-wide observers.",
+    "After each completed stage, update this checkpoint with evidence: commit SHA and CI run when available."
+  ],
+  "product_principle": "首页10秒回答：孩子现在在哪 -> 最近有没有变化 -> 变化来自哪里；再进入具体考试/分数。学生不被审判，家长知道要看什么，老师能快速读懂分享。",
+  "stages": {
+    "S0": {
+      "name": "UI baseline and recovery contract",
+      "status": "in_progress",
+      "requirements": [
+        "Create draft PR early and keep this checkpoint authoritative.",
+        "Audit PC/Pad/Android hierarchy from current v0.3.0 code.",
+        "Preserve weak-network stability and existing exam-entry performance fixes."
+      ]
+    },
+    "S1": {
+      "name": "Design-system consolidation",
+      "status": "pending",
+      "requirements": [
+        "Unify radius tokens to small/medium/large, spacing rhythm, typography hierarchy, focus states and button hierarchy.",
+        "Keep current restrained green/neutral palette; do not use red/green as academic judgment.",
+        "One primary action per visual region."
+      ]
+    },
+    "S2": {
+      "name": "Homepage hierarchy",
+      "status": "pending",
+      "requirements": [
+        "Make school-relative position the largest visual datum; total score becomes supporting context.",
+        "First screen order: 现在在哪 -> 最近变化 -> 变化来源 -> 最近考试.",
+        "Remove duplicate overview/trajectory summaries and avoid dashboard-card accumulation."
+      ]
+    },
+    "S3": {
+      "name": "Trajectory information architecture",
+      "status": "pending",
+      "requirements": [
+        "Overview tells what happened; trajectory explains why.",
+        "Keep overall/single-subject/six-subject/time-axis roles distinct.",
+        "On mobile, six-subject scan becomes compact rows rather than six oversized cards.",
+        "Single-subject history remains complete while only category-compatible exams drive trend conclusions."
+      ]
+    },
+    "S4": {
+      "name": "Human exam-entry semantics",
+      "status": "pending",
+      "requirements": [
+        "Use human fields: 考试类型, 考试范围, optional 更多比较信息; hide implementation language such as comparisonSeries from normal users.",
+        "Show 联考位次/人数 inside overall position only when relevant; participants remain optional.",
+        "Retain two subject cards per row on desktop and one per row on tablet/mobile."
+      ]
+    },
+    "S5": {
+      "name": "Sharing flow redesign",
+      "status": "pending",
+      "requirements": [
+        "Default flow: 分享什么 -> 给谁看 -> 隐私摘要 -> 生成并复制链接.",
+        "Presets: family, teacher, custom; advanced field checkboxes collapsed by default.",
+        "Single-exam share stays pinned; trajectory share keeps multidimensional tabs and touchable timeline.",
+        "Family notes/account/member data remain impossible to share."
+      ]
+    },
+    "S6": {
+      "name": "Settings/onboarding simplification",
+      "status": "pending",
+      "requirements": [
+        "Turn settings into task navigation: family members, children, invite new family, account recovery, sharing/privacy.",
+        "Onboarding becomes staged instead of one dense form; recovery code step requires explicit save acknowledgement.",
+        "Do not expose server secrets or admin bootstrap credentials in browser UI."
+      ]
+    },
+    "S7": {
+      "name": "Renderer consolidation and weak-network behavior",
+      "status": "pending",
+      "requirements": [
+        "Reduce post-render patching where safe; stable UI should render correctly once rather than visibly morphing on weak networks.",
+        "Do not sacrifice the v0.3.0 data/API contract or draft recovery.",
+        "No broad DOM observer, no continuous mutation loop, no layout flash that blocks exam entry."
+      ]
+    },
+    "S8": {
+      "name": "Cross-device and accessibility acceptance",
+      "status": "pending",
+      "requirements": [
+        "At 360px: no page-level horizontal scroll, main tap targets >=44px, first screen exposes position + recent change.",
+        "PC: no more than three primary information zones in the first screen; total score must not dominate relative position.",
+        "Sharing should reach a copied link through at most three normal decisions; advanced privacy controls are secondary.",
+        "Keyboard focus-visible, touch scrolling, dialog scrolling, weak-network loading and Android regressions covered."
+      ]
+    }
+  },
+  "release_gate": [
+    "S0-S8 marked completed with repository evidence.",
+    "Version exactly 0.4.0 across package.json, package-lock.json and wrangler.toml.",
+    "npm run verify passes on the final PR head.",
+    "UI contract tests cover hierarchy, share flow, responsive/touch rules, observer performance guard and privacy.",
+    "Final self-review finds no duplicate legacy UI visible beside v0.4 UI.",
+    "PR marked ready only after final head CI success.",
+    "Merge with expected_head_sha; then main CI must pass.",
+    "Cloudflare deploy must checkout the exact tested main SHA.",
+    "Production /api/health must attest appVersion=0.4.0 before declaring completion."
+  ],
+  "last_verified": {
+    "main_sha": "9dab7d1d3ff8a03db24163f113dcb5bed98ac105",
+    "open_prs_before_start": 0,
+    "production_baseline": "0.3.0"
+  }
+}
