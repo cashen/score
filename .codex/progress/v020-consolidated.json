@@ -3,58 +3,15 @@
   "branch": "feat/v020-trajectory-invite-recovery",
   "targetVersion": "0.2.0",
   "releaseMode": "single consolidated release; nothing reaches main until all stages pass",
-  "status": "ready-for-merge",
-  "stages": [
-    {
-      "id": "S1",
-      "name": "Exam interaction stability",
-      "status": "complete",
-      "evidence": [
-        "Exam/draft lifecycle observers only watch direct body children.",
-        "Family/share/trajectory/onboarding enhancements avoid document-wide subtree observers.",
-        "Draft restoration dispatches score:draft-restored explicitly.",
-        "Score-mode synchronization is idempotent.",
-        "Observer regression tests are in test/observer-stability.test.js."
-      ]
-    },
-    {
-      "id": "S2",
-      "name": "Trajectory-first multi-exam analysis and sharing",
-      "status": "complete",
-      "evidence": [
-        "For 2+ exams the UI answers current position, recent movement, and subject contributors before raw scores.",
-        "Percentile is only used when both rank and participants exist; otherwise comparisons remain rank-only with caveats.",
-        "Share creation explicitly separates single-exam and trajectory scope; a single live share remains pinned to the chosen exam ID.",
-        "Trajectory shares include an interactive chronological exam timeline: past exams are visually distinct from the current exam, desktop click/hover affordances are present, and Android/touch uses horizontal scrolling plus tap selection.",
-        "Selecting a timeline node shows that exam's total score, school/class rank and six subject details.",
-        "Integration and UI-contract tests cover scoped sharing and the timeline contract."
-      ]
-    },
-    {
-      "id": "S3",
-      "name": "Independent-family invitation and recovery",
-      "status": "complete",
-      "evidence": [
-        "Eligible owner can create an expiring high-entropy invitation for a completely separate family.",
-        "Invitee chooses family name, username, password and first student; invitation-created families cannot recursively invite new families.",
-        "Family isolation is tested: inviter cannot read the invited family's student data.",
-        "Account creation returns a one-time recovery code while KV stores only its hash.",
-        "Username + recovery code resets password, rotates the recovery code and invalidates prior sessions.",
-        "Inviter can issue a 15-minute one-time recovery link only for a family they invited; inviter never receives old/new password.",
-        "Invitation and recovery indexes store minimal issuance/usage metadata."
-      ]
-    },
-    {
-      "id": "S4",
-      "name": "Full release gate",
-      "status": "pr-ci-green-awaiting-main-production",
-      "evidence": [
-        "package.json, package-lock.json and Worker APP_VERSION are 0.2.0.",
-        "Worker entrypoint is src/v020.js and onboarding/share v2 routes are wired.",
-        "Exact PR head 88ad0183d059f0059671bd8f3bd5babe7b8a0f02 passed CI run 34088618304.",
-        "Next gate: mark Ready, merge with expected_head_sha, require main CI, Cloudflare deploy and production /api/health appVersion=0.2.0."
-      ]
-    }
-  ],
-  "resumeRule": "PR #10 exact head passed CI. Mark Ready and merge only with expected_head_sha; then require main CI, Cloudflare deploy and production health attestation for 0.2.0 before declaring completion."
+  "status": "release-head-frozen",
+  "releaseHead": "01b098211e706a61244637d896b19041aaabe210",
+  "prCiRun": 34088659449,
+  "prCiConclusion": "success",
+  "stages": {
+    "S1": "complete: exam interaction freeze removed; observer storm regression tests green",
+    "S2": "complete: trajectory-first analysis; single vs trajectory sharing; touch/click timeline with current/past distinction",
+    "S3": "complete: independent-family invitation; recovery code; assisted one-time password reset; family isolation",
+    "S4": "PR exact-head CI green; next actions are Ready, expected_head_sha merge, main CI, Cloudflare deploy and production /api/health=0.2.0"
+  },
+  "resumeRule": "Do not create more commits on this PR unless a gate fails. Merge only head 01b098211e706a61244637d896b19041aaabe210 after Ready. After merge, require main CI, deploy success, and production health attestation before completion."
 }
