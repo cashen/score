@@ -60,9 +60,9 @@ test("v0.4.2 enhancement keeps DOM observation narrow", () => {
   assert.doesNotMatch(ui, /document\.documentElement/);
 });
 
-test("release version is exactly 0.4.2 across package lockfile and Worker", () => {
-  assert.equal(pkg.version, "0.4.2");
-  assert.equal(lock.version, "0.4.2");
-  assert.equal(lock.packages[""].version, "0.4.2");
-  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.4\.2"/);
+test("v0.4 typography contract remains within the same runtime family", () => {
+  assert.match(pkg.version, /^0\.4\./);
+  assert.equal(lock.version, pkg.version);
+  assert.equal(lock.packages[""].version, pkg.version);
+  assert.match(wrangler, new RegExp(`APP_VERSION\\s*=\\s*"${pkg.version.replaceAll(".", "\\.")}"`));
 });

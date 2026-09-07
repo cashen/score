@@ -2,7 +2,7 @@
   --v42-report-max: 960px;
 }
 
-/* v0.4.2: cap hierarchy immediately from CSS so weak networks never flash a ranking poster. */
+/* v0.4.2+: cap hierarchy immediately from CSS so weak networks never flash a ranking poster. */
 .public-shell {
   max-width: var(--v42-report-max);
 }
@@ -23,8 +23,13 @@
   line-height: 1.55;
 }
 
+/* Exam context stays on its own line; school rank + class rank + score form one coordinate row. */
 .v41-coordinate-primary {
-  gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 12px;
+  row-gap: 6px;
   margin: 14px 0 12px;
 }
 
@@ -34,6 +39,7 @@
 
 .v41-coordinate-primary > em {
   order: 0;
+  flex: 0 0 100%;
   color: var(--muted);
   font-size: 16px;
   line-height: 1.45;
@@ -41,6 +47,7 @@
 
 .v41-coordinate-primary > strong {
   order: 1;
+  flex: 0 0 auto;
   font-size: clamp(38px, 4.4vw, 44px);
   line-height: 1.05;
   letter-spacing: -.025em;
@@ -49,6 +56,8 @@
 
 .v41-coordinate-primary > span {
   order: 2;
+  flex: 0 1 auto;
+  min-width: 0;
   color: var(--text);
   font-size: 19px;
   line-height: 1.5;
@@ -106,6 +115,8 @@
   }
 
   .v41-coordinate-primary {
+    column-gap: 10px;
+    row-gap: 4px;
     margin: 12px 0 10px;
   }
 
