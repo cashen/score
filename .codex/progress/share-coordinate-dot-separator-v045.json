@@ -1,0 +1,39 @@
+{
+  "project": "cashen/score",
+  "release": "0.4.5",
+  "branch": "feat/share-coordinate-dot-separator-v045",
+  "base_sha": "93b77bb8fd988661eddc3a20f3e5efb3b34d1d09",
+  "status": "sealed",
+  "resume_protocol": [
+    "Fetch latest main SHA, PR exact head, diff, CI and this checkpoint before editing.",
+    "Treat only committed code and passing tests as completed; never infer completion from chat history.",
+    "If main moved, compare/reconcile explicitly; never force-reset or overwrite unverified work."
+  ],
+  "goal": "Replace the equal-weight coordinate row's vertical dividers with restrained neutral-gray middle dots so it reads as one natural sentence-like coordinate: 校第 X 名 · 班第 X 名 · X 分.",
+  "requirements": [
+    "Keep school rank, class rank and total score equal in font size, weight and color.",
+    "Use neutral-gray middle dots, not theme-green separators and not border-left rules.",
+    "Dots are purely punctuation: lower visual emphasis than the coordinate text.",
+    "Preserve exam name/date above the coordinate row.",
+    "Maintain flex-wrap behavior on narrow screens and avoid a separator appearing as the first visible token on a wrapped line.",
+    "No backend/KV/auth/share-token/data-model changes.",
+    "No subtree:true broad MutationObserver.",
+    "Version exactly 0.4.5; final exact-head CI success before expected_head_sha merge; main CI + Cloudflare production attestation required."
+  ],
+  "implementation": [
+    "Removed the v0.4.4 border-left separators from peer coordinate items.",
+    "Added neutral --v45-separator rgba(31,41,46,.34), independent of the green theme line color.",
+    "Desktop/Pad >=621px renders a middle-dot pseudo-element before the second and third coordinate metrics at .9em / weight 400.",
+    "<=620px removes separator punctuation entirely and uses column-gap so a wrapped line never begins with a dot.",
+    "Equal-weight coordinate typography remains unchanged: desktop 24px/650, mobile 20px, <=380px 19px; student name remains larger.",
+    "Worker/API/KV/auth/share token/data model and observer behavior are unchanged."
+  ],
+  "evidence": {
+    "functional_head": "68ff9d18ff0606ec00626c63fe806c7d27033303",
+    "functional_ci_run": 34166254614,
+    "functional_ci_conclusion": "success",
+    "changed_files_before_seal": 7,
+    "release_version": "0.4.5"
+  },
+  "next_gate": "Run CI on this sealed checkpoint commit. Only if that exact head succeeds may PR #18 become Ready and merge with expected_head_sha."
+}
