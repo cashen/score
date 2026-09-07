@@ -1,0 +1,24 @@
+{
+  "project": "cashen/score",
+  "release": "0.4.4",
+  "branch": "feat/share-coordinate-equal-weight-v044",
+  "base_sha": "8971b19ce253d050ed66cd6ca07b072711f18283",
+  "status": "planned",
+  "resume_protocol": [
+    "Fetch latest main SHA, PR exact head, diff, CI and this checkpoint before editing.",
+    "Treat only committed code and passing tests as completed; never infer completion from chat history.",
+    "If main moved, compare/reconcile explicitly; never force-reset or overwrite unverified work."
+  ],
+  "goal": "Render the current exam coordinate values as equal-weight peer metrics: 校第 X 名 | 班第 X 名 | X 分. All share the same font size, weight and color, remain visually smaller than the student name, and wrap naturally on narrow screens.",
+  "requirements": [
+    "School rank, class rank and total score use the same typography and color.",
+    "Coordinate metrics are visually smaller than the student name.",
+    "Use subtle CSS separators rather than making school rank a hero.",
+    "Exam name/date stays on the line above.",
+    "Use flex-wrap; no forced nowrap and no page-level horizontal overflow on 360-430px.",
+    "Preserve optional percentile semantics without elevating one metric over the others.",
+    "No backend/KV/auth/share-token/data-model changes.",
+    "No subtree:true broad MutationObserver.",
+    "Version exactly 0.4.4; final exact-head CI success before expected_head_sha merge; main CI + Cloudflare production attestation required."
+  ]
+}
