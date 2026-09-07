@@ -1,0 +1,22 @@
+{
+  "project": "cashen/score",
+  "release": "0.4.3",
+  "branch": "feat/share-coordinate-row-v043",
+  "base_sha": "b62cce596aeea46b8acda0c1759f1bdc7826e245",
+  "status": "planned",
+  "resume_protocol": [
+    "Fetch latest main SHA, PR exact head, diff, CI and this checkpoint before editing.",
+    "Treat only committed code and passing tests as completed; never infer completion from chat history.",
+    "If main moved, compare/reconcile explicitly; never force-reset or overwrite unverified work."
+  ],
+  "goal": "Keep exam context on the line above, then render school rank, class rank and total score as one compact coordinate row using flex-wrap. Desktop/Pad should usually stay on one line; narrow phones may wrap naturally without overflow.",
+  "requirements": [
+    "Coordinate line reads: 校第 7 名　班第 1 名 · 509.5 分.",
+    "Use flex + wrap, not a hard-coded desktop/mobile line break.",
+    "School rank remains primary but no giant typography regression.",
+    "No page-level horizontal scrolling on 360-430px widths.",
+    "No backend/KV/auth/share-token/data-model changes.",
+    "No subtree:true broad MutationObserver.",
+    "Version exactly 0.4.3; final exact-head CI success before expected_head_sha merge; main CI + Cloudflare production attestation required."
+  ]
+}
