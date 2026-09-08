@@ -16,7 +16,8 @@
     "S3-subject-view",
     "S4-full-timeline-detail",
     "S5-sharing-views",
-    "S6-responsive-accessibility"
+    "S6-responsive-accessibility",
+    "S7-final-verify-pr-main-production"
   ],
   "inProgress": null,
   "pending": [],
@@ -61,7 +62,7 @@
     ]
   },
   "lastFailure": null,
-  "verifiedAt": "2026-09-08T22:38:09.469Z",
+  "verifiedAt": "2026-09-08T22:54:30Z",
   "recoveryRule": [
     "Read this checkpoint before every continuation.",
     "Re-read live main, PR head and checks before any retry.",
