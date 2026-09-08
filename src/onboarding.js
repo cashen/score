@@ -210,7 +210,8 @@ async function handleInviteAccept(request, env, rawToken) {
     subjectTrack: safeText(body.student?.subjectTrack, 50) || "物化生",
     createdAt,
     updatedAt: createdAt,
-    deletedAt: null
+    deletedAt: null,
+    archivedAt: null
   };
 
   // KV is not transactional. Write complete objects before exposing the username mapping.

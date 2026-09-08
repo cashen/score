@@ -595,3 +595,14 @@ summary:focus-visible,
   .subject-history > summary,
   .subject-advanced > summary { min-height: 44px; }
 }
+.entry-stepper { display: flex; gap: 8px; margin: 12px 0 4px; color: var(--v50-muted); font-size: 12px; }
+.entry-stepper span { flex: 1; padding: 8px 10px; border-bottom: 2px solid var(--v50-line); }
+.entry-stepper span.is-active { color: var(--v50-text); border-color: var(--v50-accent); font-weight: 700; }
+.entry-navigation { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0; }
+.entry-navigation [data-entry-hint] { flex: 1; color: var(--v50-muted); font-size: 12px; text-align: center; }
+.trash-section { margin-top: 20px; }
+.trash-list { display: grid; gap: 8px; }
+.trash-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px dashed var(--v50-line); border-radius: 10px; }
+.trash-row small { display: block; color: var(--v50-muted); margin-top: 3px; }
+.recovery-required { max-width: 460px; }
+.recovery-ack { display: flex; gap: 8px; margin-top: 12px; font-size: 13px; }

@@ -67,7 +67,7 @@ export function normalizeRankings(rankings) {
   return rankings.slice(0, 8).map((item) => {
     const rank = integerOrNull(item?.rank, 1);
     const participants = integerOrNull(item?.participants, 1);
-    if (rank != null && participants != null && rank > participants) throw new Error("排名不能大于参与人数");
+    if (rank != null && participants != null && rank > participants) throw Object.assign(new Error("排名不能大于参与人数"), { code: "rank_exceeds_participants", field: "rank" });
     return {
       scope: safeText(item?.scope, 32) || "school",
       label: safeText(item?.label, 60),
@@ -83,7 +83,7 @@ export function normalizeSubject(value = {}) {
   const fullScore = numberOrNull(value.fullScore, 1, 1000);
   const rawScore = numberOrNull(value.rawScore, 0, 1000);
   const finalScore = numberOrNull(value.finalScore, 0, 1000);
-  if (fullScore != null && rawScore != null && rawScore > fullScore) throw new Error("原始分不能高于满分");
+  if (fullScore != null && rawScore != null && rawScore > fullScore) throw Object.assign(new Error("原始分不能高于满分"), { code: "score_exceeds_full", field: "rawScore" });
   return { scoreMode, fullScore, rawScore, finalScore, rankings: normalizeRankings(value.rankings) };
 }
 
@@ -98,7 +98,7 @@ export function normalizeExam(input, existing = null) {
   const subjects = {};
   for (const subject of SUBJECTS) subjects[subject] = normalizeSubject(input.subjects?.[subject] || {});
   const date = safeText(input.date, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) throw new Error("考试日期无效");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) throw Object.assign(new Error("考试日期无效"), { code: "invalid_exam_date", field: "date" });
   const type = EXAM_TYPES.has(input.type) ? input.type : "other";
   const officialScore = numberOrNull(input.overall?.officialScore, 0, 2000);
   const calculatedScore = SUBJECTS.reduce((sum, key) => {
@@ -143,7 +143,11 @@ export const DEFAULT_SHARE_FIELDS = Object.freeze({
   overallRank: true,
   subjectScores: true,
   subjectRanks: true,
-  history: true
+  history: true,
+  examStatus: false,
+  comparisonContext: false,
+  status: false,
+  comparison: false
 });
 
 export function normalizeShareFields(input = {}) {
@@ -177,10 +181,10 @@ export function publicProjection(student, exams, fields) {
       id: exam.id,
       name: exam.name,
       date: exam.date,
-      type: exam.type,
-      status: exam.status,
-      comparison: exam.comparison ? { series: exam.comparison.series || null, level: exam.comparison.level || null } : null
+      type: exam.type
     };
+    if (fields.examStatus || fields.status) projected.status = exam.status || "normal";
+    if (fields.comparisonContext || fields.comparison) projected.comparison = exam.comparison ? { series: exam.comparison.series || null, level: exam.comparison.level || null } : null;
     if (fields.overallScore) projected.overallScore = exam.overall?.officialScore ?? exam.overall?.calculatedScore ?? null;
     if (fields.overallRank) projected.overallRankings = exam.overall?.rankings || [];
     if (fields.subjectScores || fields.subjectRanks) {
