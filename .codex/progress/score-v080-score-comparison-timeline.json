@@ -3,26 +3,32 @@
   "repository": "cashen/score",
   "branch": "feat/score-v080-score-comparison-timeline",
   "baseSha": "28ad0dd0a04b7b08119e17a9ee45bce363e36933",
-  "headSha": "28ad0dd0a04b7b08119e17a9ee45bce363e36933",
-  "pr": null,
+  "headSha": "543bea6ae081f4d7bfa4c0887df67281f47384f6",
+  "pr": 22,
   "version": "0.8.0",
   "completed": [
     "S0-live-baseline",
     "S0-branch",
-    "S0-plan-written"
-  ],
-  "inProgress": "S1-comparison-contract",
-  "pending": [
+    "S0-plan-written",
     "S1-comparison-contract",
     "S2-total-view",
     "S3-subject-view",
     "S4-full-timeline-detail",
     "S5-sharing-views",
-    "S6-responsive-accessibility",
+    "S6-responsive-accessibility"
+  ],
+  "inProgress": "S7-final-verify-pr-main-production",
+  "pending": [
     "S7-final-verify-pr-main-production"
   ],
   "verification": {
-    "localVerify": null,
+    "localVerify": {
+      "command": "npm ci && npm run verify",
+      "tests": 104,
+      "pass": 104,
+      "fail": 0,
+      "verifiedAt": "2026-09-08T22:53:00Z"
+    },
     "exactHeadCi": null,
     "mainCi": null,
     "productionHealth": null
