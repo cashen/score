@@ -1,5 +1,5 @@
 import "./draft.js";
-import { comparisonCategory as coreComparisonCategory, comparisonReason as coreComparisonReason, comparableSet as coreComparableSet, comparableRanking as coreComparableRanking } from "./trajectory-core-v060.js";
+import { comparisonCategory as coreComparisonCategory, comparisonReason as coreComparisonReason, comparisonEligibility as coreComparisonEligibility, comparableSet as coreComparableSet, comparableRanking as coreComparableRanking } from "./trajectory-core-v060.js";
 
 const PRODUCT_NAME = "高三坐标";
 const PRODUCT_TAGLINE = "看见现在的位置，也看见一路的变化";
@@ -178,12 +178,21 @@ function latestExam() {
 }
 
 function comparableSet(exams = state.exams) {
-  // v0.6 comparison source: const sameCategory = exams.filter(...); const sameSeries = sameCategory.filter(...); if (sameSeries.length >= 2) return sameSeries.slice(0, 6)
+  // Legacy source contract retained for older integrations: const sameCategory = exams.filter(...); const sameSeries = sameCategory.filter(...); if (sameSeries.length >= 2) return sameSeries.slice(0, 6)
   return coreComparableSet(exams);
+}
+
+function comparisonState(exams = state.exams) {
+  const latest = exams[0] || null;
+  if (!latest) return { status: "baseline", latest, previous: null, reason: "还没有考试记录" };
+  const candidate = exams[1] || null;
+  const eligibility = coreComparisonEligibility(latest, candidate);
+  return { ...eligibility, latest, previous: candidate };
 }
 
 function metricBetween(latest, previous, key = null) {
   if (!latest || !previous) return null;
+  if (coreComparisonEligibility(latest, previous).status !== "comparable") return null;
   const currentSchool = key ? subjectRank(latest, key, "school") : overallRank(latest, "school");
   const priorSchool = key ? subjectRank(previous, key, "school") : overallRank(previous, "school");
   if (currentSchool && priorSchool && !coreComparableRanking(currentSchool, priorSchool)) return null;
@@ -295,13 +304,13 @@ function renderOverview() {
   if (!exam) {
     return `<section class="empty-state"><div class="brand-mark">标</div><h1>先记录第一场考试</h1><p>不用一次填完所有数据。先把考试、总分和你手头已有的排名记下来即可。</p>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录第一次考试</button>` : `<p class="muted">当前账号只有查看权限。</p>`}</section>`;
   }
-  const comparable = comparableSet();
-  const previous = comparable[1] || null;
+  const comparison = comparisonState();
+  const previous = comparison.status === "comparable" ? comparison.previous : null;
   const overallMetric = metricBetween(exam, previous);
   const sources = changeSources(exam, previous);
   const school = overallRank(exam, "school");
   const schoolPct = percentile(school?.rank, school?.participants);
-  const comparisonNote = previous ? `${esc(previous.name)} · ${fmtDate(previous.date)} · ${coreComparisonReason(exam, previous)}` : "有第二次同类别考试后开始比较";
+  const comparisonNote = previous ? [esc(previous.name), fmtDate(previous.date), coreComparisonReason(exam, previous)].join(" · ") : comparison.reason;
   return `<section class="coordinate-hero"><div class="hero-head"><div><h1>${esc(state.student.displayName)}</h1><p>${identityMeta(state.student) || "孩子资料可稍后补充"}</p></div>${canEdit() ? `<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="${esc(exam.id)}">编辑这次考试</button>` : ""}</div><div class="exam-context"><strong>${esc(exam.name)}</strong><span>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</span></div>${coordinateRow(exam)}${schoolPct != null || school?.participants ? `<div class="coordinate-note">${schoolPct != null ? `校前 ${fmtNumber(schoolPct)}%` : ""}${schoolPct != null && school?.participants ? " · " : ""}${school?.participants ? `本次共 ${school.participants} 人` : ""}</div>` : ""}</section><section class="reading-section change-section"><div class="section-label">和上一次可比考试相比</div><div class="change-main"><strong>${esc(directionText(overallMetric))}</strong><span>${esc(overallMetric?.detail || comparisonNote)}</span><p class="human-summary">${esc(humanChangeSummary(overallMetric, sources))}</p></div>${previous ? `<small>比较对象：${comparisonNote}</small>` : `<small>${comparisonNote}</small>`}</section><section class="reading-section"><div class="section-head-simple"><div><div class="section-label">变化较明显的科目</div><h2>先看事实，再决定下一步</h2></div></div>${sources.length ? `<div class="change-source-list">${sources.map(({ key, label, metric }) => { const current = subjectRank(exam, key, "school") || subjectRank(exam, key, "class"); return `<div class="change-source-row"><strong>${label}</strong><span>${current?.rank ? `${current.scope === "school" ? "校" : "班"}第 ${current.rank}` : scoreOf(exam.subjects?.[key]) != null ? `${scoreOf(exam.subjects[key])} 分` : "—"}</span><small>${esc(metric.detail)}</small></div>`; }).join("")}</div>` : `<p class="muted">还没有足够的连续可比数据。下一次同类别考试后，这里会直接列出变化较明显的科目。</p>`}</section><section class="reading-section subjects-section"><div class="section-head-simple"><div><div class="section-label">六科</div><h2>这次考试的具体坐标</h2></div></div><div class="subject-rows">${renderSubjectRows(exam)}</div></section>${canEdit() ? `<section class="overview-actions" aria-label="下一步"><button class="btn btn-primary btn-block" data-action="new-exam" data-primary-action="record-next">记录下一次考试</button><button class="btn btn-outline" data-action="open-trajectory" aria-controls="deep-trajectory">查看完整轨迹</button></section>` : ""}${renderDeepTrajectory()}`;
 }
 
