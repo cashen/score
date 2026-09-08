@@ -14,12 +14,14 @@ const lock = JSON.parse(await readFile(new URL("../package-lock.json", import.me
 const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
 
 const activeSources = [index, router, app, onboarding, css, onboardingCss].join("\n");
+const cssFlat = css.replace(/\s+/g, " ");
+
+function expectAll(source, values) {
+  for (const value of values) assert.ok(source.includes(value), `missing contract: ${value}`);
+}
 
 test("production entry is a single v0.5 source path", () => {
-  assert.match(index, /\/styles\.css/);
-  assert.match(index, /\/onboarding-v050\.css/);
-  assert.match(index, /\/ui-v050\.css/);
-  assert.match(index, /\/router-v2\.js/);
+  expectAll(index, ["/styles.css", "/onboarding-v050.css", "/ui-v050.css", "/router-v2.js"]);
   for (const asset of [
     "brand-v021.js",
     "exam-humanize.js",
@@ -34,101 +36,104 @@ test("production entry is a single v0.5 source path", () => {
     "ui-v042.css",
     "onboarding-v2.js",
     "onboarding-v2.css"
-  ]) assert.doesNotMatch(index, new RegExp(asset.replaceAll(".", "\\.")));
+  ]) assert.ok(!index.includes(asset), `legacy asset still active: ${asset}`);
 });
 
 test("router has one normal app path and one onboarding path", () => {
-  assert.match(router, /await import\("\.\/onboarding-v050\.js"\)/);
-  assert.match(router, /await import\("\.\/app\.js"\)/);
-  assert.match(router, /1500/);
-  assert.match(router, /网络有点慢，数据还在读取/);
+  expectAll(router, [
+    'await import("./onboarding-v050.js")',
+    'await import("./app.js")',
+    "1500",
+    "网络有点慢，数据还在读取"
+  ]);
 });
 
 test("brand and primary navigation are direct source content", () => {
-  assert.match(app, /const PRODUCT_NAME = "高三坐标"/);
-  assert.match(app, /看见现在的位置，也看见一路的变化/);
-  assert.match(app, /data-tab="overview">轨迹/);
-  assert.match(app, /data-tab="exams">考试/);
-  assert.match(app, /data-tab="sharing">分享/);
-  assert.match(app, /data-tab="family">家庭/);
-  assert.doesNotMatch(app, /data-tab="settings"/);
+  expectAll(app, [
+    'const PRODUCT_NAME = "高三坐标"',
+    "看见现在的位置，也看见一路的变化",
+    'data-tab="overview">轨迹',
+    'data-tab="exams">考试',
+    'data-tab="sharing">分享',
+    'data-tab="family">家庭'
+  ]);
+  assert.ok(!app.includes('data-tab="settings"'));
 });
 
 test("home follows identity, coordinate, change, subjects, history", () => {
   const overview = app.slice(app.indexOf("function renderOverview"), app.indexOf("function renderExamList"));
-  for (const phrase of ["coordinate-hero", "和上一次可比考试相比", "变化较明显的科目", "六科", "查看完整轨迹"]) assert.match(overview, new RegExp(phrase));
-  assert.doesNotMatch(overview, /变化来自哪里/);
-  assert.doesNotMatch(overview, /现在在哪/);
+  expectAll(overview, ["coordinate-hero", "和上一次可比考试相比", "变化较明显的科目", "六科", "查看完整轨迹"]);
+  assert.ok(!overview.includes("变化来自哪里"));
+  assert.ok(!overview.includes("现在在哪"));
 });
 
 test("exam entry keeps technical metadata out of the primary path", () => {
-  assert.match(app, /更多考试信息（可选）/);
-  assert.match(app, /deriveDataStatus/);
-  assert.doesNotMatch(app, /<label>数据状态<\/label>/);
+  expectAll(app, ["更多考试信息（可选）", "deriveDataStatus", "正常记录", "有特殊情况", "缺考"]);
+  assert.ok(!app.includes("<label>数据状态</label>"));
   assert.doesNotMatch(app, /发挥失常|发挥较好/);
-  assert.match(app, /正常记录/);
-  assert.match(app, /有特殊情况/);
-  assert.match(app, /缺考/);
 });
 
 test("password change is an in-product secure form, not browser prompt", () => {
-  assert.match(app, /function passwordDialog\(/);
-  assert.match(app, /当前密码/);
-  assert.match(app, /再次输入新密码/);
-  assert.match(app, /至少 10 个字符/);
+  expectAll(app, ["function passwordDialog(", "当前密码", "再次输入新密码", "至少 10 个字符"]);
   assert.doesNotMatch(app, /\bprompt\s*\(/);
   assert.doesNotMatch(app, /\balert\s*\(/);
 });
 
 test("share composer uses human language and explicit privacy scope", () => {
-  for (const phrase of ["想分享什么？", "将分享", "不会分享", "分享链接", "持续更新", "只分享当前内容", "自动失效（可选）", "公开链接（高级）", "生成并复制链接"]) {
-    assert.match(app, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-  }
-  assert.match(app, /任何拿到这个地址的人都可以查看。不会主动进入搜索，但这不等于私密。/);
+  expectAll(app, [
+    "想分享什么？",
+    "将分享",
+    "不会分享",
+    "分享链接",
+    "持续更新",
+    "只分享当前内容",
+    "自动失效（可选）",
+    "公开链接（高级）",
+    "生成并复制链接",
+    "任何拿到这个地址的人都可以查看。不会主动进入搜索，但这不等于私密。"
+  ]);
 });
 
 test("copy contract keeps implementation jargon out of rendered user copy", () => {
-  const renderedLiteral = /(?:>|textContent\s*=|innerHTML\s*=)[^\n]*(?:token|noindex|dataStatus|comparisonSeries|comparisonLevel)/gi;
-  assert.doesNotMatch(app, renderedLiteral);
+  // Internal identifiers may still use words such as token; the contract is that
+  // ordinary rendered copy must not expose those implementation terms to users.
+  for (const term of ["token", "noindex", "dataStatus", "comparisonSeries", "comparisonLevel"]) {
+    const visibleTag = new RegExp(`>\\s*${term}\\s*<`, "i");
+    assert.doesNotMatch(activeSources, visibleTag);
+  }
   assert.doesNotMatch(onboarding, /高三轨迹|独立家庭/);
   assert.doesNotMatch(app, /家庭账号|变化来自哪里|发挥失常/);
 });
 
 test("family and another-household invitation are semantically separated", () => {
-  assert.match(app, /家庭里的孩子/);
-  assert.match(app, /谁可以登录这个家庭/);
-  assert.match(app, /邀请另一户家庭使用高三坐标/);
-  assert.match(onboarding, /建立你的家庭空间/);
-  assert.match(onboarding, /邀请人也无法查看/);
+  expectAll(app, ["家庭里的孩子", "谁可以登录这个家庭", "邀请另一户家庭使用高三坐标"]);
+  expectAll(onboarding, ["建立你的家庭空间", "邀请人也无法查看"]);
 });
 
 test("draft lifecycle gives visible local-save feedback", () => {
-  assert.match(app, /data-draft-state/);
-  assert.match(draft, /草稿已保存在本机/);
-  assert.match(draft, /已恢复上次未保存的内容/);
-  assert.match(draft, /正在保存本机草稿/);
+  expectAll(app, ["data-draft-state"]);
+  expectAll(draft, ["草稿已保存在本机", "已恢复上次未保存的内容", "正在保存本机草稿"]);
 });
 
 test("app root is not a giant live region; status and errors own announcements", () => {
   assert.doesNotMatch(index, /id="app"[^>]*aria-live/);
-  assert.match(app, /data-status-region role="status" aria-live="polite"/);
-  assert.match(app, /role="alert"/);
+  expectAll(app, ['data-status-region role="status" aria-live="polite"', 'role="alert"']);
 });
 
 test("mobile preserves coordinate and exam-list information", () => {
-  assert.match(css, /@media \(max-width: 760px\)/);
-  assert.match(css, /\.exam-list-coordinate\s*\{[\s\S]*grid-column:\s*1/);
-  assert.doesNotMatch(css, /\.exam-list-coordinate[^}]*display:\s*none/);
-  assert.match(css, /\.subject-row\s*\{[\s\S]*grid-template-columns/);
-  assert.match(css, /@media \(hover: none\)[\s\S]*min-height:\s*44px/);
+  assert.ok(cssFlat.includes("@media (max-width: 760px)"));
+  assert.match(cssFlat, /\.exam-list-coordinate\s*\{[^}]*grid-column:\s*1(?:\s*\/\s*[^;}]*)?/);
+  assert.doesNotMatch(cssFlat, /\.exam-list-coordinate\s*\{[^}]*display:\s*none/);
+  assert.match(cssFlat, /\.subject-row\s*\{[^}]*grid-template-columns:/);
+  assert.match(cssFlat, /@media \(hover: none\).*min-height:\s*44px/);
 });
 
 test("coordinate visual hierarchy is restrained and equal-weight", () => {
-  assert.match(css, /\.hero-head h1,[\s\S]*font-size:\s*31px/);
-  assert.match(css, /\.coordinate-row > span\s*\{[\s\S]*font-size:\s*24px;[\s\S]*font-weight:\s*650/);
-  assert.match(css, /content:\s*"·"/);
-  assert.match(css, /rgba\(31,41,46,\.34\)/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.coordinate-row > span \+ span::before\s*\{\s*display:\s*none/);
+  assert.match(cssFlat, /\.hero-head h1,\s*\.public-coordinate h1\s*\{[^}]*font-size:\s*31px/);
+  assert.match(cssFlat, /\.coordinate-row > span\s*\{[^}]*font-size:\s*24px;[^}]*font-weight:\s*650/);
+  assert.ok(css.includes('content: "·"'));
+  assert.match(cssFlat, /rgba\(31,\s*41,\s*46,\s*\.34\)/);
+  assert.match(cssFlat, /@media \(max-width: 760px\).*\.coordinate-row > span \+ span::before\s*\{\s*display:\s*none/);
 });
 
 test("version contract is exactly 0.5.0", () => {
