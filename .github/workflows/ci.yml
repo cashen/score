@@ -15,23 +15,4 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Run verify with diagnostic capture
-        id: verify
-        shell: bash
-        run: |
-          set +e
-          npm run verify > verify-output.txt 2>&1
-          status=$?
-          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
-          cat verify-output.txt
-          exit 0
-      - name: Upload verify diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: verify-output
-          path: verify-output.txt
-          if-no-files-found: error
-      - name: Preserve verify failure
-        if: steps.verify.outputs.exit_code != '0'
-        run: exit 1
+      - run: npm run verify
