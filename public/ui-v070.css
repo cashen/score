@@ -128,6 +128,12 @@ summary:focus-visible,
 .change-section { border-color: #dbe4f2; background: var(--v70-change); }
 .section-label { color: var(--v70-muted); }
 .change-main strong { letter-spacing: -.02em; }
+.human-summary {
+  margin: 9px 0 0;
+  color: var(--v70-text);
+  font-size: 15px;
+  line-height: 1.55;
+}
 
 .overview-actions {
   display: grid;
@@ -158,6 +164,24 @@ summary:focus-visible,
 .change-source-row small { color: var(--v70-muted); }
 .deep-trajectory { border-color: var(--v70-line); border-radius: var(--v70-radius-md); }
 .deep-trajectory > summary { min-height: 54px; }
+.trajectory-boundary-note {
+  margin: 0 0 14px;
+  padding: 9px 11px;
+  border-radius: var(--v70-radius-sm);
+  background: #f7fafc;
+  color: var(--v70-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.share-summary {
+  border-color: #dfe7ed;
+  background: #f8fafc;
+}
+.share-summary > div + div { border-top: 1px solid var(--v70-line); padding-top: 8px; }
+.share-scope > label { transition: border-color 160ms ease, background-color 160ms ease; }
+.share-scope > label:has(input:checked) { border-color: #c5d7ef; background: var(--v70-action-soft); }
+.public-advanced,
+.admin-advanced { border-color: var(--v70-line); }
 
 .btn {
   transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
@@ -167,6 +191,40 @@ summary:focus-visible,
 .btn-primary:hover { filter: none; background: #2b57b9; }
 
 .empty-state .brand-mark { background: #254f75; }
+
+.dialog-backdrop {
+  background: rgba(15, 24, 30, .46);
+  animation: v70-scrim-in 180ms ease-out both;
+}
+.dialog {
+  box-shadow: 0 -12px 34px rgba(15, 29, 40, .14);
+  animation: v70-dialog-in 220ms ease-out both;
+}
+.entry-stepper span { transition: color 160ms ease, border-color 160ms ease; }
+.entry-stepper span.is-active { color: var(--v70-action); border-color: var(--v70-action); }
+.entry-navigation [data-entry-hint] { line-height: 1.45; }
+.draft-state {
+  padding: 8px 10px;
+  border: 1px solid #e1e8ee;
+  border-radius: var(--v70-radius-sm);
+  background: #f7fafc;
+  color: var(--v70-muted);
+  line-height: 1.45;
+}
+.error-box,
+.notice-box {
+  border: 1px solid transparent;
+}
+.error-box { border-color: #f0d4d4; }
+.notice-box { border-color: #f0e2bd; }
+.trash-row {
+  border-style: solid;
+  border-color: #e7e1d2;
+  background: #fffdf8;
+}
+
+@keyframes v70-scrim-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes v70-dialog-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 760px) {
   .container { padding: 14px 12px 92px; }
@@ -229,6 +287,8 @@ summary:focus-visible,
   .tab:active,
   .btn:active,
   .overview-actions .btn-primary:active { transform: none; }
+  .dialog-backdrop,
+  .dialog { animation: none; }
 }
 
 @media (prefers-reduced-transparency: reduce) {
