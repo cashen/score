@@ -34,3 +34,31 @@ test("plan keeps the UI refresh bounded to existing product contracts", () => {
   assert.match(plan, /S1 — 视觉基础与隐私信号/);
   assert.match(plan, /S5 — 版本、全量验证、PR 与生产验收/);
 });
+
+test("overview has one clear next action without changing comparison semantics", () => {
+  assert.match(app, /function humanChangeSummary\(/);
+  assert.match(app, /class="overview-actions"/);
+  assert.match(app, /data-primary-action="record-next"/);
+  assert.match(app, /记录下一次考试/);
+  assert.match(app, /id="deep-trajectory"/);
+  assert.match(app, /data-action="open-trajectory"/);
+  assert.doesNotMatch(app, /能力提高|能力下降|保证录取/);
+});
+
+test("entry errors speak in subject names and preserve recovery cues", () => {
+  assert.match(app, /for \(const \[key, label\] of SUBJECTS\)/);
+  assert.match(app, /\$\{label\}原始分不能高于/);
+  assert.match(app, /\$\{label\}的\$\{scope === "school" \? "学校" : "班级"\}排名不能大于参与人数/);
+  assert.match(app, /草稿会自动保存在本机/);
+  assert.match(css, /\.draft-state\s*\{/);
+  assert.match(css, /\.trash-row\s*\{/);
+});
+
+test("sharing and trajectory explain their boundaries before details", () => {
+  assert.match(app, /将分享/);
+  assert.match(app, /不会分享/);
+  assert.match(app, /默认只分享一场/);
+  assert.match(app, /只有同类别、口径一致的考试会用于变化结论/);
+  assert.match(css, /\.trajectory-boundary-note\s*\{/);
+  assert.match(css, /\.share-summary\s*\{/);
+});
