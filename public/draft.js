@@ -1,6 +1,6 @@
 const DB_NAME = "score-local-drafts";
 const STORE = "drafts";
-const VERSION = 1;
+const VERSION = 2;
 let activeForm = null;
 let activeKey = null;
 let timer = null;
@@ -52,14 +52,19 @@ function setDraftState(form, text) {
 }
 
 function studentKey() {
-  const select = document.querySelector("#student-select");
-  if (select?.value) return select.value;
-  const heading = document.querySelector(".coordinate-hero h1")?.textContent?.trim();
-  return heading || "default";
+  const familyId = document.body?.dataset?.familyId || "unknown-family";
+  const studentId = document.body?.dataset?.studentId || document.querySelector("#student-select")?.value || "unknown-student";
+  const memberId = document.body?.dataset?.memberId || "unknown-member";
+  return `${familyId}:${studentId}:${memberId}`;
 }
 
-function isNewExamForm(form) {
-  return form?.id === "exam-form" && form.querySelector(".dialog-head h2")?.textContent?.includes("记录一次考试");
+function draftKey(form) {
+  const id = form?.dataset?.examId;
+  return `${id ? "exam-edit" : "exam-new"}:${studentKey()}:${id || "new"}`;
+}
+
+function isExamForm(form) {
+  return form?.id === "exam-form";
 }
 
 function serialize(form) {
@@ -83,9 +88,9 @@ function apply(form, draft) {
 }
 
 async function attach(form) {
-  if (!isNewExamForm(form) || form === activeForm) return;
+  if (!isExamForm(form) || form === activeForm) return;
   activeForm = form;
-  activeKey = `exam-new:${studentKey()}`;
+  activeKey = draftKey(form);
   try { apply(form, await readDraft(activeKey)); } catch {}
   const save = () => {
     clearTimeout(timer);

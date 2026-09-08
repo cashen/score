@@ -80,8 +80,11 @@ function requireCsrf(request, session) {
 
 async function requireStudent(env, member, studentId, write = false) {
   const student = await getJson(env, `student:${studentId}`);
-  if (!student || student.deletedAt || student.familyId !== member.familyId) {
+  if (!student || student.familyId !== member.familyId || (student.deletedAt && !write)) {
     throw Object.assign(new Error("找不到孩子资料"), { status: 404, code: "student_not_found" });
+  }
+  if (write && student.archivedAt && member.role !== "owner") {
+    throw Object.assign(new Error("该孩子资料已归档，只有家庭管理员可以恢复"), { status: 403, code: "student_archived" });
   }
   if (write && member.role === "viewer") {
     throw Object.assign(new Error("当前账号只有查看权限"), { status: 403, code: "read_only" });
@@ -90,21 +93,35 @@ async function requireStudent(env, member, studentId, write = false) {
 }
 
 async function loadExamIndex(env, studentId) {
-  return (await getJson(env, `exam-index:${studentId}`)) || { studentId, items: [], updatedAt: null };
+  const legacy = (await getJson(env, `exam-index:${studentId}`)) || { studentId, items: [], updatedAt: null };
+  if (typeof env.SCORE_KV.list !== "function") return legacy;
+  try {
+    const listed = await env.SCORE_KV.list({ prefix: `exam-summary:${studentId}:`, limit: MAX_EXAMS });
+    const summaries = await Promise.all((listed?.keys || []).map((key) => getJson(env, key.name)));
+    const items = summaries.filter(Boolean);
+    if (items.length) {
+      items.sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.updatedAt).localeCompare(String(a.updatedAt)));
+      return { studentId, items: items.slice(0, MAX_EXAMS), updatedAt: now() };
+    }
+  } catch {
+    // Local test KV and older bindings may not implement list; retain the legacy index.
+  }
+  return legacy;
 }
 
 async function saveExamIndex(env, studentId, items) {
   const normalized = items
-    .slice(0, MAX_EXAMS)
     .sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.updatedAt).localeCompare(String(a.updatedAt)));
-  await putJson(env, `exam-index:${studentId}`, { studentId, items: normalized, updatedAt: now() });
+  const bounded = normalized.slice(0, MAX_EXAMS);
+  await Promise.all(bounded.map((item) => putJson(env, `exam-summary:${studentId}:${item.id}`, item)));
+  await putJson(env, `exam-index:${studentId}`, { studentId, items: bounded, updatedAt: now() });
 }
 
 async function loadExams(env, studentId, { latestOnly = false } = {}) {
   const index = await loadExamIndex(env, studentId);
   const items = latestOnly ? index.items.slice(0, 1) : index.items.slice(0, MAX_EXAMS);
   const exams = await Promise.all(items.map((item) => getJson(env, `exam:${studentId}:${item.id}`)));
-  return exams.filter(Boolean);
+  return exams.filter((exam) => exam && !exam.deletedAt);
 }
 
 function examSummary(exam) {
@@ -171,6 +188,8 @@ async function handleAdminProvision(request, env) {
     username,
     role: "owner",
     password: passwordRecord,
+    recoveryCodeHash: null,
+    recoveryRequired: true,
     sessionVersion: 1,
     createdAt,
     disabledAt: null
@@ -195,7 +214,8 @@ async function handleAdminProvision(request, env) {
     subjectTrack: safeText(body.student?.subjectTrack, 50) || "物化生",
     createdAt,
     updatedAt: createdAt,
-    deletedAt: null
+    deletedAt: null,
+    archivedAt: null
   };
 
   await putJson(env, uKey, { memberId });
@@ -236,6 +256,7 @@ async function handleMe(request, env, session) {
     sessionExpiresAt: new Date(session.payload.exp).toISOString(),
     appVersion: env.APP_VERSION || "dev",
     schemaVersion: Number(env.SCHEMA_VERSION) || 1
+    ,recoveryReady: Boolean(session.member.recoveryCodeHash)
   });
 }
 
@@ -267,6 +288,7 @@ async function handleLogoutAll(request, env, session) {
 async function handleProfilePatch(request, env, session, studentId) {
   requireCsrf(request, session);
   const student = await requireStudent(env, session.member, studentId, true);
+  if (student.archivedAt) return errorJson("该孩子资料已归档，恢复后才能创建分享", 409, "student_archived");
   const body = await readJson(request);
   const updated = {
     ...student,
@@ -291,6 +313,7 @@ async function handleExamList(env, member, studentId) {
 async function handleExamCreate(request, env, session, studentId) {
   requireCsrf(request, session);
   const student = await requireStudent(env, session.member, studentId, true);
+  if (student.archivedAt) return errorJson("该孩子资料已归档，恢复后才能继续录入", 409, "student_archived");
   const body = await readJson(request);
   const input = { ...body, context: { schoolLabel: student.schoolLabel, classLabel: student.className, grade: student.grade, ...body.context } };
   const exam = normalizeExam(input);
@@ -302,9 +325,11 @@ async function handleExamCreate(request, env, session, studentId) {
 
 async function handleExamUpdate(request, env, session, studentId, examId) {
   requireCsrf(request, session);
-  await requireStudent(env, session.member, studentId, true);
+  const student = await requireStudent(env, session.member, studentId, true);
+  if (student.archivedAt) return errorJson("该孩子资料已归档，恢复后才能修改", 409, "student_archived");
   const existing = await getJson(env, `exam:${studentId}:${examId}`);
   if (!existing) return errorJson("考试记录不存在", 404, "exam_not_found");
+  if (existing.deletedAt) return errorJson("这条考试已在回收站，请使用撤销删除", 410, "exam_in_trash");
   const body = await readJson(request);
   assertRevision(body, existing);
   const exam = normalizeExam({ ...body, id: examId }, existing);
@@ -317,16 +342,59 @@ async function handleExamUpdate(request, env, session, studentId, examId) {
 
 async function handleExamDelete(request, env, session, studentId, examId) {
   requireCsrf(request, session);
-  await requireStudent(env, session.member, studentId, true);
+  const student = await requireStudent(env, session.member, studentId, true);
+  if (student.archivedAt) return errorJson("该孩子资料已归档，恢复后才能删除", 409, "student_archived");
   const existing = await getJson(env, `exam:${studentId}:${examId}`);
   if (!existing) return errorJson("考试记录不存在", 404, "exam_not_found");
   const body = await readJson(request);
   assertRevision(body, existing);
-  await putJson(env, `exam-history:${studentId}:${examId}:r${existing.revision}`, { ...existing, deletedAt: now() });
-  await env.SCORE_KV.delete(`exam:${studentId}:${examId}`);
+  const deletedAt = now();
+  await putJson(env, `exam-history:${studentId}:${examId}:r${existing.revision}`, { ...existing, deletedAt });
+  const deleted = { ...existing, deletedAt, deletedBy: session.member.id, updatedAt: deletedAt, revision: existing.revision + 1 };
+  await putJson(env, `exam:${studentId}:${examId}`, deleted);
   const index = await loadExamIndex(env, studentId);
-  await saveExamIndex(env, studentId, index.items.filter((item) => item.id !== examId));
-  return json({ ok: true });
+  await saveExamIndex(env, studentId, [examSummary(deleted), ...index.items.filter((item) => item.id !== examId)]);
+  return json({ ok: true, undoUntil: new Date(Date.now() + 15 * 60 * 1000).toISOString() });
+}
+
+async function handleExamTrash(env, member, studentId) {
+  await requireStudent(env, member, studentId, false);
+  const index = await loadExamIndex(env, studentId);
+  const exams = await Promise.all((index.items || []).map((item) => getJson(env, `exam:${studentId}:${item.id}`)));
+  return json({ exams: exams.filter((exam) => exam?.deletedAt).sort((a, b) => String(b.deletedAt).localeCompare(String(a.deletedAt))) });
+}
+
+async function handleExamRestore(request, env, session, studentId, examId) {
+  requireCsrf(request, session);
+  await requireStudent(env, session.member, studentId, true);
+  const existing = await getJson(env, `exam:${studentId}:${examId}`);
+  if (!existing?.deletedAt) return errorJson("回收站中没有这条考试", 404, "exam_not_in_trash");
+  const body = await readJson(request);
+  assertRevision(body, existing);
+  const restored = { ...existing, deletedAt: null, deletedBy: null, updatedAt: now(), revision: existing.revision + 1 };
+  await putJson(env, `exam:${studentId}:${examId}`, restored);
+  const index = await loadExamIndex(env, studentId);
+  await saveExamIndex(env, studentId, [examSummary(restored), ...index.items.filter((item) => item.id !== examId)]);
+  return json({ exam: restored });
+}
+
+async function handleStudentLifecycle(request, env, session, studentId) {
+  requireCsrf(request, session);
+  if (session.member.role !== "owner") throw Object.assign(new Error("只有家庭管理员可以归档资料"), { status: 403, code: "owner_required" });
+  const student = await requireStudent(env, session.member, studentId, true);
+  const body = await readJson(request);
+  const archived = Boolean(body.archived);
+  const updated = { ...student, archivedAt: archived ? (student.archivedAt || now()) : null, updatedAt: now() };
+  await putJson(env, `student:${studentId}`, updated);
+  if (archived) {
+    const shares = await getShareIndex(env, studentId);
+    await Promise.all((shares.items || []).map(async (item) => {
+      const key = `share:${item.kind}:${item.kind === "secret" ? item.locator : item.locator}`;
+      await env.SCORE_KV.delete(key);
+    }));
+    await putJson(env, shareIndexKey(studentId), { studentId, items: [] });
+  }
+  return json({ student: updated, archived });
 }
 
 async function handleExport(env, member, studentId) {
@@ -334,6 +402,22 @@ async function handleExport(env, member, studentId) {
   const family = await getJson(env, `family:${member.familyId}`);
   const exams = await loadExams(env, studentId);
   return json({ exportedAt: now(), schemaVersion: 1, family: { id: family?.id, displayName: family?.displayName }, student, exams });
+}
+
+async function handleFamilyExport(env, member) {
+  if (member.role !== "owner") throw Object.assign(new Error("只有家庭管理员可以导出全家庭数据"), { status: 403, code: "owner_required" });
+  const family = await getJson(env, `family:${member.familyId}`);
+  if (!family) return errorJson("家庭资料不存在", 404, "family_not_found");
+  const students = (await Promise.all((family.studentIds || []).map((id) => getJson(env, `student:${id}`)))).filter(Boolean);
+  const exams = [];
+  const shares = [];
+  for (const student of students) exams.push(...await loadExams(env, student.id), ...await (async () => {
+    const index = await loadExamIndex(env, student.id);
+    const all = await Promise.all((index.items || []).map((item) => getJson(env, `exam:${student.id}:${item.id}`)));
+    return all.filter((exam) => exam?.deletedAt);
+  })());
+  for (const student of students) shares.push(...((await getShareIndex(env, student.id)).items || []).map((share) => ({ ...share, studentId: student.id })));
+  return json({ exportedAt: now(), schemaVersion: 1, family: { id: family.id, displayName: family.displayName }, students, exams, shares, members: (await Promise.all((family.memberIds || []).map((id) => getJson(env, `member:${id}`)))).filter(Boolean).map((m) => ({ id: m.id, username: m.username, role: m.role, createdAt: m.createdAt, disabledAt: m.disabledAt || null })) });
 }
 
 async function handleShareList(env, member, studentId) {
@@ -406,7 +490,7 @@ async function routeApi(request, env) {
   const path = url.pathname;
 
   if (request.method === "GET" && path === "/api/health") {
-    return json({ ok: true, appVersion: env.APP_VERSION || "dev", schemaVersion: Number(env.SCHEMA_VERSION) || 1, storage: "workers-kv" });
+    return json({ ok: true, appVersion: env.APP_VERSION || "dev", buildSha: env.BUILD_SHA || null, schemaVersion: Number(env.SCHEMA_VERSION) || 1, storage: "workers-kv" });
   }
   if (request.method === "POST" && path === "/api/admin/provision") return handleAdminProvision(request, env);
   if (request.method === "POST" && path === "/api/login") return handleLogin(request, env);
@@ -423,6 +507,7 @@ async function routeApi(request, env) {
   if (request.method === "GET" && path === "/api/me") return handleMe(request, env, session);
   if (request.method === "POST" && path === "/api/me/password") return handleChangePassword(request, env, session);
   if (request.method === "POST" && path === "/api/me/logout-all") return handleLogoutAll(request, env, session);
+  if (request.method === "GET" && path === "/api/family/export") return handleFamilyExport(env, session.member);
 
   if ((request.method === "GET" || request.method === "POST") && path === "/api/family/members") {
     const response = await handleFamilyMembers(request, env, session);
@@ -434,10 +519,16 @@ async function routeApi(request, env) {
 
   const profileMatch = path.match(/^\/api\/students\/([^/]+)\/profile$/);
   if (request.method === "PATCH" && profileMatch) return handleProfilePatch(request, env, session, profileMatch[1]);
+  const lifecycleMatch = path.match(/^\/api\/students\/([^/]+)\/lifecycle$/);
+  if (request.method === "PATCH" && lifecycleMatch) return handleStudentLifecycle(request, env, session, lifecycleMatch[1]);
 
   const examsMatch = path.match(/^\/api\/students\/([^/]+)\/exams$/);
   if (examsMatch && request.method === "GET") return handleExamList(env, session.member, examsMatch[1]);
   if (examsMatch && request.method === "POST") return handleExamCreate(request, env, session, examsMatch[1]);
+  const trashMatch = path.match(/^\/api\/students\/([^/]+)\/exams\/trash$/);
+  if (trashMatch && request.method === "GET") return handleExamTrash(env, session.member, trashMatch[1]);
+  const restoreMatch = path.match(/^\/api\/students\/([^/]+)\/exams\/([^/]+)\/restore$/);
+  if (restoreMatch && request.method === "POST") return handleExamRestore(request, env, session, restoreMatch[1], restoreMatch[2]);
 
   const examMatch = path.match(/^\/api\/students\/([^/]+)\/exams\/([^/]+)$/);
   if (examMatch && request.method === "PUT") return handleExamUpdate(request, env, session, examMatch[1], examMatch[2]);
@@ -466,7 +557,7 @@ export default {
       return withSecurity(asset, { noStore: isSensitiveShell });
     } catch (error) {
       const status = error?.status || 400;
-      const response = errorJson(error?.message || "请求处理失败", status, error?.code || "request_failed");
+      const response = errorJson(error?.message || "请求处理失败", status, error?.code || "request_failed", error?.field || null);
       if (error?.current) {
         const payload = await response.json();
         return withSecurity(json({ ...payload, current: error.current }, status), { noStore: true });

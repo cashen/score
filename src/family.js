@@ -60,6 +60,7 @@ function memberSummary(member, currentMemberId) {
     role: member.role,
     createdAt: member.createdAt,
     disabledAt: member.disabledAt || null,
+    recoveryReady: Boolean(member.recoveryCodeHash),
     isCurrent: member.id === currentMemberId
   };
 }
@@ -93,7 +94,8 @@ function newStudent(familyId, input = {}) {
     subjectTrack: safeText(input.subjectTrack, 50) || "物化生",
     createdAt,
     updatedAt: createdAt,
-    deletedAt: null
+    deletedAt: null,
+    archivedAt: null
   };
 }
 
@@ -130,6 +132,8 @@ export async function handleFamilyMembers(request, env, session) {
     username,
     role,
     password: await hashPassword(password, env.AUTH_PEPPER, iterations),
+    recoveryCodeHash: null,
+    recoveryRequired: true,
     sessionVersion: 1,
     createdAt: now(),
     disabledAt: null

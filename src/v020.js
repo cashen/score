@@ -52,7 +52,7 @@ export default {
 
       return baseWorker.fetch(request, env, ctx);
     } catch (error) {
-      return withSecurity(errorJson(error?.message || "请求处理失败", error?.status || 400, error?.code || "request_failed"), { noStore: true });
+      return withSecurity(errorJson(error?.message || "请求处理失败", error?.status || 400, error?.code || "request_failed", error?.field || null), { noStore: true });
     }
   }
 };

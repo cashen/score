@@ -105,7 +105,7 @@ test("comparison metadata can be deliberately cleared and is safe in public proj
   input.comparison = { series: "2027届辽宁模考", level: "province" };
   const exam = normalizeExam(input);
   const student = { displayName: "小王", graduationYear: 2027 };
-  const projection = publicProjection(student, [exam], normalizeShareFields({ school: false, className: false }));
+  const projection = publicProjection(student, [exam], normalizeShareFields({ school: false, className: false, comparisonContext: true }));
   assert.deepEqual(projection.exams[0].comparison, { series: "2027届辽宁模考", level: "province" });
   assert.equal("notes" in projection.exams[0], false);
 

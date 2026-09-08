@@ -1,0 +1,31 @@
+{
+  "task": "score-v060-trust-recovery-trajectory",
+  "repository": "cashen/score",
+  "branch": "feat/score-v060-trust-recovery-trajectory",
+  "baseSha": "c22871767f810f6810458799d0ab926a30cab615",
+  "headSha": "978ae10d5ef60758d4db2b04c0f25d8a43406d73",
+  "pr": null,
+  "version": "0.6.0",
+  "status": "in_progress",
+  "completed": ["S0-baseline", "S0-branch", "S0-checkpoint", "S1-trust-recovery", "S2-share-allowlist", "S3-comparison-integrity", "S4-lightweight-entry", "S5-trash-restore", "S6-trajectory-archive", "S7-family-backup", "S8-kv-index-safety", "S9-tests-release-gate"],
+  "inProgress": "S10-pr-main-production",
+  "pending": [
+    "S10-pr-main-production"
+  ],
+  "verification": {
+    "localVerify": "PASS: npm run verify (86 tests, 0 failures) at 978ae10d5ef60758d4db2b04c0f25d8a43406d73",
+    "exactHeadCi": null,
+    "mainCi": null,
+    "productionHealth": null,
+    "productionBuildSha": null
+  },
+  "lastFailure": null,
+  "verifiedAt": "2026-09-08T00:00:00Z",
+  "recoveryRule": [
+    "Read this checkpoint before every continuation.",
+    "Re-fetch and compare current main, branch head, PR head and checks before retrying writes.",
+    "Only committed code with matching green checks counts as complete.",
+    "Never reset or overwrite user changes.",
+    "Do not merge until the final exact head is green and production is attested."
+  ]
+}

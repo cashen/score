@@ -5,6 +5,9 @@ on:
     types: [completed]
 permissions:
   contents: read
+concurrency:
+  group: score-deploy-main
+  cancel-in-progress: true
 jobs:
   deploy:
     if: >-
@@ -67,7 +70,7 @@ jobs:
           NODE
           trap 'rm -f .runtime-secrets.json' EXIT
 
-          npx --yes wrangler@4 deploy --keep-vars --secrets-file .runtime-secrets.json
+          npx --yes wrangler@4 deploy --keep-vars --secrets-file .runtime-secrets.json --var BUILD_SHA:${TESTED_SHA}
 
           node <<'NODE'
           const expected = process.env.EXPECTED_VERSION;
@@ -88,7 +91,7 @@ jobs:
               const payload = await response.json();
               last = JSON.stringify(payload);
               console.log(`Production attestation ${attempt}/30: HTTP ${response.status}, appVersion=${payload.appVersion ?? 'missing'}, expected=${expected}`);
-              if (response.ok && payload.ok === true && payload.appVersion === expected) {
+              if (response.ok && payload.ok === true && payload.appVersion === expected && payload.buildSha === sha) {
                 console.log(`Production version attested: ${expected}`);
                 process.exit(0);
               }

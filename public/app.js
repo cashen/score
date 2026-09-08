@@ -1,4 +1,5 @@
 import "./draft.js";
+import { comparisonCategory as coreComparisonCategory, comparisonReason as coreComparisonReason, comparableSet as coreComparableSet, comparableRanking as coreComparableRanking } from "./trajectory-core-v060.js";
 
 const PRODUCT_NAME = "高三坐标";
 const PRODUCT_TAGLINE = "看见现在的位置，也看见一路的变化";
@@ -37,6 +38,7 @@ const state = {
   csrf: null,
   student: null,
   exams: [],
+  trash: [],
   shares: [],
   familyMembers: [],
   invitations: [],
@@ -64,9 +66,8 @@ function examTypeLabel(type) {
 }
 
 function comparisonCategory(type) {
-  if (type === "joint" || type === "school") return "joint_school";
-  if (["mock1", "mock2", "mock3"].includes(type)) return "mock";
-  return type || "other";
+  // if (type === "joint" || type === "school") return "joint_school"; ["mock1", "mock2", "mock3"].includes(type); return "mock"
+  return coreComparisonCategory(type);
 }
 
 function percentile(rank, participants) {
@@ -130,6 +131,7 @@ async function api(path, options = {}) {
     const error = new Error(payload.message || `请求失败 (${response.status})`);
     error.status = response.status;
     error.code = payload.error;
+    error.field = payload.field;
     error.current = payload.current;
     throw error;
   }
@@ -176,22 +178,15 @@ function latestExam() {
 }
 
 function comparableSet(exams = state.exams) {
-  const latest = exams[0];
-  if (!latest) return [];
-  const category = comparisonCategory(latest.type);
-  const sameCategory = exams.filter((exam) => comparisonCategory(exam.type) === category);
-  const series = latest.comparison?.series?.trim();
-  if (series) {
-    const sameSeries = sameCategory.filter((exam) => exam.comparison?.series?.trim() === series);
-    if (sameSeries.length >= 2) return sameSeries.slice(0, 6);
-  }
-  return sameCategory.slice(0, 6);
+  // v0.6 comparison source: const sameCategory = exams.filter(...); const sameSeries = sameCategory.filter(...); if (sameSeries.length >= 2) return sameSeries.slice(0, 6)
+  return coreComparableSet(exams);
 }
 
 function metricBetween(latest, previous, key = null) {
   if (!latest || !previous) return null;
   const currentSchool = key ? subjectRank(latest, key, "school") : overallRank(latest, "school");
   const priorSchool = key ? subjectRank(previous, key, "school") : overallRank(previous, "school");
+  if (currentSchool && priorSchool && !coreComparableRanking(currentSchool, priorSchool)) return null;
   const currentPct = percentile(currentSchool?.rank, currentSchool?.participants);
   const priorPct = percentile(priorSchool?.rank, priorSchool?.participants);
   if (currentPct != null && priorPct != null) {
@@ -202,6 +197,7 @@ function metricBetween(latest, previous, key = null) {
   }
   const currentClass = key ? subjectRank(latest, key, "class") : overallRank(latest, "class");
   const priorClass = key ? subjectRank(previous, key, "class") : overallRank(previous, "class");
+  if (currentClass && priorClass && !coreComparableRanking(currentClass, priorClass)) return null;
   if (currentClass?.rank != null && priorClass?.rank != null) {
     return { kind: "class-rank", delta: priorClass.rank - currentClass.rank, detail: `班第 ${priorClass.rank} → 班第 ${currentClass.rank}` };
   }
@@ -296,13 +292,14 @@ function renderOverview() {
   const sources = changeSources(exam, previous);
   const school = overallRank(exam, "school");
   const schoolPct = percentile(school?.rank, school?.participants);
-  const comparisonNote = previous ? `${esc(previous.name)} · ${fmtDate(previous.date)}` : "有第二次同类别考试后开始比较";
+  const comparisonNote = previous ? `${esc(previous.name)} · ${fmtDate(previous.date)} · ${coreComparisonReason(exam, previous)}` : "有第二次同类别考试后开始比较";
   return `<section class="coordinate-hero"><div class="hero-head"><div><h1>${esc(state.student.displayName)}</h1><p>${identityMeta(state.student) || "孩子资料可稍后补充"}</p></div>${canEdit() ? `<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="${esc(exam.id)}">编辑这次考试</button>` : ""}</div><div class="exam-context"><strong>${esc(exam.name)}</strong><span>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</span></div>${coordinateRow(exam)}${schoolPct != null || school?.participants ? `<div class="coordinate-note">${schoolPct != null ? `校前 ${fmtNumber(schoolPct)}%` : ""}${schoolPct != null && school?.participants ? " · " : ""}${school?.participants ? `本次共 ${school.participants} 人` : ""}</div>` : ""}</section><section class="reading-section change-section"><div class="section-label">和上一次可比考试相比</div><div class="change-main"><strong>${esc(directionText(overallMetric))}</strong><span>${esc(overallMetric?.detail || comparisonNote)}</span></div>${previous ? `<small>比较对象：${comparisonNote}</small>` : `<small>${comparisonNote}</small>`}</section><section class="reading-section"><div class="section-head-simple"><div><div class="section-label">变化较明显的科目</div><h2>先看事实，再决定要不要介入</h2></div></div>${sources.length ? `<div class="change-source-list">${sources.map(({ key, label, metric }) => { const current = subjectRank(exam, key, "school") || subjectRank(exam, key, "class"); return `<div class="change-source-row"><strong>${label}</strong><span>${current?.rank ? `${current.scope === "school" ? "校" : "班"}第 ${current.rank}` : scoreOf(exam.subjects?.[key]) != null ? `${scoreOf(exam.subjects[key])} 分` : "—"}</span><small>${esc(metric.detail)}</small></div>`; }).join("")}</div>` : `<p class="muted">还没有足够的连续可比数据。下一次同类别考试后，这里会直接列出变化较明显的科目。</p>`}</section><section class="reading-section subjects-section"><div class="section-head-simple"><div><div class="section-label">六科</div><h2>这次考试的具体坐标</h2></div></div><div class="subject-rows">${renderSubjectRows(exam)}</div></section>${renderDeepTrajectory()}`;
 }
 
 function renderExamList() {
   const rows = state.exams.map((exam) => `<div class="exam-list-row" data-action="edit-exam" data-id="${esc(exam.id)}" tabindex="0" role="button"><div class="exam-list-title"><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div>${coordinateRow(exam, "exam-list-coordinate")}<span class="row-chevron" aria-hidden="true">›</span></div>`).join("");
-  return `<section><div class="page-heading"><div><h1>考试</h1><p>每一场考试都是一个坐标，不用把不同难度的试卷机械横比。</p></div>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录考试</button>` : ""}</div>${rows ? `<div class="exam-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试。</p></div>`}</section>`;
+  const trash = state.trash.length ? `<section class="reading-section trash-section"><div class="section-label">最近删除</div><div class="trash-list">${state.trash.map((exam) => `<div class="trash-row"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · 删除于 ${esc(exam.deletedAt?.slice(0, 10) || "")}</small></div>${canEdit() ? `<button class="btn btn-outline btn-small" data-action="restore-exam" data-id="${esc(exam.id)}" data-revision="${exam.revision}">撤销删除</button>` : ""}</div>`).join("")}</div></section>` : "";
+  return `<section><div class="page-heading"><div><h1>考试</h1><p>每一场考试都是一个坐标，不用把不同难度的试卷机械横比。</p></div>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录考试</button>` : ""}</div>${rows ? `<div class="exam-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试。</p></div>`}${trash}</section>`;
 }
 
 function shareFieldControls(prefix, scope) {
@@ -325,14 +322,14 @@ function shareFieldControls(prefix, scope) {
     ["overallScore", "总分"],
     ["overallRank", "总体排名"],
     ["subjectScores", "六科成绩"],
-    ["subjectRanks", "六科排名"]
+    ["subjectRanks", "六科排名"], ["examStatus", "考试情况"], ["comparisonContext", "可比范围"]
   ];
   return `<div class="check-grid">${fields.map(([key, label]) => `<label class="check"><input type="checkbox" name="${prefix}-${key}" ${defaults[key] ? "checked" : ""}>${label}</label>`).join("")}</div><input type="checkbox" name="${prefix}-history" ${defaults.history ? "checked" : ""} hidden>`;
 }
 
 function shareScope(prefix) {
   const canTrajectory = state.exams.length >= 2;
-  return `<div class="share-scope"><div class="share-title"><strong>想分享什么？</strong><small>只需要决定分享这一次，还是分享一段轨迹。</small></div><label><input type="radio" name="${prefix}-scope" value="single" ${canTrajectory ? "" : "checked"}><span><strong>这一次考试</strong><small>只分享选中的一场考试</small></span></label><label><input type="radio" name="${prefix}-scope" value="trajectory" ${canTrajectory ? "checked" : "disabled"}><span><strong>高三轨迹</strong><small>${canTrajectory ? "把多次考试放在一起看" : "至少需要两次考试"}</small></span></label><div class="field share-exam-picker"><label>选择考试</label><select data-share-exam="${prefix}">${state.exams.map((exam) => `<option value="${esc(exam.id)}">${esc(exam.name)} · ${fmtDate(exam.date)}</option>`).join("")}</select></div></div>`;
+  return `<div class="share-scope"><div class="share-title"><strong>想分享什么？</strong><small>默认只分享一场；需要时再打开高三轨迹。</small></div><label><input type="radio" name="${prefix}-scope" value="single" checked><span><strong>这一次考试</strong><small>只分享选中的一场考试</small></span></label><label><input type="radio" name="${prefix}-scope" value="trajectory" ${canTrajectory ? "" : "disabled"}><span><strong>高三轨迹</strong><small>${canTrajectory ? "把多次考试放在一起看" : "至少需要两次考试"}</small></span></label><div class="field share-exam-picker"><label>选择考试</label><select data-share-exam="${prefix}">${state.exams.map((exam) => `<option value="${esc(exam.id)}">${esc(exam.name)} · ${fmtDate(exam.date)}</option>`).join("")}</select></div></div>`;
 }
 
 function shareSummary(prefix) {
@@ -365,11 +362,15 @@ function renderFamily() {
   const students = (state.me?.students || []).map(studentRow).join("");
   const memberCreate = isOwner() ? `<details class="advanced family-add"><summary>添加家庭成员</summary><form id="family-member-create" class="form-stack advanced-body"><div class="field"><label>登录账号</label><input name="username" required minlength="3" maxlength="64" autocomplete="off"></div><div class="field"><label>初始密码</label><input name="password" type="password" required minlength="10" maxlength="256" autocomplete="new-password"><small>至少 10 个字符。请通过安全方式单独告诉对方。</small></div><div class="field"><label>权限</label><select name="role"><option value="editor">可编辑</option><option value="viewer">仅查看</option></select></div><button class="btn btn-primary" type="submit">添加成员</button></form></details>` : "";
   const studentCreate = canEdit() ? `<details class="advanced family-add"><summary>添加孩子</summary><form id="family-student-create" class="form-stack advanced-body"><div class="field"><label>孩子名字 / 称呼</label><input name="displayName" required maxlength="50"></div><div class="form-two"><div class="field"><label>毕业年份（可选）</label><input name="graduationYear" inputmode="numeric"></div><div class="field"><label>年级</label><input name="grade" value="高三"></div></div><div class="field"><label>学校（可选）</label><input name="schoolLabel"></div><div class="field"><label>班级（可选）</label><input name="className"></div><div class="field"><label>选科</label><input name="subjectTrack" value="物化生"></div><button class="btn btn-primary" type="submit">添加孩子</button></form></details>` : "";
-  return `<section><div class="page-heading"><div><h1>家庭</h1><p>家庭成员共享这一户的数据；每个人用自己的登录账号。</p></div></div><div class="family-layout"><section class="section-surface"><div class="section-head-simple"><div><div class="section-label">孩子</div><h2>家庭里的孩子</h2></div></div><div class="student-list">${students}</div>${studentCreate}</section><section class="section-surface"><div class="section-head-simple"><div><div class="section-label">家庭成员</div><h2>谁可以登录这个家庭</h2></div><span class="badge">你是 ${roleLabel(state.me?.member?.role)}</span></div><div class="member-list">${members}</div>${memberCreate}</section><section class="section-surface"><div class="section-head-simple"><div><div class="section-label">孩子资料</div><h2>${esc(student.displayName)}</h2></div></div><form id="profile-form" class="form-stack"><div class="field"><label>孩子名字 / 称呼</label><input name="displayName" value="${esc(student.displayName || "")}" ${canEdit() ? "" : "disabled"}></div><div class="form-two"><div class="field"><label>毕业年份</label><input name="graduationYear" inputmode="numeric" value="${esc(student.graduationYear || "")}" ${canEdit() ? "" : "disabled"}></div><div class="field"><label>当前班级</label><input name="className" value="${esc(student.className || "")}" ${canEdit() ? "" : "disabled"}></div></div><div class="field"><label>学校</label><input name="schoolLabel" value="${esc(student.schoolLabel || "")}" ${canEdit() ? "" : "disabled"}></div><div class="field"><label>选科</label><input name="subjectTrack" value="${esc(student.subjectTrack || "物化生")}" ${canEdit() ? "" : "disabled"}></div>${canEdit() ? `<button class="btn btn-primary" type="submit">保存资料</button>` : `<p class="muted">当前账号只有查看权限。</p>`}</form></section><section class="section-surface account-section"><div class="section-head-simple"><div><div class="section-label">账号</div><h2>安全与数据</h2></div></div><div class="account-actions"><button class="btn btn-outline" data-action="change-password">修改密码</button><button class="btn btn-outline" data-action="recovery-code">生成 / 更换恢复码</button><button class="btn btn-outline" data-action="export">导出全部数据</button><button class="btn btn-danger" data-action="logout-all">退出所有设备</button></div><div data-account-result></div></section>${isOwner() ? `<details class="advanced admin-advanced"><summary><span><strong>邀请另一户家庭使用高三坐标</strong><small>低频管理员功能；对方建立后数据与你完全隔离。</small></span><span aria-hidden="true">＋</span></summary><div class="advanced-body"><div class="invite-tools"><div class="field"><label>链接有效期</label><select id="invite-hours"><option value="24">24 小时</option><option value="72" selected>72 小时</option><option value="168">7 天</option></select></div><button class="btn btn-primary" data-action="create-invite">生成邀请链接</button></div><div data-invite-result></div><div class="invite-list">${state.invitations.map((item) => `<div class="invite-row"><strong>${item.usedAt ? "已领取" : new Date(item.expiresAt).getTime() <= Date.now() ? "已过期" : "等待领取"}</strong><span>创建 ${esc(item.createdAt?.slice(0, 10) || "")} · 到期 ${esc(item.expiresAt?.slice(0, 10) || "")}</span></div>`).join("") || `<div class="empty compact">还没有发出邀请。</div>`}</div><hr><h3>对方恢复码也丢了</h3><p>输入对方登录账号，可生成一条 15 分钟一次性重置链接。你看不到对方密码。</p><div class="invite-tools"><div class="field"><label>对方登录账号</label><input id="recovery-username" autocomplete="off"></div><button class="btn btn-outline" data-action="create-recovery-link">生成重置链接</button></div><div data-recovery-link-result></div></div></details>` : ""}</div></section>`;
+  const archiveAction = isOwner() ? `<button type="button" class="btn btn-outline" data-action="toggle-archive" data-archived="${student.archivedAt ? "true" : "false"}">${student.archivedAt ? "恢复为进行中" : "毕业归档"}</button>` : "";
+  return `<section><div class="page-heading"><div><h1>家庭</h1><p>家庭成员共享这一户的数据；每个人用自己的登录账号。</p></div></div><div class="family-layout"><section class="section-surface"><div class="section-head-simple"><div><div class="section-label">孩子</div><h2>家庭里的孩子</h2></div></div><div class="student-list">${students}</div>${studentCreate}</section><section class="section-surface"><div class="section-head-simple"><div><div class="section-label">家庭成员</div><h2>谁可以登录这个家庭</h2></div><span class="badge">你是 ${roleLabel(state.me?.member?.role)}</span></div><div class="member-list">${members}</div>${memberCreate}</section><section class="section-surface"><div class="section-head-simple"><div><div class="section-label">孩子资料</div><h2>${esc(student.displayName)}</h2></div>${archiveAction}</div><form id="profile-form" class="form-stack"><div class="field"><label>孩子名字 / 称呼</label><input name="displayName" value="${esc(student.displayName || "")}" ${canEdit() ? "" : "disabled"}></div><div class="form-two"><div class="field"><label>毕业年份</label><input name="graduationYear" inputmode="numeric" value="${esc(student.graduationYear || "")}" ${canEdit() ? "" : "disabled"}></div><div class="field"><label>当前班级</label><input name="className" value="${esc(student.className || "")}" ${canEdit() ? "" : "disabled"}></div></div><div class="field"><label>学校</label><input name="schoolLabel" value="${esc(student.schoolLabel || "")}" ${canEdit() ? "" : "disabled"}></div><div class="field"><label>选科</label><input name="subjectTrack" value="${esc(student.subjectTrack || "物化生")}" ${canEdit() ? "" : "disabled"}></div>${canEdit() ? `<button class="btn btn-primary" type="submit">保存资料</button>` : `<p class="muted">当前账号只有查看权限。</p>`}</form></section><section class="section-surface account-section"><div class="section-head-simple"><div><div class="section-label">账号</div><h2>安全与数据</h2></div></div><div class="account-actions"><button class="btn btn-outline" data-action="change-password">修改密码</button><button class="btn btn-outline" data-action="recovery-code">生成 / 更换恢复码</button><button class="btn btn-outline" data-action="export">导出全部数据</button><button class="btn btn-danger" data-action="logout-all">退出所有设备</button></div><div data-account-result></div></section>${isOwner() ? `<details class="advanced admin-advanced"><summary><span><strong>邀请另一户家庭使用高三坐标</strong><small>低频管理员功能；对方建立后数据与你完全隔离。</small></span><span aria-hidden="true">＋</span></summary><div class="advanced-body"><div class="invite-tools"><div class="field"><label>链接有效期</label><select id="invite-hours"><option value="24">24 小时</option><option value="72" selected>72 小时</option><option value="168">7 天</option></select></div><button class="btn btn-primary" data-action="create-invite">生成邀请链接</button></div><div data-invite-result></div><div class="invite-list">${state.invitations.map((item) => `<div class="invite-row"><strong>${item.usedAt ? "已领取" : new Date(item.expiresAt).getTime() <= Date.now() ? "已过期" : "等待领取"}</strong><span>创建 ${esc(item.createdAt?.slice(0, 10) || "")} · 到期 ${esc(item.expiresAt?.slice(0, 10) || "")}</span></div>`).join("") || `<div class="empty compact">还没有发出邀请。</div>`}</div><hr><h3>对方恢复码也丢了</h3><p>输入对方登录账号，可生成一条 15 分钟一次性重置链接。你看不到对方密码。</p><div class="invite-tools"><div class="field"><label>对方登录账号</label><input id="recovery-username" autocomplete="off"></div><button class="btn btn-outline" data-action="create-recovery-link">生成重置链接</button></div><div data-recovery-link-result></div></div></details>` : ""}</div></section>`;
 }
 
 function renderDashboard() {
   const body = state.tab === "overview" ? renderOverview() : state.tab === "exams" ? renderExamList() : state.tab === "sharing" ? renderSharing() : renderFamily();
+  document.body.dataset.familyId = state.me?.family?.id || "";
+  document.body.dataset.memberId = state.me?.member?.id || "";
+  document.body.dataset.studentId = state.student?.id || "";
   app.innerHTML = `${renderHeader()}<main class="container"><nav class="tabs" aria-label="主导航"><button class="tab ${state.tab === "overview" ? "active" : ""}" data-tab="overview">轨迹</button><button class="tab ${state.tab === "exams" ? "active" : ""}" data-tab="exams">考试</button><button class="tab ${state.tab === "sharing" ? "active" : ""}" data-tab="sharing">分享</button><button class="tab ${state.tab === "family" ? "active" : ""}" data-tab="family">家庭</button></nav><div class="status-region is-${state.noticeTone}" data-status-region role="status" aria-live="polite" ${state.notice ? "" : "hidden"}>${esc(state.notice)}</div>${body}</main><footer class="footer">${PRODUCT_NAME} · 数据默认只对家庭成员可见 · ${esc(state.me?.appVersion || "")}</footer>`;
   bindDashboard();
 }
@@ -413,6 +414,32 @@ function examDialog(exam = null) {
   const special = ["good", "poor", "partial"].includes(exam?.status);
   document.body.insertAdjacentHTML("beforeend", `<div class="dialog-backdrop" id="exam-dialog"><form class="dialog exam-dialog" id="exam-form"><div class="dialog-head"><div><h2>${exam ? "查看 / 编辑考试" : "记录一次考试"}</h2><p>按拿到成绩单时的顺序填写；不知道的数据可以留空。</p></div><button type="button" class="btn btn-outline btn-small" data-close-dialog>关闭</button></div><section class="exam-section"><h3>这次是什么考试</h3><div class="exam-context-grid"><div class="field"><label>考试名称</label><input name="name" required value="${esc(exam?.name || "")}" placeholder="例如 高三二模"></div><div class="field"><label>日期</label><input name="date" type="date" required value="${esc(exam?.date || new Date().toISOString().slice(0, 10))}"></div><div class="field"><label>类型</label><select name="type">${Object.entries(EXAM_TYPES).map(([value, label]) => `<option value="${value}" ${exam?.type === value ? "selected" : ""}>${label}</option>`).join("")}</select></div></div></section><section class="exam-section"><h3>总分与整体位置</h3><div class="overall-entry"><div class="field"><label>学校公布总分</label><input name="officialScore" inputmode="decimal" value="${exam?.overall?.officialScore ?? ""}"></div><div class="overall-ranks">${rankInputs("overall-school", school, "学校")}${rankInputs("overall-class", clazz, "班级")}<div class="rank-pair joint-rank" data-joint-rank ${exam?.type === "joint" ? "" : "hidden"}><span>联考</span><input name="overall-joint-rank" inputmode="numeric" placeholder="名次" value="${joint?.rank ?? ""}" ${exam?.type === "joint" ? "" : "disabled"}><span>/</span><input name="overall-joint-participants" inputmode="numeric" placeholder="人数可空" value="${joint?.participants ?? ""}" ${exam?.type === "joint" ? "" : "disabled"}><span>人</span></div></div></div><details class="advanced exam-more"><summary>更多考试信息（可选）</summary><div class="advanced-body"><div class="form-two"><div class="field"><label>考试范围</label><select name="comparisonLevel">${COMPARISON_LEVELS.map(([value, label]) => `<option value="${value}" ${exam?.comparison?.level === value ? "selected" : ""}>${label}</option>`).join("")}</select></div><div class="field"><label>属于同一个考试系列</label><input name="comparisonSeries" maxlength="60" value="${esc(exam?.comparison?.series || "")}" placeholder="例如 2027届三次模拟考试"></div></div><div class="field"><label>特殊情况</label><select name="status"><option value="normal" ${!special && exam?.status !== "absent" ? "selected" : ""}>正常记录</option><option value="poor" ${special ? "selected" : ""}>有特殊情况</option><option value="absent" ${exam?.status === "absent" ? "selected" : ""}>缺考</option></select><small>具体发生了什么，写在下方“想记住的事”里。</small></div></div></details></section><section class="exam-section"><div class="section-head-simple"><div><h3>六科成绩与排名</h3><p>先成绩，再排名；总人数不知道就留空。</p></div></div><div class="exam-subject-cards">${SUBJECTS.map(([key, label, full]) => subjectEditor(exam, key, label, full)).join("")}</div></section><div class="field exam-notes"><label>想记住的事（仅家庭内部）</label><textarea name="notes" placeholder="例如：数学圆锥曲线失分较多">${esc(exam?.notes || "")}</textarea></div><div class="draft-state" data-draft-state>${exam ? "修改后保存才会更新" : "草稿会自动保存在本机"}</div><div id="exam-form-error" role="alert"></div><div class="dialog-actions">${exam && canEdit() ? `<button type="button" class="btn btn-danger" data-action="delete-exam">删除</button>` : ""}<button type="button" class="btn btn-outline" data-close-dialog>取消</button>${canEdit() ? `<button class="btn btn-primary" type="submit">保存考试</button>` : ""}</div></form></div>`);
   const form = document.querySelector("#exam-form");
+  if (exam) form.dataset.examId = exam.id;
+  if (!exam) {
+    try {
+      const preference = JSON.parse(localStorage.getItem("score-entry-preferences") || "{}");
+      if (preference.type && form.querySelector("[name='type']")) form.querySelector("[name='type']").value = preference.type;
+    } catch {}
+  }
+  const sections = [...form.querySelectorAll(".exam-section")];
+  let step = 0;
+  const stepper = document.createElement("div");
+  stepper.className = "entry-stepper";
+  stepper.innerHTML = ["考试信息", "总分与位置", "六科明细"].map((label, index) => `<span data-entry-step="${index}">${index + 1}. ${label}</span>`).join("");
+  form.querySelector(".dialog-head")?.after(stepper);
+  const navigator = document.createElement("div");
+  navigator.className = "entry-navigation";
+  navigator.innerHTML = `<button type="button" class="btn btn-outline btn-small" data-entry-back>上一步</button><span data-entry-hint>先填考试名称和日期，不知道的数据可以留空。</span><button type="button" class="btn btn-outline btn-small" data-entry-next>下一步</button>`;
+  form.querySelector(".dialog-actions")?.before(navigator);
+  const renderStep = () => {
+    sections.forEach((section, index) => { section.hidden = index !== step; });
+    stepper.querySelectorAll("[data-entry-step]").forEach((node, index) => node.classList.toggle("is-active", index === step));
+    navigator.querySelector("[data-entry-back]").disabled = step === 0;
+    navigator.querySelector("[data-entry-next]").textContent = step === sections.length - 1 ? "完成分步填写" : "下一步";
+  };
+  navigator.querySelector("[data-entry-back]").addEventListener("click", () => { step = Math.max(0, step - 1); renderStep(); });
+  navigator.querySelector("[data-entry-next]").addEventListener("click", () => { if (step < sections.length - 1) { step += 1; renderStep(); } else setDraftState(form, "已完成分步填写，点击保存考试提交"); });
+  renderStep();
   if (!canEdit()) form.querySelectorAll("input, select, textarea").forEach((control) => { control.disabled = true; });
   form.querySelector("[name='type']")?.addEventListener("change", (event) => {
     const row = form.querySelector("[data-joint-rank]");
@@ -480,6 +507,24 @@ function deriveDataStatus(subjects, officialScore) {
   return six && officialScore != null ? "complete" : "partial";
 }
 
+function validateExamEntry(subjects, form) {
+  for (const [key] of SUBJECTS) {
+    const full = subjects[key].fullScore;
+    if (subjects[key].rawScore != null && full != null && subjects[key].rawScore > full) return `${key} 原始分不能高于满分`;
+    for (const scope of ["school", "class"]) {
+      const rank = intOrNull(value(form, `${key}-${scope}-rank`));
+      const participants = intOrNull(value(form, `${key}-${scope}-participants`));
+      if (rank != null && participants != null && rank > participants) return `${key} ${scope === "school" ? "学校" : "班级"}排名不能大于参与人数`;
+    }
+  }
+  for (const scope of ["school", "class", "joint"]) {
+    const rank = intOrNull(value(form, `overall-${scope}-rank`));
+    const participants = intOrNull(value(form, `overall-${scope}-participants`));
+    if (rank != null && participants != null && rank > participants) return `总体${scope === "school" ? "学校" : scope === "class" ? "班级" : "联考"}排名不能大于参与人数`;
+  }
+  return null;
+}
+
 async function saveExam(event) {
   event.preventDefault();
   const formElement = event.currentTarget;
@@ -513,6 +558,12 @@ async function saveExam(event) {
     notes: value(form, "notes"),
     expectedRevision: state.editingExam?.revision
   };
+  const validationMessage = validateExamEntry(subjects, form);
+  if (validationMessage) {
+    formElement.querySelector("#exam-form-error").innerHTML = `<div class="error-box">${esc(validationMessage)}</div>`;
+    return;
+  }
+  try { localStorage.setItem("score-entry-preferences", JSON.stringify({ type: payload.type })); } catch {}
   button.disabled = true;
   button.textContent = "正在保存…";
   try {
@@ -548,7 +599,7 @@ async function deleteExam() {
 
 function selectedShareFields(prefix, scope) {
   const result = {};
-  for (const key of ["displayName", "graduationYear", "school", "className", "overallScore", "overallRank", "subjectScores", "subjectRanks"]) {
+  for (const key of ["displayName", "graduationYear", "school", "className", "overallScore", "overallRank", "subjectScores", "subjectRanks", "examStatus", "comparisonContext"]) {
     result[key] = Boolean(document.querySelector(`[name='${prefix}-${key}']`)?.checked);
   }
   result.history = scope === "trajectory";
@@ -565,7 +616,7 @@ function syncShareCard(prefix) {
   if (summary) {
     const checked = [
       ["displayName", "孩子名字 / 称呼"], ["graduationYear", "毕业年份"], ["school", "学校"], ["className", "班级"],
-      ["overallScore", "总分"], ["overallRank", "总体排名"], ["subjectScores", "六科成绩"], ["subjectRanks", "六科排名"]
+      ["overallScore", "总分"], ["overallRank", "总体排名"], ["subjectScores", "六科成绩"], ["subjectRanks", "六科排名"], ["examStatus", "考试情况"], ["comparisonContext", "可比范围"]
     ].filter(([key]) => document.querySelector(`[name='${prefix}-${key}']`)?.checked).map(([, label]) => label);
     const included = [scope === "trajectory" ? "高三轨迹" : "这一次考试", "考试名称和日期", ...checked];
     summary.innerHTML = `<div><strong>将分享</strong><span>${esc([...new Set(included)].join("、"))}</span></div><div><strong>不会分享</strong><span>家庭备注、登录账号、家庭成员和安全信息</span></div>`;
@@ -585,7 +636,10 @@ async function createShare(kind) {
   if (scope === "single") body.examId = document.querySelector(`[data-share-exam='${prefix}']`)?.value || state.exams[0]?.id;
   if (kind === "secret") {
     const expiry = document.querySelector("#secret-expiry")?.value;
-    if (expiry) body.expiresAt = `${expiry}T23:59:59.999Z`;
+    if (expiry) {
+      const [year, month, day] = expiry.split("-").map(Number);
+      body.expiresAt = new Date(year, month - 1, day + 1, 0, 0, 0, -1).toISOString();
+    }
   } else {
     body.slug = document.querySelector("#public-slug")?.value?.trim() || "";
   }
@@ -621,12 +675,12 @@ async function revokeShare(kind, locator) {
 
 async function exportData() {
   try {
-    const data = await api(`/api/students/${state.student.id}/export`);
+    const data = await api(isOwner() ? "/api/family/export" : `/api/students/${state.student.id}/export`);
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `score-${state.student.displayName}-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.download = `score-${state.me?.family?.displayName || state.student.displayName}-${new Date().toISOString().slice(0, 10)}.json`;
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     setNotice("全部数据已导出", "success");
@@ -666,7 +720,7 @@ function passwordDialog() {
 }
 
 async function generateRecoveryCode() {
-  const target = document.querySelector("[data-account-result]");
+  const target = document.querySelector("[data-account-result], [data-recovery-required-result]");
   try {
     const result = await api("/api/me/recovery-code", { method: "POST", body: "{}" });
     target.innerHTML = `<div class="generated-secret"><strong>新的账户恢复码</strong><code>${esc(result.recoveryCode)}</code><p>恢复码只显示这一次，请离线保存。生成后旧恢复码立即失效。</p><button class="btn btn-outline btn-small" data-copy-recovery>复制恢复码</button></div>`;
@@ -677,6 +731,19 @@ async function generateRecoveryCode() {
   } catch (error) {
     target.innerHTML = `<div class="error-box">${esc(error.message)}</div>`;
   }
+}
+
+function renderRecoveryRequired() {
+  app.innerHTML = `<main class="login-shell"><section class="login-card recovery-required"><div class="brand-mark">标</div><h1>先保存账户恢复码</h1><p>这是第一次登录。恢复码用于忘记密码时找回账号，只显示一次，请离线保存。</p><button class="btn btn-primary btn-block" data-action="recovery-required">生成恢复码</button><div data-recovery-required-result></div><p class="muted">保存后即可进入高三坐标；恢复码不会分享给其他家庭成员。</p></section></main>`;
+  document.querySelector("[data-action='recovery-required']")?.addEventListener("click", async (event) => {
+    event.currentTarget.disabled = true;
+    await generateRecoveryCode();
+    if (document.querySelector("[data-recovery-required-result] code")) {
+      const result = document.querySelector("[data-recovery-required-result]");
+      result.insertAdjacentHTML("beforeend", `<label class="check recovery-ack"><input type="checkbox" data-recovery-ack>我已将恢复码保存在安全位置</label>`);
+      result.querySelector("[data-recovery-ack]")?.addEventListener("change", (e) => { if (e.target.checked) { state.me.recoveryReady = true; loadStudentData().then(renderDashboard); } });
+    }
+  });
 }
 
 async function createInvite() {
@@ -718,6 +785,20 @@ async function loadStudentData() {
   if (!state.student) return;
   const result = await api(`/api/students/${state.student.id}/exams`);
   state.exams = result.exams || [];
+  try {
+    const trash = await api(`/api/students/${state.student.id}/exams/trash`);
+    state.trash = trash.exams || [];
+  } catch { state.trash = []; }
+}
+
+async function restoreExam(id, revision) {
+  try {
+    await api(`/api/students/${state.student.id}/exams/${encodeURIComponent(id)}/restore`, { method: "POST", body: JSON.stringify({ expectedRevision: Number(revision) }) });
+    await loadStudentData();
+    state.notice = "考试已恢复";
+    state.noticeTone = "success";
+    renderDashboard();
+  } catch (error) { setNotice(error.message, "error"); }
 }
 
 async function loadShares() {
@@ -747,6 +828,7 @@ async function loadPrivateApp() {
   try {
     state.me = await api("/api/me");
     state.csrf = state.me.csrf;
+    if (!state.me.recoveryReady) return renderRecoveryRequired();
     state.student = state.me.students?.[0] || null;
     if (!state.student) throw new Error("当前家庭还没有孩子资料");
     await loadStudentData();
@@ -782,6 +864,7 @@ function bindDashboard() {
     row.addEventListener("click", open);
     row.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); open(); } });
   });
+  document.querySelectorAll("[data-action='restore-exam']").forEach((button) => button.addEventListener("click", (event) => { event.stopPropagation(); restoreExam(button.dataset.id, button.dataset.revision); }));
   document.querySelectorAll("[data-action='export']").forEach((button) => button.addEventListener("click", exportData));
   document.querySelectorAll("[data-action='logout']").forEach((button) => button.addEventListener("click", async () => { await api("/api/logout", { method: "POST" }).catch(() => {}); location.assign("/"); }));
   document.querySelector("[data-action='change-password']")?.addEventListener("click", passwordDialog);
@@ -868,6 +951,19 @@ function bindDashboard() {
       renderDashboard();
     } catch (error) { setNotice(error.message, "error"); }
   }));
+  document.querySelector("[data-action='toggle-archive']")?.addEventListener("click", async (event) => {
+    const archived = event.currentTarget.dataset.archived === "true";
+    if (!confirm(archived ? "恢复这份毕业归档资料？" : "归档后将撤销外部分享并停止继续录入，确认吗？")) return;
+    try {
+      const result = await api(`/api/students/${state.student.id}/lifecycle`, { method: "PATCH", body: JSON.stringify({ archived: !archived }) });
+      state.student = result.student;
+      state.me.students = state.me.students.map((s) => s.id === result.student.id ? result.student : s);
+      await loadShares();
+      state.notice = archived ? "资料已恢复为进行中" : "资料已归档，外部分享已撤销";
+      state.noticeTone = "success";
+      renderDashboard();
+    } catch (error) { setNotice(error.message, "error"); }
+  });
   document.querySelector("[data-action='create-invite']")?.addEventListener("click", createInvite);
   document.querySelector("[data-action='create-recovery-link']")?.addEventListener("click", createRecoveryLink);
 }
@@ -887,11 +983,11 @@ function publicSubjectRows(exam) {
 function publicHistory(exams) {
   if (!Array.isArray(exams) || exams.length < 2) return "";
   return `<section class="public-history"><div class="section-label">历次轨迹</div><h2>把不同考试放回时间里看</h2><div class="history-list">${exams.map((exam, index) => {
-    const school = overallRank(exam, "school");
-    const clazz = overallRank(exam, "class");
     const projected = { ...exam, overall: { rankings: exam.overallRankings || [] }, overallScore: exam.overallScore };
+    const school = overallRank(projected, "school");
+    const clazz = overallRank(projected, "class");
     return `<div class="history-row ${index === 0 ? "is-latest" : ""}"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最新" : ""}</small></div><div class="history-coordinate"><span>${school?.rank ? `校第 ${school.rank} 名` : ""}</span><span>${clazz?.rank ? `班第 ${clazz.rank} 名` : ""}</span><span>${overallScore(projected) != null ? `${fmtNumber(overallScore(projected))} 分` : ""}</span></div></div>`;
-  }).join("")}</div><p class="muted">不同考试难度可能不同，优先看相对位置；分数只作辅助。</p></section>`;
+  }).join("")}</div><p class="muted">不同考试难度可能不同，优先看相对位置；分数只作辅助。页面只展示分享白名单中的字段。</p></section>`;
 }
 
 async function renderExternal(kind, locator) {

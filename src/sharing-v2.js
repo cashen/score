@@ -46,16 +46,24 @@ function isExpired(grant) {
 }
 
 async function loadExams(env, studentId) {
-  const index = (await getJson(env, `exam-index:${studentId}`)) || { items: [] };
+  let index = (await getJson(env, `exam-index:${studentId}`)) || { items: [] };
+  if (typeof env.SCORE_KV.list === "function") {
+    try {
+      const listed = await env.SCORE_KV.list({ prefix: `exam-summary:${studentId}:`, limit: MAX_EXAMS });
+      const summaries = await Promise.all((listed?.keys || []).map((key) => getJson(env, key.name)));
+      if (summaries.some(Boolean)) index = { items: summaries.filter(Boolean) };
+    } catch {}
+  }
+  index.items = (index.items || []).sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.updatedAt).localeCompare(String(a.updatedAt)));
   const exams = await Promise.all((index.items || []).slice(0, MAX_EXAMS).map((item) => getJson(env, `exam:${studentId}:${item.id}`)));
-  return exams.filter(Boolean);
+  return exams.filter((exam) => exam && !exam.deletedAt);
 }
 
 async function selectExams(env, studentId, scope, examId = null) {
   if (scope === "single") {
     if (examId) {
       const exam = await getJson(env, `exam:${studentId}:${examId}`);
-      return exam ? [exam] : [];
+      return exam && !exam.deletedAt ? [exam] : [];
     }
     const all = await loadExams(env, studentId);
     return all[0] ? [all[0]] : [];
@@ -74,16 +82,14 @@ async function shareIndex(env, studentId) {
 async function handleCreate(request, env, session, studentId) {
   requireCsrf(request, session);
   const student = await requireStudent(env, session.member, studentId, true);
+  if (student.archivedAt) return errorJson("该孩子资料已归档，恢复后才能创建分享", 409, "student_archived");
   const body = await readJson(request);
   const kind = body.kind === "public" ? "public" : "secret";
   const mode = body.mode === "snapshot" ? "snapshot" : "live";
   const fields = normalizeShareFields(body.fields);
   const requestedScope = body.scope === "single" || body.scope === "trajectory" ? body.scope : null;
   let scope = requestedScope;
-  if (!scope) {
-    const available = await loadExams(env, studentId);
-    scope = fields.history && available.length >= 2 ? "trajectory" : "single";
-  }
+  if (!scope) scope = "single";
   fields.history = scope === "trajectory";
   const expiresAt = validExpiry(body.expiresAt);
   const exams = await selectExams(env, studentId, scope, body.examId || null);
