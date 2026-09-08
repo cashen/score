@@ -1,0 +1,21 @@
+{
+  "task": "ui-v070-apple-human",
+  "repository": "cashen/score",
+  "branch": "feat/score-v061-apple-human-ui",
+  "baseSha": "03e86273d0af709b25e9a883d16dd4ea7c2527b8",
+  "headSha": "0734abe0d3eafa8bb75b852e14a8594321bc2c01",
+  "pr": null,
+  "version": "0.7.0",
+  "completed": ["S0-baseline-plan"],
+  "inProgress": "S0-push-and-pr",
+  "pending": ["S1-visual-foundation", "S2-overview", "S3-entry-feedback", "S4-sharing-boundaries", "S5-final-gate-merge-production"],
+  "lastFailure": null,
+  "verifiedAt": "2026-09-08T05:55:00Z",
+  "recoveryRule": [
+    "Read this file before every continuation.",
+    "Compare current GitHub main, branch head, PR head and checks before retrying writes.",
+    "Only committed code with matching tests counts as completed.",
+    "Never reset or overwrite user changes.",
+    "Do not merge until final exact-head CI and production attestation pass."
+  ]
+}
