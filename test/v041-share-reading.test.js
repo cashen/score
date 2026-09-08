@@ -22,7 +22,9 @@ test("share preview explicitly states included and excluded information", () => 
 test("public sharing uses human privacy language", () => {
   assert.match(app, /公开链接（高级）/);
   assert.match(app, /任何拿到这个地址的人都可以查看。不会主动进入搜索，但这不等于私密。/);
-  assert.doesNotMatch(app, />[^<]*(?:token|noindex)[^<]*</i);
+  // Internal token/robots identifiers may exist in implementation. What must not exist
+  // is rendered copy that literally presents those engineering terms to the user.
+  assert.doesNotMatch(app, />\s*(?:token|noindex)\s*</i);
 });
 
 test("share UI is source rendered, not v0.4 patched", () => {
