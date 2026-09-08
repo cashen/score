@@ -14,7 +14,7 @@ test("comparison metadata stays optional and out of the primary exam path", () =
 test("comparison copy avoids causal claims", () => {
   assert.match(app, /变化较明显的科目/);
   assert.doesNotMatch(app, /变化来自哪里/);
-  assert.match(app, /先看事实，再决定要不要介入/);
+  assert.match(app, /先看事实，再决定下一步/);
 });
 
 test("overall comparison prefers relative position before score", () => {

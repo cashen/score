@@ -24,10 +24,10 @@ test("轨迹 is a feature word while the product name stays 高三坐标", () =>
   assert.doesNotMatch(app, /PRODUCT_NAME\s*=\s*"高三轨迹"/);
 });
 
-test("v0.6.0 version sources remain consistent", () => {
-  assert.equal(pkg.version, "0.6.0");
+test("v0.7.0 version sources remain consistent", () => {
+  assert.equal(pkg.version, "0.7.0");
   assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[""].version, pkg.version);
-  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.6\.0"/);
+  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.7\.0"/);
   assert.doesNotMatch(pkg.scripts.check, /brand-v021\.js/);
 });

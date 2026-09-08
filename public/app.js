@@ -219,6 +219,15 @@ function directionText(metric) {
   return "和上一次基本接近";
 }
 
+function humanChangeSummary(metric, sources) {
+  if (!metric) return "先记录更多同类别考试，再看变化。";
+  const threshold = metric.kind === "percentile" ? 0.4 : metric.kind === "score" ? 1 : 0;
+  const subject = sources[0]?.label ? `${sources[0].label}的变化更明显。` : "";
+  if (metric.delta > threshold) return `这次整体位置向前。${subject}`;
+  if (metric.delta < -threshold) return `这次整体位置向后。${subject}`;
+  return `这次整体位置和上一次基本接近。${subject}`;
+}
+
 function changeSources(latest, previous) {
   if (!latest || !previous) return [];
   return SUBJECTS.map(([key, label]) => ({ key, label, metric: metricBetween(latest, previous, key) }))
@@ -248,7 +257,7 @@ function identityMeta(student) {
 function renderHeader() {
   const students = state.me?.students || [];
   const selector = students.length > 1 ? `<select id="student-select" aria-label="切换孩子">${students.map((student) => `<option value="${esc(student.id)}" ${state.student?.id === student.id ? "selected" : ""}>${esc(student.displayName)}</option>`).join("")}</select>` : "";
-  return `<header class="topbar"><div class="topbar-inner"><div class="brand"><div class="brand-mark">标</div><span>${PRODUCT_NAME}</span></div><div class="top-actions">${selector}<details class="account-menu"><summary class="btn btn-outline btn-small">账号</summary><div class="account-menu-panel"><button type="button" data-tab-jump="family">家庭与账号</button><button type="button" data-action="export">导出全部数据</button><button type="button" data-action="logout">退出登录</button></div></details></div></div></header>`;
+  return `<header class="topbar"><div class="topbar-inner"><div class="brand"><div class="brand-mark">标</div><span>${PRODUCT_NAME}</span></div><div class="top-actions"><span class="privacy-pill" aria-label="数据默认仅家庭成员可见">仅家庭可见</span>${selector}<details class="account-menu"><summary class="btn btn-outline btn-small">账号</summary><div class="account-menu-panel"><button type="button" data-tab-jump="family">家庭与账号</button><button type="button" data-action="export">导出全部数据</button><button type="button" data-action="logout">退出登录</button></div></details></div></div></header>`;
 }
 
 function renderSubjectRows(exam) {
@@ -278,7 +287,7 @@ function renderDeepTrajectory() {
     }).filter(Boolean).join("");
     return rows ? `<details class="subject-history"><summary>${label}<span>查看历次记录</span></summary><div>${rows}</div></details>` : "";
   }).join("");
-  return `<details class="deep-trajectory" data-deep-trajectory><summary><span><strong>查看完整轨迹</strong><small>历次整体位置与六科历史</small></span><span aria-hidden="true">＋</span></summary><div class="deep-trajectory-body"><section><h3>历次考试</h3><div class="history-list">${overallRows}</div></section><section><h3>六科历史</h3><div class="subject-history-list">${subjectHistory}</div></section></div></details>`;
+  return `<details class="deep-trajectory" id="deep-trajectory" data-deep-trajectory><summary><span><strong>查看完整轨迹</strong><small>历次整体位置与六科历史</small></span><span aria-hidden="true">＋</span></summary><div class="deep-trajectory-body"><p class="trajectory-boundary-note">只有同类别、口径一致的考试会用于变化结论；其他记录仍会保留，方便回看。</p><section><h3>历次考试</h3><div class="history-list">${overallRows}</div></section><section><h3>六科历史</h3><div class="subject-history-list">${subjectHistory}</div></section></div></details>`;
 }
 
 function renderOverview() {
@@ -293,7 +302,7 @@ function renderOverview() {
   const school = overallRank(exam, "school");
   const schoolPct = percentile(school?.rank, school?.participants);
   const comparisonNote = previous ? `${esc(previous.name)} · ${fmtDate(previous.date)} · ${coreComparisonReason(exam, previous)}` : "有第二次同类别考试后开始比较";
-  return `<section class="coordinate-hero"><div class="hero-head"><div><h1>${esc(state.student.displayName)}</h1><p>${identityMeta(state.student) || "孩子资料可稍后补充"}</p></div>${canEdit() ? `<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="${esc(exam.id)}">编辑这次考试</button>` : ""}</div><div class="exam-context"><strong>${esc(exam.name)}</strong><span>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</span></div>${coordinateRow(exam)}${schoolPct != null || school?.participants ? `<div class="coordinate-note">${schoolPct != null ? `校前 ${fmtNumber(schoolPct)}%` : ""}${schoolPct != null && school?.participants ? " · " : ""}${school?.participants ? `本次共 ${school.participants} 人` : ""}</div>` : ""}</section><section class="reading-section change-section"><div class="section-label">和上一次可比考试相比</div><div class="change-main"><strong>${esc(directionText(overallMetric))}</strong><span>${esc(overallMetric?.detail || comparisonNote)}</span></div>${previous ? `<small>比较对象：${comparisonNote}</small>` : `<small>${comparisonNote}</small>`}</section><section class="reading-section"><div class="section-head-simple"><div><div class="section-label">变化较明显的科目</div><h2>先看事实，再决定要不要介入</h2></div></div>${sources.length ? `<div class="change-source-list">${sources.map(({ key, label, metric }) => { const current = subjectRank(exam, key, "school") || subjectRank(exam, key, "class"); return `<div class="change-source-row"><strong>${label}</strong><span>${current?.rank ? `${current.scope === "school" ? "校" : "班"}第 ${current.rank}` : scoreOf(exam.subjects?.[key]) != null ? `${scoreOf(exam.subjects[key])} 分` : "—"}</span><small>${esc(metric.detail)}</small></div>`; }).join("")}</div>` : `<p class="muted">还没有足够的连续可比数据。下一次同类别考试后，这里会直接列出变化较明显的科目。</p>`}</section><section class="reading-section subjects-section"><div class="section-head-simple"><div><div class="section-label">六科</div><h2>这次考试的具体坐标</h2></div></div><div class="subject-rows">${renderSubjectRows(exam)}</div></section>${renderDeepTrajectory()}`;
+  return `<section class="coordinate-hero"><div class="hero-head"><div><h1>${esc(state.student.displayName)}</h1><p>${identityMeta(state.student) || "孩子资料可稍后补充"}</p></div>${canEdit() ? `<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="${esc(exam.id)}">编辑这次考试</button>` : ""}</div><div class="exam-context"><strong>${esc(exam.name)}</strong><span>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</span></div>${coordinateRow(exam)}${schoolPct != null || school?.participants ? `<div class="coordinate-note">${schoolPct != null ? `校前 ${fmtNumber(schoolPct)}%` : ""}${schoolPct != null && school?.participants ? " · " : ""}${school?.participants ? `本次共 ${school.participants} 人` : ""}</div>` : ""}</section><section class="reading-section change-section"><div class="section-label">和上一次可比考试相比</div><div class="change-main"><strong>${esc(directionText(overallMetric))}</strong><span>${esc(overallMetric?.detail || comparisonNote)}</span><p class="human-summary">${esc(humanChangeSummary(overallMetric, sources))}</p></div>${previous ? `<small>比较对象：${comparisonNote}</small>` : `<small>${comparisonNote}</small>`}</section><section class="reading-section"><div class="section-head-simple"><div><div class="section-label">变化较明显的科目</div><h2>先看事实，再决定下一步</h2></div></div>${sources.length ? `<div class="change-source-list">${sources.map(({ key, label, metric }) => { const current = subjectRank(exam, key, "school") || subjectRank(exam, key, "class"); return `<div class="change-source-row"><strong>${label}</strong><span>${current?.rank ? `${current.scope === "school" ? "校" : "班"}第 ${current.rank}` : scoreOf(exam.subjects?.[key]) != null ? `${scoreOf(exam.subjects[key])} 分` : "—"}</span><small>${esc(metric.detail)}</small></div>`; }).join("")}</div>` : `<p class="muted">还没有足够的连续可比数据。下一次同类别考试后，这里会直接列出变化较明显的科目。</p>`}</section><section class="reading-section subjects-section"><div class="section-head-simple"><div><div class="section-label">六科</div><h2>这次考试的具体坐标</h2></div></div><div class="subject-rows">${renderSubjectRows(exam)}</div></section>${canEdit() ? `<section class="overview-actions" aria-label="下一步"><button class="btn btn-primary btn-block" data-action="new-exam" data-primary-action="record-next">记录下一次考试</button><button class="btn btn-outline" data-action="open-trajectory" aria-controls="deep-trajectory">查看完整轨迹</button></section>` : ""}${renderDeepTrajectory()}`;
 }
 
 function renderExamList() {
@@ -508,13 +517,13 @@ function deriveDataStatus(subjects, officialScore) {
 }
 
 function validateExamEntry(subjects, form) {
-  for (const [key] of SUBJECTS) {
+  for (const [key, label] of SUBJECTS) {
     const full = subjects[key].fullScore;
-    if (subjects[key].rawScore != null && full != null && subjects[key].rawScore > full) return `${key} 原始分不能高于满分`;
+    if (subjects[key].rawScore != null && full != null && subjects[key].rawScore > full) return `${label}原始分不能高于 ${full} 分`;
     for (const scope of ["school", "class"]) {
       const rank = intOrNull(value(form, `${key}-${scope}-rank`));
       const participants = intOrNull(value(form, `${key}-${scope}-participants`));
-      if (rank != null && participants != null && rank > participants) return `${key} ${scope === "school" ? "学校" : "班级"}排名不能大于参与人数`;
+      if (rank != null && participants != null && rank > participants) return `${label}的${scope === "school" ? "学校" : "班级"}排名不能大于参与人数`;
     }
   }
   for (const scope of ["school", "class", "joint"]) {
@@ -865,6 +874,12 @@ function bindDashboard() {
     row.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); open(); } });
   });
   document.querySelectorAll("[data-action='restore-exam']").forEach((button) => button.addEventListener("click", (event) => { event.stopPropagation(); restoreExam(button.dataset.id, button.dataset.revision); }));
+  document.querySelector("[data-action='open-trajectory']")?.addEventListener("click", () => {
+    const details = document.querySelector("#deep-trajectory");
+    if (!details) return;
+    details.open = true;
+    details.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
   document.querySelectorAll("[data-action='export']").forEach((button) => button.addEventListener("click", exportData));
   document.querySelectorAll("[data-action='logout']").forEach((button) => button.addEventListener("click", async () => { await api("/api/logout", { method: "POST" }).catch(() => {}); location.assign("/"); }));
   document.querySelector("[data-action='change-password']")?.addEventListener("click", passwordDialog);
