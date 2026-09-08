@@ -42,8 +42,12 @@ const state = {
   shares: [],
   familyMembers: [],
   invitations: [],
-  tab: "overview",
-  editingExam: null,
+ tab: "overview",
+  trajectoryView: "total",
+  subjectKey: "chinese",
+  subjectMetric: "score",
+  selectedExamId: null,
+ editingExam: null,
   notice: "",
   noticeTone: "notice"
 };
@@ -263,6 +267,58 @@ function identityMeta(student) {
   return [student?.graduationYear ? `${student.graduationYear}届` : null, student?.schoolLabel, student?.className, student?.subjectTrack].filter(Boolean).map(esc).join(" · ");
 }
 
+function trajectorySubnav(active = "total") {
+  const items = [["total", "总成绩"], ["subject", "单科对比"], ["timeline", "时间轴"]];
+  return `<nav class="trajectory-subnav" aria-label="轨迹视图">${items.map(([key, label]) => `<button type="button" class="trajectory-subtab ${active === key ? "active" : ""}" data-trajectory-view="${key}" aria-pressed="${active === key}">${label}</button>`).join("")}</nav>`;
+}
+
+function subjectMetricValue(exam, key, metric) {
+  const subject = exam?.subjects?.[key] || {};
+  if (metric === "score") return scoreOf(subject) == null ? null : `${fmtNumber(scoreOf(subject))} 分`;
+  const ranking = subjectRank(exam, key, metric === "schoolRank" ? "school" : "class");
+  if (!ranking?.rank) return null;
+  return `${metric === "schoolRank" ? "校" : "班"}第 ${ranking.rank} 名`;
+}
+
+function rankingDetails(rankings = []) {
+  return rankings.filter((item) => item?.rank != null || item?.participants != null).map((item) => {
+    const scope = item.scope === "school" ? "学校" : item.scope === "class" ? "班级" : item.scope || "范围";
+    const rank = item.rank != null ? `${scope}第 ${item.rank} 名` : `${scope}排名未填`;
+    const participants = item.participants != null ? ` / ${item.participants} 人` : "";
+    return `${rank}${participants}`;
+  }).join(" · ");
+}
+
+function renderSubjectComparison() {
+  const key = SUBJECTS.some(([subject]) => subject === state.subjectKey) ? state.subjectKey : SUBJECTS[0][0];
+  const metric = ["score", "schoolRank", "classRank"].includes(state.subjectMetric) ? state.subjectMetric : "score";
+  const label = SUBJECTS.find(([subject]) => subject === key)?.[1] || "单科";
+  const rows = state.exams.map((exam) => `<div class="subject-compare-row"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div><b>${esc(subjectMetricValue(exam, key, metric) || "—" )}</b><span>${esc(metric === "score" ? "按当前记录的分数显示" : "按当前记录的相对位置显示")}</span></div>`).join("");
+  const comparison = comparisonState();
+  const current = comparison.latest;
+  const previous = comparison.status === "comparable" ? comparison.previous : null;
+  const change = metricBetween(current, previous, key);
+  const status = change ? change.detail : comparison.reason;
+  return `<section class="trajectory-view subject-compare-view"><div class="page-heading"><div><div class="section-label">单科对比</div><h1>${label}</h1><p>把分数、学校排名和班级排名分开看；数据不足时不下结论。</p></div></div><div class="subject-picker" role="group" aria-label="选择科目">${SUBJECTS.map(([subject, subjectLabel]) => `<button type="button" class="subject-chip ${subject === key ? "active" : ""}" data-subject-key="${subject}" aria-pressed="${subject === key}">${subjectLabel}</button>`).join("")}</div><div class="metric-picker" role="group" aria-label="选择单科指标"><button type="button" class="metric-chip ${metric === "score" ? "active" : ""}" data-subject-metric="score" aria-pressed="${metric === "score"}">分数</button><button type="button" class="metric-chip ${metric === "schoolRank" ? "active" : ""}" data-subject-metric="schoolRank" aria-pressed="${metric === "schoolRank"}">学校排名</button><button type="button" class="metric-chip ${metric === "classRank" ? "active" : ""}" data-subject-metric="classRank" aria-pressed="${metric === "classRank"}">班级排名</button></div><div class="comparison-state" role="status"><strong>${esc(change ? directionText(change) : status)}</strong><span>${esc(status)}</span></div>${rows ? `<div class="subject-compare-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试，建立这门课的基线。</p></div>`}</section>`;
+}
+
+function renderExamDetail(exam) {
+  if (!exam) return "";
+  const subjectRows = SUBJECTS.map(([key, label]) => {
+    const subject = exam.subjects?.[key] || {};
+    const score = scoreOf(subject);
+    const details = rankingDetails(subject.rankings);
+    return `<div class="exam-detail-subject"><strong>${label}</strong><span>${score == null ? "分数待补" : `${fmtNumber(score)} 分`}</span><small>${esc(details || "排名待补")}</small></div>`;
+  }).join("");
+  return `<section class="exam-detail section-surface"><div class="section-head-simple"><div><div class="section-label">考试详情</div><h2>${esc(exam.name)}</h2><p>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</p></div>${canEdit() ? `<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="${esc(exam.id)}">编辑</button>` : ""}</div><div class="exam-detail-overall"><strong>${overallScore(exam) == null ? "总分待补" : `${fmtNumber(overallScore(exam))} 分`}</strong><span>${esc(rankingDetails(exam.overall?.rankings || [] ) || "总体排名待补")}</span></div><p class="trajectory-boundary-note">${esc(coreComparisonReason(exam, state.exams.find((item) => item.id !== exam.id) || null))}</p><div class="exam-detail-subjects">${subjectRows}</div>${exam.notes && canEdit() ? `<details class="private-detail"><summary>家庭内部备注</summary><p>${esc(exam.notes)}</p></details>` : ""}</section>`;
+}
+
+function renderTimelineView() {
+  const selected = state.exams.find((exam) => exam.id === state.selectedExamId) || null;
+  const rows = state.exams.map((exam, index) => `<a class="history-row timeline-row ${index === 0 ? "is-latest" : ""}" href="?view=timeline&exam=${encodeURIComponent(exam.id)}" data-action="view-exam" data-id="${esc(exam.id)}"><span><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最新" : ""}</small></span>${coordinateRow(exam, "history-coordinate")}<span class="row-chevron" aria-hidden="true">›</span></a>`).join("");
+  return `<section class="trajectory-view timeline-view"><div class="page-heading"><div><div class="section-label">时间轴</div><h1>每一次考试都在这里</h1><p>打开任意一场，查看这次考试的完整记录。</p></div>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录考试</button>` : ""}</div>${selected ? renderExamDetail(selected) : ""}${rows ? `<div class="history-list full-timeline-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试。</p></div>`}</section>`;
+}
+
 function renderHeader() {
   const students = state.me?.students || [];
   const selector = students.length > 1 ? `<select id="student-select" aria-label="切换孩子">${students.map((student) => `<option value="${esc(student.id)}" ${state.student?.id === student.id ? "selected" : ""}>${esc(student.displayName)}</option>`).join("")}</select>` : "";
@@ -282,7 +338,7 @@ function renderSubjectRows(exam) {
 }
 
 function renderDeepTrajectory() {
-  const exams = state.exams.slice(0, 8);
+  const exams = state.exams;
   if (!exams.length) return "";
   const overallRows = exams.map((exam) => `<div class="history-row" data-action="edit-exam" data-id="${esc(exam.id)}" tabindex="0" role="button"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div>${coordinateRow(exam, "history-coordinate")}</div>`).join("");
   const subjectHistory = SUBJECTS.map(([key, label]) => {
@@ -300,6 +356,8 @@ function renderDeepTrajectory() {
 }
 
 function renderOverview() {
+  if (state.trajectoryView === "subject") return renderSubjectComparison();
+  if (state.trajectoryView === "timeline") return renderTimelineView();
   const exam = latestExam();
   if (!exam) {
     return `<section class="empty-state"><div class="brand-mark">标</div><h1>先记录第一场考试</h1><p>不用一次填完所有数据。先把考试、总分和你手头已有的排名记下来即可。</p>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录第一次考试</button>` : `<p class="muted">当前账号只有查看权限。</p>`}</section>`;
@@ -385,7 +443,8 @@ function renderFamily() {
 }
 
 function renderDashboard() {
-  const body = state.tab === "overview" ? renderOverview() : state.tab === "exams" ? renderExamList() : state.tab === "sharing" ? renderSharing() : renderFamily();
+  let body = state.tab === "overview" ? renderOverview() : state.tab === "exams" ? renderExamList() : state.tab === "sharing" ? renderSharing() : renderFamily();
+  if (state.tab === "overview") body = trajectorySubnav(state.trajectoryView) + body;
   document.body.dataset.familyId = state.me?.family?.id || "";
   document.body.dataset.memberId = state.me?.member?.id || "";
   document.body.dataset.studentId = state.student?.id || "";
@@ -858,6 +917,31 @@ async function loadPrivateApp() {
 }
 
 function bindDashboard() {
+  document.querySelectorAll("[data-trajectory-view]").forEach((button) => button.addEventListener("click", () => {
+    state.trajectoryView = button.dataset.trajectoryView;
+    state.selectedExamId = null;
+    const url = new URL(location.href);
+    url.searchParams.set("view", state.trajectoryView);
+    url.searchParams.delete("exam");
+    history.pushState({}, "", url);
+    renderDashboard();
+  }));
+  document.querySelectorAll("[data-subject-key]").forEach((button) => button.addEventListener("click", () => {
+    state.subjectKey = button.dataset.subjectKey;
+    renderDashboard();
+  }));
+  document.querySelectorAll("[data-subject-metric]").forEach((button) => button.addEventListener("click", () => {
+    state.subjectMetric = button.dataset.subjectMetric;
+    renderDashboard();
+  }));
+  document.querySelectorAll("[data-action='view-exam']").forEach((row) => row.addEventListener("click", (event) => {
+    event.preventDefault();
+    state.selectedExamId = row.dataset.id;
+    const url = new URL(row.href, location.href);
+    history.pushState({}, "", url);
+    renderDashboard();
+    document.querySelector(".exam-detail")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
   document.querySelectorAll("[data-tab]").forEach((button) => button.addEventListener("click", async () => {
     state.tab = button.dataset.tab;
     clearNotice();
@@ -1034,6 +1118,15 @@ async function bootstrap() {
   const path = location.pathname;
   if (path.startsWith("/share/")) return renderExternal("secret", path.slice("/share/".length));
   if (path.startsWith("/p/")) return renderExternal("public", path.slice("/p/".length));
+  const params = new URLSearchParams(location.search);
+  if (["total", "subject", "timeline"].includes(params.get("view"))) state.trajectoryView = params.get("view");
+  if (params.get("exam")) state.selectedExamId = params.get("exam");
+  window.addEventListener("popstate", () => {
+    const next = new URLSearchParams(location.search);
+    state.trajectoryView = ["total", "subject", "timeline"].includes(next.get("view")) ? next.get("view") : "total";
+    state.selectedExamId = next.get("exam") || null;
+    if (state.me) renderDashboard();
+  });
   return loadPrivateApp();
 }
 
