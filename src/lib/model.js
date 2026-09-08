@@ -196,6 +196,7 @@ export function publicProjection(student, exams, fields) {
           projected.subjects[subject].rawScore = source.rawScore ?? null;
           projected.subjects[subject].finalScore = source.finalScore ?? null;
           projected.subjects[subject].scoreMode = source.scoreMode || "raw";
+          projected.subjects[subject].fullScore = source.fullScore ?? null;
         }
         if (fields.subjectRanks) projected.subjects[subject].rankings = source.rankings || [];
       }
