@@ -15,9 +15,12 @@ test("exam entry is rendered directly without legacy humanizer assets", () => {
 });
 
 test("direct exam renderer preserves score and rank payload fields", () => {
-  for (const name of ["officialScore", "overall-school-rank", "overall-school-participants", "overall-class-rank", "overall-class-participants"]) {
-    assert.match(app, new RegExp(name));
-  }
+  assert.match(app, /name="officialScore"/);
+  assert.match(app, /function rankInputs\(prefix, ranking, label\)/);
+  assert.match(app, /name="\$\{prefix\}-rank"/);
+  assert.match(app, /name="\$\{prefix\}-participants"/);
+  assert.match(app, /rankInputs\("overall-school", school, "学校"\)/);
+  assert.match(app, /rankInputs\("overall-class", clazz, "班级"\)/);
   for (const subject of ["chinese", "math", "english", "physics", "chemistry", "biology"]) assert.match(app, new RegExp(`\\["${subject}"`));
   assert.match(app, /deriveDataStatus/);
   assert.doesNotMatch(app, /<label>数据状态<\/label>/);
