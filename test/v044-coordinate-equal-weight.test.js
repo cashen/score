@@ -17,6 +17,6 @@ test("coordinates are smaller than the student identity", () => {
 });
 
 test("coordinate labels are explicit enough to stand without field headings", () => {
-  assert.match(app, /`\$\{prefix\}第 \$\{ranking\.rank\} 名`/);
-  assert.match(app, /`${fmtNumber\(score\)} 分`/);
+  assert.ok(app.includes('`${prefix}第 ${ranking.rank} 名`'));
+  assert.ok(app.includes('`${fmtNumber(score)} 分`'));
 });
