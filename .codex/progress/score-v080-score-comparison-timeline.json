@@ -3,7 +3,8 @@
   "repository": "cashen/score",
   "branch": "feat/score-v080-score-comparison-timeline",
   "baseSha": "28ad0dd0a04b7b08119e17a9ee45bce363e36933",
-  "headSha": "543bea6ae081f4d7bfa4c0887df67281f47384f6",
+  "headSha": "c640c7ae576b8930b031a693a04f6d93e2522422",
+  "mergedSha": "659344d5aa914fcf14d9bfeca9567ea7ae4ee518",
   "pr": 22,
   "version": "0.8.0",
   "completed": [
@@ -17,10 +18,8 @@
     "S5-sharing-views",
     "S6-responsive-accessibility"
   ],
-  "inProgress": "S7-final-verify-pr-main-production",
-  "pending": [
-    "S7-final-verify-pr-main-production"
-  ],
+  "inProgress": null,
+  "pending": [],
   "verification": {
     "localVerify": {
       "command": "npm ci && npm run verify",
@@ -29,9 +28,37 @@
       "fail": 0,
       "verifiedAt": "2026-09-08T22:53:00Z"
     },
-    "exactHeadCi": null,
-    "mainCi": null,
-    "productionHealth": null
+    "exactHeadCi": {
+      "runId": 34287968003,
+      "conclusion": "success",
+      "tests": 104,
+      "pass": 104,
+      "fail": 0
+    },
+    "mainCi": {
+      "runId": 34288032219,
+      "sha": "659344d5aa914fcf14d9bfeca9567ea7ae4ee518",
+      "conclusion": "success"
+    },
+    "deployment": {
+      "runId": 34288050524,
+      "conclusion": "success"
+    },
+    "productionHealth": {
+      "ok": true,
+      "appVersion": "0.8.0",
+      "buildSha": "659344d5aa914fcf14d9bfeca9567ea7ae4ee518",
+      "schemaVersion": 1,
+      "storage": "workers-kv"
+    },
+    "productionResources": [
+      "/styles.css",
+      "/onboarding-v050.css",
+      "/ui-v050.css",
+      "/ui-v070.css",
+      "/ui-v080.css",
+      "/router-v2.js"
+    ]
   },
   "lastFailure": null,
   "verifiedAt": "2026-09-08T22:38:09.469Z",
