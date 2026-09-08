@@ -1,0 +1,83 @@
+.onboarding-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+  background: var(--v50-bg, var(--bg));
+}
+.onboarding-card {
+  width: min(720px, 100%);
+  background: var(--v50-surface, var(--surface));
+  border: 1px solid var(--v50-line, var(--line));
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: none;
+}
+.onboarding-card h1 { margin: 10px 0 8px; }
+.onboarding-card > p { line-height: 1.65; }
+.onboarding-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.recovery-code-box {
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid #b7cec5;
+  border-radius: 14px;
+  background: var(--v50-position, var(--surface-2));
+}
+.recovery-code-box code {
+  display: block;
+  margin: 10px 0;
+  font-size: 16px;
+  line-height: 1.7;
+  word-break: break-all;
+  user-select: all;
+}
+.v4-recovery-ack {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 14px 0;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: var(--v50-attention, #fbf7ed);
+  color: #765314;
+}
+.v4-recovery-ack input { width: auto; margin-top: 2px; }
+.v4-join-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 16px 0 22px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--v50-surface-soft, var(--surface-2));
+  color: var(--v50-muted, var(--muted));
+  font-size: 13px;
+  font-weight: 700;
+}
+.v4-join-step {
+  border: 0;
+  border-top: 1px solid var(--v50-line, var(--line));
+  margin: 18px 0 0;
+  padding: 18px 0 0;
+}
+.v4-join-step legend { padding: 0; font-size: 20px; font-weight: 800; }
+.v4-join-step > p { margin: 6px 0 16px; color: var(--v50-muted, var(--muted)); }
+.v4-join-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.v4-join-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.login-help { margin-top: 14px; text-align: center; }
+.login-help a { font-weight: 700; }
+
+@media (max-width: 680px) {
+  .onboarding-shell { align-items: start; padding: 18px 12px; }
+  .onboarding-card { padding: 20px 16px; border-radius: 16px; }
+  .v4-join-fields { grid-template-columns: 1fr; }
+  .v4-join-progress { gap: 6px; font-size: 12px; }
+  .v4-join-actions { display: grid; grid-template-columns: 1fr; }
+  .v4-join-actions .btn { min-height: 44px; }
+}
+
+@media (hover: none) {
+  .onboarding-actions .btn,
+  .v4-join-actions .btn { min-height: 44px; }
+}

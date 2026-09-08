@@ -1,0 +1,43 @@
+{
+  "task": "frontend-consolidation-v050",
+  "version": "0.5.0",
+  "branch": "feat/frontend-consolidation-v050",
+  "baseMain": "c510eaaebf6b71be4eb26ee9e8f777aab42a4944",
+  "status": "implemented-awaiting-final-gate",
+  "authoritativePlan": "docs/plan/frontend-v050.md",
+  "baselineAudit": "docs/audit/frontend-v050-baseline.md",
+  "phases": {
+    "S0": {"status": "done", "note": "baseline, plan and recovery protocol committed"},
+    "S1": {"status": "done", "note": "brand and copy moved into direct source renderer"},
+    "S2": {"status": "done", "note": "primary IA is trajectory / exams / sharing / family; low-frequency account actions moved out"},
+    "S3": {"status": "done", "note": "overview is continuous reading with equal-weight coordinate"},
+    "S4": {"status": "done", "note": "exam list preserves school/class/score on mobile and uses row navigation"},
+    "S5": {"status": "done", "note": "exam entry follows exam context / overall / six subjects with optional advanced metadata"},
+    "S6": {"status": "done", "note": "trajectory copy is factual and avoids causal overclaim"},
+    "S7": {"status": "done", "note": "sharing flow uses human privacy language and explicit included/excluded scope"},
+    "S8": {"status": "done", "note": "family, account and another-household invitation boundaries are separated"},
+    "S9": {"status": "done", "note": "login/onboarding/recovery copy consolidated around 高三坐标"},
+    "S10": {"status": "done", "note": "status, draft and slow-network feedback consolidated"},
+    "S11": {"status": "done", "note": "legacy DOM enhancer chain removed from production entry; direct renderer is source of truth"},
+    "S12": {"status": "done", "note": "v0.5 visual system and compact row hierarchy implemented"},
+    "S13": {"status": "done", "note": "360/mobile information-preservation and touch contracts covered"},
+    "S14": {"status": "done", "note": "app-wide live region removed; targeted status/alert semantics used"},
+    "S15": {"status": "done", "note": "copy/source-of-truth regression contracts migrated and expanded"}
+  },
+  "verification": {
+    "greenImplementationHead": "01590e21c48d899ae49e8cdb2a18949a9815abe2",
+    "greenImplementationCiRun": 34172672109,
+    "greenImplementationCiConclusion": "success",
+    "diagnosticWorkflow": "temporary verify-output artifact capture was used only to identify four brittle historical/source-regex contracts; it has been removed before final gate",
+    "finalExactHeadCi": "pending after checkpoint seal"
+  },
+  "recovery": [
+    "Fetch latest main and compare with baseMain.",
+    "Fetch PR exact head, changed files/diff and CI.",
+    "Read this checkpoint and docs/plan/frontend-v050.md.",
+    "Only committed work with matching passing tests counts as done.",
+    "Never force reset user work; reconcile main drift explicitly.",
+    "Before merge require exact-head CI success and use expected_head_sha.",
+    "After merge require main CI, exact-SHA Cloudflare deploy and production appVersion=0.5.0."
+  ]
+}

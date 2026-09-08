@@ -46,11 +46,16 @@ async function deleteDraft(key) {
   }).finally(() => db.close());
 }
 
+function setDraftState(form, text) {
+  const target = form?.querySelector?.("[data-draft-state]");
+  if (target) target.textContent = text;
+}
+
 function studentKey() {
   const select = document.querySelector("#student-select");
   if (select?.value) return select.value;
-  const title = document.querySelector("main.container .title-row h1")?.textContent?.trim();
-  return title || "default";
+  const heading = document.querySelector(".coordinate-hero h1")?.textContent?.trim();
+  return heading || "default";
 }
 
 function isNewExamForm(form) {
@@ -71,10 +76,7 @@ function apply(form, draft) {
     if (!field || typeof field.value === "undefined") continue;
     field.value = value;
   }
-  const note = document.createElement("div");
-  note.className = "notice-box";
-  note.textContent = `已恢复本机未同步草稿 · ${new Date(draft.savedAt).toLocaleString()}`;
-  form.querySelector(".dialog-head")?.after(note);
+  setDraftState(form, `已恢复上次未保存的内容 · ${new Date(draft.savedAt).toLocaleString()}`);
   form.dataset.draftRestored = "1";
   form.dispatchEvent(new CustomEvent("score:draft-restored", { bubbles: true }));
   return true;
@@ -87,7 +89,15 @@ async function attach(form) {
   try { apply(form, await readDraft(activeKey)); } catch {}
   const save = () => {
     clearTimeout(timer);
-    timer = setTimeout(() => writeDraft(activeKey, serialize(form)).catch(() => {}), 250);
+    setDraftState(form, "正在保存本机草稿…");
+    timer = setTimeout(async () => {
+      try {
+        await writeDraft(activeKey, serialize(form));
+        if (form.isConnected) setDraftState(form, "草稿已保存在本机");
+      } catch {
+        if (form.isConnected) setDraftState(form, "本机草稿暂未保存");
+      }
+    }, 250);
   };
   form.addEventListener("input", save);
   form.addEventListener("change", save);

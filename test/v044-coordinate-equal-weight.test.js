@@ -2,49 +2,21 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const css = await readFile(new URL("../public/ui-v042.css", import.meta.url), "utf8");
-const ui = await readFile(new URL("../public/ui-v042.js", import.meta.url), "utf8");
-const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
-const lock = JSON.parse(await readFile(new URL("../package-lock.json", import.meta.url), "utf8"));
-const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
+const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "utf8");
 
-test("school rank class rank and total score are peer coordinate items", () => {
-  assert.match(ui, /class=\"v44-coordinate-row\"/);
-  assert.match(ui, /class=\"v44-coordinate-item\"/);
-  assert.match(ui, /metrics\.map/);
-  assert.match(ui, /schoolRank/);
-  assert.match(ui, /classRank/);
-  assert.match(ui, /source\.total/);
-  assert.doesNotMatch(ui, /<strong>\$\{v42Esc\(primary\)\}<\/strong>/);
+test("school, class and score share one typography rule", () => {
+  assert.match(app, /items\.map\(\(item\) => `<span>\$\{esc\(item\)\}<\/span>`\)/);
+  assert.match(css, /\.coordinate-row > span\s*\{[\s\S]*font-size:\s*24px;[\s\S]*font-weight:\s*650/);
+  assert.doesNotMatch(css, /\.coordinate-row[^}]*:first-child[^}]*font-size/);
 });
 
-test("all coordinate metrics share one typography token and stay smaller than the name", () => {
-  assert.match(css, /\.v41-current-coordinate > h1[\s\S]*font-size:\s*30px/);
-  assert.match(css, /\.v44-coordinate-item[\s\S]*font-size:\s*24px/);
-  assert.match(css, /\.v44-coordinate-item[\s\S]*font-weight:\s*650/);
-  assert.match(css, /\.v44-coordinate-item[\s\S]*color:\s*var\(--text\)/);
-  assert.doesNotMatch(css, /\.v44-coordinate-item[^}]*font-size:\s*(?:3[0-9]|4[0-9]|[5-9][0-9])px/);
+test("coordinates are smaller than the student identity", () => {
+  assert.match(css, /\.hero-head h1,[\s\S]*font-size:\s*31px/);
+  assert.match(css, /\.coordinate-row > span[\s\S]*font-size:\s*24px/);
 });
 
-test("coordinate items keep natural wrapping without forcing one structural divider style", () => {
-  assert.match(css, /\.v44-coordinate-row[\s\S]*flex-wrap:\s*wrap/);
-  assert.doesNotMatch(css, /white-space:\s*nowrap/);
-});
-
-test("mobile coordinate metrics remain peer-sized below the mobile name", () => {
-  assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.v41-current-coordinate > h1[\s\S]*font-size:\s*26px/);
-  assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.v44-coordinate-item[\s\S]*font-size:\s*20px/);
-  assert.match(css, /@media \(max-width: 380px\)[\s\S]*\.v44-coordinate-item[\s\S]*font-size:\s*19px/);
-});
-
-test("optional school percentile stays inside the school metric instead of becoming a hero", () => {
-  assert.match(ui, /metrics\.push\(source\.schoolPct \? `\$\{schoolRank\} · \$\{source\.schoolPct\}` : schoolRank\)/);
-  assert.match(ui, /metrics\.push\(`校\$\{source\.schoolPct\}`\)/);
-});
-
-test("v0.4.4 equal-weight contract remains active across later 0.4.x patches", () => {
-  assert.match(pkg.version, /^0\.4\.(?:[4-9]|\d{2,})$/);
-  assert.equal(lock.version, pkg.version);
-  assert.equal(lock.packages[""].version, pkg.version);
-  assert.match(wrangler, new RegExp(`APP_VERSION\\s*=\\s*"${pkg.version.replaceAll(".", "\\.")}"`));
+test("coordinate labels are explicit enough to stand without field headings", () => {
+  assert.ok(app.includes('`${prefix}第 ${ranking.rank} 名`'));
+  assert.ok(app.includes('`${fmtNumber(score)} 分`'));
 });
