@@ -1,0 +1,28 @@
+{
+  "task": "logo-b-score-record",
+  "repository": "cashen/score",
+  "branch": "feat/logo-b-score-record",
+  "baseSha": "0a5644406d3e748a6e1acc97e3354c5b0d9adfe9",
+  "headSha": "0a5644406d3e748a6e1acc97e3354c5b0d9adfe9",
+  "pr": null,
+  "version": "0.9.1",
+  "completed": ["S0-live-baseline", "S0-branch", "S0-plan-written"],
+  "inProgress": "S0-plan-pr",
+  "pending": ["S0-plan-pr", "S1-logo-svg", "S2-site-integration", "S3-a11y", "S4-tests-release", "S5-merge-production"],
+  "verification": {
+    "mainSha": "0a5644406d3e748a6e1acc97e3354c5b0d9adfe9",
+    "mainTreeSha": "b41ccff66fb356f18be3811c3ec9356bd2ad65bc",
+    "openPrs": [],
+    "mainCi": {"runId": 34410736773, "conclusion": "success"},
+    "deployment": {"runId": 34410864489, "conclusion": "success"},
+    "productionHealth": {"ok": true, "appVersion": "0.9.0", "buildSha": "0a5644406d3e748a6e1acc97e3354c5b0d9adfe9", "schemaVersion": 1, "storage": "workers-kv"}
+  },
+  "lastFailure": null,
+  "verifiedAt": "2026-09-09T22:15:00Z",
+  "recoveryRule": [
+    "Before every continuation read this checkpoint and live GitHub main, PR head, Actions and production.",
+    "Do not overwrite older worktrees or user changes.",
+    "Commit code, tests and checkpoint after each material stage.",
+    "Merge only after final exact-head PR CI succeeds; unknown network results are not success."
+  ]
+}
