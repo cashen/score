@@ -1,0 +1,36 @@
+{
+  "task": "score-v100-share-eink",
+  "repository": "cashen/score",
+  "branch": "revert/v010-to-v090",
+  "baseSha": "495d868221698b4ca0446e2d0c218065fe778059",
+  "headSha": "0a5644406d3e748a6e1acc97e3354c5b0d9adfe9",
+  "pr": 26,
+  "version": "0.9.0",
+  "status": "rolled_back",
+  "completed": ["S0-live-baseline", "S0-branch", "S0-plan-written", "S0-plan-pr", "S1-eink-tokens", "S2-total", "S3-subject-timeline", "S4-boundary", "S5-a11y-and-browser", "S6-browser", "rollback-pr-26", "rollback-production-verified"],
+  "inProgress": null,
+  "pending": [],
+  "verification": {
+    "mainSha": "0a5644406d3e748a6e1acc97e3354c5b0d9adfe9",
+    "openPrs": [],
+    "mainCi": {"runId": 34373058007, "conclusion": "success"},
+    "deployment": {"runId": 34410864489, "conclusion": "success"},
+    "rollbackPr": {"number": 26, "headSha": "5bc26ebb8c595fd8c5ac506c7da75410317ef8e9", "ciRunId": 34410543273, "ciConclusion": "success", "mergeSha": "0a5644406d3e748a6e1acc97e3354c5b0d9adfe9"},
+    "rollbackMainCi": {"runId": 34410736773, "conclusion": "success"},
+    "rollbackDeployment": {"runId": 34410864489, "conclusion": "success"},
+    "localVerify": {"command": "npm run verify", "tests": 123, "pass": 123, "fail": 0},
+    "localBrowser": {"status": "not_verified", "reason": "Playwright Chromium/WebKit download stalled in restricted network and was interrupted"},
+    "prBrowser": {"runId": 34409549674, "conclusion": "success", "passed": 30, "failed": 0, "failureFixed": "duplicate exact snapshot-mode accessible text by prefixing report-header mode with 模式："},
+    "postFixLocalVerify": {"command": "npm run verify", "tests": 123, "pass": 123, "fail": 0},
+    "productionHealth": {"status": "verified_in_deploy_job", "appVersion": "0.9.0", "buildSha": "0a5644406d3e748a6e1acc97e3354c5b0d9adfe9", "schemaVersion": 1, "storage": "workers-kv", "resourceVerification": "passed; /ui-v081-share-ink.css present; /ui-v100-share-eink.css absent"}
+  },
+  "lastFailure": "Direct local production curl timed out; deployment job's same-origin health and resource verification succeeded.",
+  "verifiedAt": "2026-09-09T22:11:00Z",
+  "recoveryRule": [
+    "Before every continuation read this checkpoint and live GitHub main, PR head, Actions and production.",
+    "Do not repeat a completed stage for an unchanged input SHA.",
+    "Do not overwrite older worktrees or user changes.",
+    "Commit code, tests and checkpoint after each stage.",
+    "Merge only after final exact-head PR CI succeeds; unknown network results are not success."
+  ]
+}
