@@ -3,7 +3,7 @@
   "repository": "cashen/score",
   "branch": "feat/score-v081-share-ink-editorial",
   "baseSha": "659344d5aa914fcf14d9bfeca9567ea7ae4ee518",
-  "headSha": "4ebd64db6053588acbb6c1b11ca5d22b9f00c7ea",
+  "headSha": "d51db9b038fc4e31296b44d0a6ebbbfa5d5dfaab",
   "pr": 23,
   "version": "0.8.1",
   "completed": [
@@ -67,7 +67,14 @@
       "fail": 0,
       "verifiedAt": "2026-09-09T04:25:28Z"
     },
-    "exactHeadCi": null,
+    "exactHeadCi": {
+      "runId": 34310957742,
+      "sha": "d51db9b038fc4e31296b44d0a6ebbbfa5d5dfaab",
+      "conclusion": "success",
+      "tests": 107,
+      "pass": 107,
+      "fail": 0
+    },
     "mainCi": null,
     "productionHealth": null
   },
@@ -76,7 +83,7 @@
     "reason": "The v0.8 checkpoint merged into main predates final CI, merge and production evidence; live GitHub and production facts are authoritative."
   },
   "lastFailure": null,
-  "verifiedAt": "2026-09-09T04:25:28Z",
+  "verifiedAt": "2026-09-09T04:27:00Z",
   "recoveryRule": [
     "Read this checkpoint and live GitHub state before every continuation.",
     "Do not repeat completed v0.8.0 work.",
