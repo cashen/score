@@ -3,7 +3,7 @@
   "repository": "cashen/score",
   "branch": "feat/score-v081-share-ink-editorial",
   "baseSha": "659344d5aa914fcf14d9bfeca9567ea7ae4ee518",
-  "headSha": "d51db9b038fc4e31296b44d0a6ebbbfa5d5dfaab",
+  "headSha": "10ab0c0136c99a6665aafd852a6e042e757d8388",
   "pr": 23,
   "version": "0.8.1",
   "completed": [
@@ -15,7 +15,7 @@
     "S2-pen-ink-share-ui",
     "S3-accessibility-version-regression"
   ],
-  "inProgress": "S4-exact-head-ci-merge-production",
+  "inProgress": "blocked-browser-preview-access",
   "pending": [
     "S4-exact-head-ci-merge-production"
   ],
@@ -68,12 +68,16 @@
       "verifiedAt": "2026-09-09T04:25:28Z"
     },
     "exactHeadCi": {
-      "runId": 34310957742,
-      "sha": "d51db9b038fc4e31296b44d0a6ebbbfa5d5dfaab",
-      "conclusion": "success",
-      "tests": 107,
-      "pass": 107,
-      "fail": 0
+      "runId": 34311041993,
+      "sha": "10ab0c0136c99a6665aafd852a6e042e757d8388",
+      "conclusion": "success"
+    },
+    "browserQa": {
+      "status": "blocked",
+      "fixture": "Synthetic data only; no production student records changed.",
+      "attempt": "Cloud Browser navigation to http://127.0.0.1:4173/qa?w=360",
+      "error": "net::ERR_BLOCKED_BY_CLIENT",
+      "unverified": ["mobile rendered layout", "keyboard interaction", "rendered total/subject/timeline navigation"]
     },
     "mainCi": null,
     "productionHealth": null
@@ -82,8 +86,13 @@
     "priorCheckpointStale": true,
     "reason": "The v0.8 checkpoint merged into main predates final CI, merge and production evidence; live GitHub and production facts are authoritative."
   },
-  "lastFailure": null,
-  "verifiedAt": "2026-09-09T04:27:00Z",
+  "lastFailure": {
+    "stage": "browser-acceptance",
+    "command": "inkTab.goto('http://127.0.0.1:4173/qa?w=360')",
+    "error": "net::ERR_BLOCKED_BY_CLIENT",
+    "nextStep": "Obtain an authorized browser-accessible preview; complete mobile and keyboard QA before exact-head CI and merge. Re-read main and PR head first."
+  },
+  "verifiedAt": "2026-09-09T10:14:36Z",
   "recoveryRule": [
     "Read this checkpoint and live GitHub state before every continuation.",
     "Do not repeat completed v0.8.0 work.",
