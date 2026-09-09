@@ -21,9 +21,9 @@ export function scoreSummaryText(summary) {
   const number = value => Number(value).toFixed(1).replace(/\.0$/, "");
   if (!summary || summary.kind === "missing") return "总分待补";
   if (summary.kind === "absent") return "本场缺考";
-  if (summary.kind === "official") return `学校公布总分 ${number(summary.value)}`;
-  if (summary.kind === "calculated_complete") return `六科合计 ${number(summary.value)}`;
-  return `已录 ${summary.recordedSubjects}/${summary.expectedSubjects} 科，小计 ${number(summary.subtotal)}`;
+  if (summary.kind === "official") return `学校公布总分 ${number(summary.value)} 分`;
+  if (summary.kind === "calculated_complete") return `六科合计 ${number(summary.value)} 分`;
+  return `已录 ${summary.recordedSubjects}/${summary.expectedSubjects} 科，小计 ${number(summary.subtotal)} 分`;
 }
 
 export function examCompleteness(exam) {

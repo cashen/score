@@ -15,7 +15,7 @@ test("empty and partial scores never masquerade as a total", () => {
   assert.equal(partial.overall.calculatedScore, 90);
   assert.equal(examScoreSummary(partial).kind, "calculated_partial");
   assert.equal(examScoreSummary(partial).value, null);
-  assert.equal(scoreSummaryText(examScoreSummary(partial)), "已录 1/6 科，小计 90");
+  assert.equal(scoreSummaryText(examScoreSummary(partial)), "已录 1/6 科，小计 90 分");
 });
 
 test("official zero and complete six-subject totals remain valid", () => {
@@ -35,4 +35,8 @@ test("absence and public projection preserve honest score semantics", () => {
   assert.equal(projected.exams[0].overallScore, null);
   assert.equal(projected.exams[0].scoreSummary.kind, "calculated_partial");
   assert.equal(projected.exams[0].scoreSummary.subtotal, 90);
+  const reflected = make({ math: subject(90) });
+  reflected.reflection = { studentNote: "只给自己看的话", nextTry: "下次先做一道" };
+  const shared = publicProjection({ displayName: "示例" }, [reflected], { overallScore: true, subjectScores: true });
+  assert.equal("reflection" in shared.exams[0], false);
 });

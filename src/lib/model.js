@@ -106,6 +106,11 @@ export function normalizeExam(input, existing = null) {
   const recordedScores = SUBJECTS.map(key => subjects[key].finalScore ?? subjects[key].rawScore).filter(score => score != null);
   const calculatedScore = recordedScores.length ? recordedScores.reduce((sum, score) => sum + score, 0) : null;
   const comparison = input.comparison === undefined ? (existing?.comparison || null) : normalizeComparison(input.comparison);
+  const reflectionInput = input.reflection === undefined ? existing?.reflection : input.reflection;
+  const reflection = reflectionInput && typeof reflectionInput === "object" ? {
+    studentNote: safeText(reflectionInput.studentNote, 500),
+    nextTry: safeText(reflectionInput.nextTry, 500)
+  } : { studentNote: "", nextTry: "" };
   return {
     schemaVersion: 1,
     id,
@@ -127,6 +132,7 @@ export function normalizeExam(input, existing = null) {
     },
     subjects,
     notes: safeText(input.notes, 1500),
+    reflection,
     dataStatus: input.dataStatus === "complete" ? "complete" : "partial",
     revision: existing ? existing.revision + 1 : 1,
     createdAt: existing?.createdAt || new Date().toISOString(),
