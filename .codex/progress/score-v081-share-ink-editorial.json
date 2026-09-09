@@ -3,7 +3,7 @@
   "repository": "cashen/score",
   "branch": "feat/score-v081-share-ink-editorial",
   "baseSha": "659344d5aa914fcf14d9bfeca9567ea7ae4ee518",
-  "headSha": "4d7c10459397745742f1ed6d208a9c61ce5dbc42",
+  "headSha": "c1d54388a3390d394b73f4afffa77229f45d2a90",
   "pr": 23,
   "version": "0.8.1",
   "completed": [
@@ -15,7 +15,7 @@
     "S2-pen-ink-share-ui",
     "S3-accessibility-version-regression"
   ],
-  "inProgress": "S4-ci-browser-regression",
+  "inProgress": "S4-final-browser-and-resource-ci",
   "pending": [
     "S4-exact-head-ci-merge-production"
   ],
@@ -62,23 +62,36 @@
         "npm ci",
         "npm run verify"
       ],
-      "tests": 107,
-      "pass": 107,
+      "tests": 110,
+      "pass": 110,
       "fail": 0,
-      "verifiedAt": "2026-09-09T04:25:28Z"
+      "verifiedAt": "2026-09-09T10:26:25.460Z"
     },
     "exactHeadCi": {
-      "runId": 34339235573,
-      "sha": "4d7c10459397745742f1ed6d208a9c61ce5dbc42",
-      "conclusion": "success"
+      "runId": 34339798752,
+      "sha": "c1d54388a3390d394b73f4afffa77229f45d2a90",
+      "conclusion": "success",
+      "browserTests": 30
     },
     "browserQa": {
-      "status": "pending-project-ci",
-      "recovery": "Added reproducible project browser tests in a dedicated CI job; no temporary public preview or production data writes.",
-      "fixture": "Synthetic data only; no production student records changed.",
-      "attempt": "Cloud Browser navigation to http://127.0.0.1:4173/qa?w=360",
-      "error": "net::ERR_BLOCKED_BY_CLIENT",
-      "unverified": ["mobile rendered layout", "keyboard interaction", "rendered total/subject/timeline navigation"]
+      "status": "awaiting-layout-fix-rerun",
+      "runId": 34339798752,
+      "tests": 30,
+      "pass": 30,
+      "artifactId": 10099285455,
+      "visualReview": {
+        "reviewed": [
+          "Chromium 360 total, subject, timeline detail",
+          "Chromium 1280 timeline detail",
+          "WebKit 390 total"
+        ],
+        "findings": [
+          "Mobile subject label squeezed against detail values",
+          "Desktop timeline chevron placed on a second row"
+        ],
+        "resolution": "Scoped grid tracks and spacing fixed; added label-width, gap and chevron-alignment assertions. Revised screenshots pending."
+      },
+      "fixture": "Synthetic data only; no production records changed."
     },
     "mainCi": null,
     "productionHealth": null
@@ -87,13 +100,8 @@
     "priorCheckpointStale": true,
     "reason": "The v0.8 checkpoint merged into main predates final CI, merge and production evidence; live GitHub and production facts are authoritative."
   },
-  "lastFailure": {
-    "stage": "browser-acceptance",
-    "command": "inkTab.goto('http://127.0.0.1:4173/qa?w=360')",
-    "error": "net::ERR_BLOCKED_BY_CLIENT",
-    "nextStep": "Obtain an authorized browser-accessible preview; complete mobile and keyboard QA before exact-head CI and merge. Re-read main and PR head first."
-  },
-  "verifiedAt": "2026-09-09T10:14:36Z",
+  "lastFailure": null,
+  "verifiedAt": "2026-09-09T10:26:25.465Z",
   "recoveryRule": [
     "Read this checkpoint and live GitHub state before every continuation.",
     "Do not repeat completed v0.8.0 work.",

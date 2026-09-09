@@ -35,6 +35,24 @@ async function layout(page) {
     expect(box.left).toBeGreaterThanOrEqual(0);
     expect(box.right).toBeLessThanOrEqual(page.viewportSize().width + 1);
   }
+  const detailRows = await page.locator(".exam-detail-subject").evaluateAll(nodes => nodes.map(node => {
+    const label = node.querySelector("strong");
+    const value = node.querySelector("span");
+    return { labelWidth: label.getBoundingClientRect().width, fontSize: parseFloat(getComputedStyle(label).fontSize), gap: value.getBoundingClientRect().left - label.getBoundingClientRect().right };
+  }));
+  for (const row of detailRows) {
+    expect(row.labelWidth).toBeGreaterThanOrEqual(row.fontSize * 2 - 1);
+    expect(row.gap).toBeGreaterThanOrEqual(10);
+  }
+  const arrows = await page.locator(".history-row").evaluateAll(nodes => nodes.map(node => {
+    const row = node.getBoundingClientRect();
+    const arrow = node.querySelector(".row-chevron").getBoundingClientRect();
+    return { rightGap: row.right - arrow.right, centerDelta: Math.abs((row.top + row.bottom - arrow.top - arrow.bottom) / 2) };
+  }));
+  for (const arrow of arrows) {
+    expect(arrow.rightGap).toBeLessThanOrEqual(20);
+    expect(arrow.centerDelta).toBeLessThanOrEqual(3);
+  }
 }
 
 test("single record: total, six subjects, timeline and complete detail", async ({ page }, info) => {
