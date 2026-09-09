@@ -3,12 +3,12 @@
   "repository": "cashen/score",
   "branch": "feat/score-v100-share-eink",
   "baseSha": "495d868221698b4ca0446e2d0c218065fe778059",
-  "headSha": "495d868221698b4ca0446e2d0c218065fe778059",
-  "pr": null,
+  "headSha": "2c0dbfd832d22704220a68279335b1f07985d0bc",
+  "pr": 25,
   "version": "0.10.0",
-  "completed": ["S0-live-baseline", "S0-branch", "S0-plan-written"],
-  "inProgress": "S0-plan-pr",
-  "pending": ["S0-plan-pr", "S1-eink-tokens", "S2-total", "S3-subject-timeline", "S4-boundary", "S5-a11y", "S6-browser", "S7-release"],
+  "completed": ["S0-live-baseline", "S0-branch", "S0-plan-written", "S0-plan-pr"],
+  "inProgress": "S1-eink-tokens",
+  "pending": ["S1-eink-tokens", "S2-total", "S3-subject-timeline", "S4-boundary", "S5-a11y", "S6-browser", "S7-release"],
   "verification": {
     "mainSha": "495d868221698b4ca0446e2d0c218065fe778059",
     "openPrs": [],
@@ -17,7 +17,7 @@
     "productionHealth": {"status": "not_verified_this_run", "lastKnownAppVersion": "0.9.0", "lastKnownBuildSha": "495d868221698b4ca0446e2d0c218065fe778059", "latestRequest": "curl timed out; retry required"}
   },
   "lastFailure": "Production health request timed out during takeover verification; do not treat as success.",
-  "verifiedAt": "2026-09-09T00:00:00Z",
+  "verifiedAt": "2026-09-09T21:44:00Z",
   "recoveryRule": [
     "Before every continuation read this checkpoint and live GitHub main, PR head, Actions and production.",
     "Do not repeat a completed stage for an unchanged input SHA.",
