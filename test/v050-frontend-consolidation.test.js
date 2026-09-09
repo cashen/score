@@ -137,11 +137,11 @@ test("coordinate visual hierarchy is restrained and equal-weight", () => {
   assert.match(cssFlat, /@media \(max-width: 760px\).*\.coordinate-row > span \+ span::before\s*\{\s*display:\s*none/);
 });
 
-test("version contract is exactly 0.8.0", () => {
-  assert.equal(pkg.version, "0.8.0");
-  assert.equal(lock.version, "0.8.0");
-  assert.equal(lock.packages[""].version, "0.8.0");
-  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.8\.0"/);
+test("version contract is exactly 0.8.1", () => {
+  assert.equal(pkg.version, "0.8.1");
+  assert.equal(lock.version, "0.8.1");
+  assert.equal(lock.packages[""].version, "0.8.1");
+  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.8\.1"/);
   assert.match(pkg.scripts.check, /public\/app\.js/);
   assert.match(pkg.scripts.check, /public\/onboarding-v050\.js/);
 });

@@ -1103,6 +1103,16 @@ function publicViewNavV080(active = "total", subject = "chinese") {
   return `<nav class="public-view-nav" aria-label="分享视图">${items.map(([key, label, suffix]) => `<a class="public-view-tab ${active === key ? "active" : ""}" href="?view=${key}${suffix}" aria-current="${active === key ? "page" : "false"}">${label}</a>`).join("")}</nav>`;
 }
 
+function publicBaselineV081(view, exams) {
+  if (!Array.isArray(exams) || exams.length !== 1) return "";
+  const copy = {
+    total: "目前只有一次考试记录。先看这一场的总成绩和位置；有下一次同口径记录后再比较。",
+    subject: "目前只有一次考试记录。这里先呈现这一科的事实，不判断变化。",
+    timeline: "时间轴从这一次开始。打开节点可以查看本场全部已分享信息。"
+  };
+  return `<aside class="public-baseline-note" aria-label="记录状态"><span class="public-baseline-mark" aria-hidden="true"></span><div><strong>当前基线</strong><p>${copy[view] || copy.total}</p></div></aside>`;
+}
+
 function publicSubjectComparisonV080(exams, key) {
   const label = SUBJECTS.find(([subject]) => subject === key)?.[1] || "单科";
   const rows = exams.map((exam) => {
@@ -1113,7 +1123,7 @@ function publicSubjectComparisonV080(exams, key) {
     const values = [score == null ? null : `${fmtNumber(score)} 分`, school?.rank ? `校第 ${school.rank}` : null, clazz?.rank ? `班第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
     return `<div class="subject-compare-row"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div><b>${esc(values || "数据待补")}</b></div>`;
   }).join("");
-  return `<section class="public-reading-section"><div class="section-label">单科</div><h2>${label}的历次记录</h2><div class="subject-picker public-subject-picker">${SUBJECTS.map(([subject, subjectLabel]) => `<a class="subject-chip ${subject === key ? "active" : ""}" href="?view=subject&subject=${encodeURIComponent(subject)}" aria-current="${subject === key ? "page" : "false"}">${subjectLabel}</a>`).join("")}</div>${rows || `<p class="muted">还没有可分享的${label}记录。</p>`}</section>`;
+  return `<section class="public-reading-section"><div class="section-label">单科</div><h2>${label}的历次记录</h2>${publicBaselineV081("subject", exams)}<div class="subject-picker public-subject-picker">${SUBJECTS.map(([subject, subjectLabel]) => `<a class="subject-chip ${subject === key ? "active" : ""}" href="?view=subject&subject=${encodeURIComponent(subject)}" aria-current="${subject === key ? "page" : "false"}">${subjectLabel}</a>`).join("")}</div>${rows || `<p class="muted">还没有可分享的${label}记录。</p>`}</section>`;
 }
 
 function publicExamDetailV080(exam) {
@@ -1138,11 +1148,12 @@ function publicTimelineV080(exams, selectedExamId = null) {
     const clazz = overallRank(projected, "class");
     return `<a class="history-row ${index === 0 ? "is-latest" : ""}" href="?view=timeline&exam=${encodeURIComponent(exam.id)}"><span><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最新" : ""}</small></span><div class="history-coordinate"><span>${school?.rank ? `校第 ${school.rank} 名` : ""}</span><span>${clazz?.rank ? `班第 ${clazz.rank} 名` : ""}</span><span>${overallScore(projected) != null ? `${fmtNumber(overallScore(projected))} 分` : ""}</span></div><span class="row-chevron" aria-hidden="true">›</span></a>`;
   }).join("");
-  return `<section class="public-reading-section public-timeline"><div class="section-label">时间轴</div><h2>每一次考试都可以打开</h2>${selected ? publicExamDetailV080(selected) : ""}<div class="history-list">${rows || `<div class="empty compact">暂未分享考试数据。</div>`}</div><p class="muted">页面只展示分享白名单中的字段。</p></section>`;
+  return `<section class="public-reading-section public-timeline"><div class="section-label">时间轴</div><h2>每一次考试都可以打开</h2>${publicBaselineV081("timeline", exams)}${selected ? publicExamDetailV080(selected) : ""}<div class="history-list">${rows || `<div class="empty compact">暂未分享考试数据。</div>`}</div><p class="muted">页面只展示分享白名单中的字段。</p></section>`;
 }
 
 function renderPublicV080(result) {
   const data = result.data || {};
+  app.classList.add("share-ink-root");
   const params = new URLSearchParams(location.search);
   const view = ["total", "subject", "timeline"].includes(params.get("view")) ? params.get("view") : "total";
   const subject = SUBJECTS.some(([key]) => key === params.get("subject")) ? params.get("subject") : "chinese";
@@ -1152,9 +1163,9 @@ function renderPublicV080(result) {
   const clazz = rankByScope(latest?.overallRankings, "class");
   const coordinate = latest ? [school?.rank ? `校第 ${school.rank} 名` : null, clazz?.rank ? `班第 ${clazz.rank} 名` : null, latest.overallScore != null ? `${fmtNumber(latest.overallScore)} 分` : null].filter(Boolean) : [];
   const meta = [data.student?.graduationYear ? `${data.student.graduationYear}届` : null, data.student?.schoolLabel, data.student?.className].filter(Boolean).map(esc).join(" · ");
-  const total = `<section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "只分享当前内容" : "持续更新"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>位置未分享</span>`}</div><div class="subject-rows public-subjects">${publicSubjectRows(latest)}</div>` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
+  const total = `<section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "只分享当前内容" : "持续更新"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>位置未分享</span>`}</div>${publicBaselineV081("total", data.exams || [])}<div class="subject-rows public-subjects">${publicSubjectRows(latest)}</div>` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
   const body = view === "subject" ? publicSubjectComparisonV080(data.exams || [], subject) : view === "timeline" ? publicTimelineV080(data.exams || [], selectedExamId) : total;
-  app.innerHTML = `<main class="public-shell"><div class="public-brand"><div class="brand-mark">标</div><span>${PRODUCT_NAME} · 分享</span></div><div class="privacy-note">此页面由家庭主动分享 · 请勿未经允许转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">分享地址可由家庭随时撤销</footer>`;
+  app.innerHTML = `<main class="public-shell ink-share" data-share-view="${view}" data-exam-count="${data.exams?.length || 0}"><div class="public-brand"><div class="brand-mark">标</div><span>${PRODUCT_NAME} · 分享</span><i class="ink-share-flourish" aria-hidden="true"></i></div><div class="privacy-note">此页面由家庭主动分享 · 请勿未经允许转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">分享地址可由家庭随时撤销</footer>`;
 }
 
 async function renderExternal(kind, locator) {

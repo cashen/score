@@ -105,3 +105,5 @@ jobs:
           console.error(`Production never converged to appVersion ${expected}. Last response: ${last}`);
           process.exit(1);
           NODE
+
+          node scripts/verify-production.mjs "$TESTED_SHA"

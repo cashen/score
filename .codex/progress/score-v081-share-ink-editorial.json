@@ -1,0 +1,112 @@
+{
+  "task": "score-v081-share-ink-editorial",
+  "repository": "cashen/score",
+  "branch": "feat/score-v081-share-ink-editorial",
+  "baseSha": "659344d5aa914fcf14d9bfeca9567ea7ae4ee518",
+  "headSha": "c1d54388a3390d394b73f4afffa77229f45d2a90",
+  "pr": 23,
+  "version": "0.8.1",
+  "completed": [
+    "S0-live-baseline",
+    "S0-branch",
+    "S0-plan-written",
+    "S0-plan-commit-pr",
+    "S1-single-exam-share-semantics",
+    "S2-pen-ink-share-ui",
+    "S3-accessibility-version-regression"
+  ],
+  "inProgress": "S4-final-browser-and-resource-ci",
+  "pending": [
+    "S4-exact-head-ci-merge-production"
+  ],
+  "verification": {
+    "baselineMainCi": {
+      "runId": 34288032219,
+      "conclusion": "success"
+    },
+    "baselineDeployment": {
+      "runId": 34288050524,
+      "conclusion": "success"
+    },
+    "baselineProductionHealth": {
+      "ok": true,
+      "appVersion": "0.8.0",
+      "buildSha": "659344d5aa914fcf14d9bfeca9567ea7ae4ee518",
+      "schemaVersion": 1,
+      "storage": "workers-kv"
+    },
+    "stageTests": {
+      "S1": {
+        "command": "node --check public/app.js && node --test test/v081-share-ink.test.js",
+        "tests": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "S2": {
+        "command": "node --check public/app.js && node --test test/v081-share-ink.test.js test/v080-share-timeline.test.js test/v080-accessibility.test.js",
+        "tests": 7,
+        "pass": 7,
+        "fail": 0
+      }
+    },
+    "resolvedFailures": [
+      {
+        "stage": "S3",
+        "command": "npm run verify",
+        "reason": "One carried-forward version assertion still expected 0.8.0.",
+        "resolution": "Updated the assertion to the required 0.8.1 contract."
+      }
+    ],
+    "localVerify": {
+      "commands": [
+        "npm ci",
+        "npm run verify"
+      ],
+      "tests": 110,
+      "pass": 110,
+      "fail": 0,
+      "verifiedAt": "2026-09-09T10:26:25.460Z"
+    },
+    "exactHeadCi": {
+      "runId": 34339798752,
+      "sha": "c1d54388a3390d394b73f4afffa77229f45d2a90",
+      "conclusion": "success",
+      "browserTests": 30
+    },
+    "browserQa": {
+      "status": "awaiting-layout-fix-rerun",
+      "runId": 34339798752,
+      "tests": 30,
+      "pass": 30,
+      "artifactId": 10099285455,
+      "visualReview": {
+        "reviewed": [
+          "Chromium 360 total, subject, timeline detail",
+          "Chromium 1280 timeline detail",
+          "WebKit 390 total"
+        ],
+        "findings": [
+          "Mobile subject label squeezed against detail values",
+          "Desktop timeline chevron placed on a second row"
+        ],
+        "resolution": "Scoped grid tracks and spacing fixed; added label-width, gap and chevron-alignment assertions. Revised screenshots pending."
+      },
+      "fixture": "Synthetic data only; no production records changed."
+    },
+    "mainCi": null,
+    "productionHealth": null
+  },
+  "reconciliation": {
+    "priorCheckpointStale": true,
+    "reason": "The v0.8 checkpoint merged into main predates final CI, merge and production evidence; live GitHub and production facts are authoritative."
+  },
+  "lastFailure": null,
+  "verifiedAt": "2026-09-09T10:26:25.465Z",
+  "recoveryRule": [
+    "Read this checkpoint and live GitHub state before every continuation.",
+    "Do not repeat completed v0.8.0 work.",
+    "Only committed code with matching tests counts as complete.",
+    "Never overwrite unrelated user changes.",
+    "Merge only after final PR-head CI succeeds."
+  ]
+}
