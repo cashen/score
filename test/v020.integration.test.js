@@ -126,6 +126,38 @@ test("one-exam live trajectory requires an explicit future-exam acknowledgement"
   assert.equal(created.share.scope, "trajectory");
 });
 
+test("authenticated share preview reuses the allow-list without exposing secret tokens", async () => {
+  const env = makeEnv();
+  const root = await rootAccount(env);
+  const exam = await createExam(env, root, root.provision.studentId, { name: "预览月考", date: "2026-09-01", score: 580, rank: 160, participants: 1000, math: 120, mathRank: 180 });
+  const fields = { overallScore: true, overallRank: true, subjectScores: true, subjectRanks: true, history: false };
+  let response = await call(env, `/api/students/${root.provision.studentId}/shares`, { method: "POST", headers: { cookie: root.cookie, "x-score-csrf": root.csrf, origin: "https://score.example" }, body: JSON.stringify({ kind: "public", slug: "preview", mode: "snapshot", scope: "single", examId: exam.id, fields }) });
+  assert.equal(response.status, 201);
+  const publicShare = await response.json();
+  response = await call(env, `/api/students/${root.provision.studentId}/shares/public/${publicShare.share.locator}/preview`, { headers: { cookie: root.cookie } });
+  assert.equal(response.status, 200);
+  const publicPreview = await response.json();
+  assert.equal(publicPreview.share.locator, "preview");
+  assert.equal(publicPreview.data.exams.length, 1);
+  assert.equal("token" in publicPreview, false);
+
+  response = await call(env, `/api/students/${root.provision.studentId}/shares`, { method: "POST", headers: { cookie: root.cookie, "x-score-csrf": root.csrf, origin: "https://score.example" }, body: JSON.stringify({ kind: "secret", mode: "live", scope: "single", examId: exam.id, fields }) });
+  assert.equal(response.status, 201);
+  const secretShare = await response.json();
+  response = await call(env, `/api/students/${root.provision.studentId}/shares/secret/${secretShare.share.locator}/preview`, { headers: { cookie: root.cookie } });
+  assert.equal(response.status, 200);
+  const secretPreview = await response.json();
+  assert.equal(secretPreview.share.kind, "secret");
+  assert.equal("token" in secretPreview, false);
+  response = await call(env, `/api/students/${root.provision.studentId}/shares/secret/${secretShare.share.locator}/preview`);
+  assert.equal(response.status, 401);
+
+  response = await call(env, `/api/students/${root.provision.studentId}/shares/revoke`, { method: "POST", headers: { cookie: root.cookie, "x-score-csrf": root.csrf, origin: "https://score.example" }, body: JSON.stringify({ kind: "public", locator: publicShare.share.locator }) });
+  assert.equal(response.status, 200);
+  response = await call(env, `/api/students/${root.provision.studentId}/shares/public/${publicShare.share.locator}/preview`, { headers: { cookie: root.cookie } });
+  assert.equal(response.status, 404);
+});
+
 test("invited family is isolated and recovery rotates password, code and sessions", async () => {
   const env = makeEnv();
   const root = await rootAccount(env);

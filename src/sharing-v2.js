@@ -171,10 +171,42 @@ async function handleExternal(env, kind, rawLocator) {
   });
 }
 
+async function handlePreview(request, env, session, studentId, kind, locator) {
+  const student = await requireStudent(env, session.member, studentId, false);
+  const index = await shareIndex(env, studentId);
+  const item = (index.items || []).find((entry) => entry.kind === kind && entry.locator === locator);
+  if (!item) return errorJson("分享链接不存在或已撤销", 404, "share_not_found");
+  const grant = await getJson(env, `share:${kind}:${locator}`);
+  if (!grant || isExpired(grant) || grant.studentId !== student.id) return errorJson("分享链接不存在或已失效", 404, "share_not_found");
+  let data = grant.mode === "snapshot" && grant.snapshot ? grant.snapshot : null;
+  if (!data) {
+    const exams = await selectExams(env, student.id, grant.scope, grant.examId || null);
+    if (grant.scope === "single" && !exams.length) return errorJson("这次考试已不存在，分享链接无法继续展示", 404, "shared_exam_not_found");
+    data = publicProjection(student, exams, grant.fields);
+  }
+  return json({
+    share: {
+      kind,
+      mode: grant.mode,
+      scope: grant.scope,
+      examId: grant.examId || null,
+      examName: grant.examName || null,
+      expiresAt: grant.expiresAt,
+      fields: grant.fields,
+      locator,
+      examCount: data.exams?.length || 0,
+      includesFutureExams: grant.scope === "trajectory" && grant.mode === "live"
+    },
+    data
+  });
+}
+
 export async function routePrivateSharingV2(request, env, session) {
   const path = new URL(request.url).pathname;
   const match = path.match(/^\/api\/students\/([^/]+)\/shares$/);
   if (request.method === "POST" && match) return handleCreate(request, env, session, match[1]);
+  const preview = path.match(/^\/api\/students\/([^/]+)\/shares\/(secret|public)\/([^/]+)\/preview$/);
+  if (request.method === "GET" && preview) return handlePreview(request, env, session, preview[1], preview[2], decodeURIComponent(preview[3]));
   return null;
 }
 
