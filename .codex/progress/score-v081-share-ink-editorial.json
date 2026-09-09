@@ -3,7 +3,7 @@
   "repository": "cashen/score",
   "branch": "feat/score-v081-share-ink-editorial",
   "baseSha": "659344d5aa914fcf14d9bfeca9567ea7ae4ee518",
-  "headSha": "c1d54388a3390d394b73f4afffa77229f45d2a90",
+  "headSha": "f7a9111c4123e45ce8a90ac6ca4af071c6ec707d",
   "pr": 23,
   "version": "0.8.1",
   "completed": [
@@ -13,12 +13,17 @@
     "S0-plan-commit-pr",
     "S1-single-exam-share-semantics",
     "S2-pen-ink-share-ui",
-    "S3-accessibility-version-regression"
-  ],
-  "inProgress": "S4-final-browser-and-resource-ci",
-  "pending": [
+    "S3-accessibility-version-regression",
+    "S4-browser-and-visual-qa",
+    "S4-expected-head-merge",
+    "S4-main-ci",
+    "S4-deployment",
+    "S4-production-health",
+    "S4-production-entry-and-assets",
     "S4-exact-head-ci-merge-production"
   ],
+  "inProgress": null,
+  "pending": [],
   "verification": {
     "baselineMainCi": {
       "runId": 34288032219,
@@ -55,6 +60,11 @@
         "command": "npm run verify",
         "reason": "One carried-forward version assertion still expected 0.8.0.",
         "resolution": "Updated the assertion to the required 0.8.1 contract."
+      },
+      {
+        "stage": "browser-preview",
+        "reason": "Interactive browser could not access localhost",
+        "resolution": "Completed project CI browser acceptance with synthetic fixtures and reviewed screenshots; no preview was published."
       }
     ],
     "localVerify": {
@@ -68,45 +78,135 @@
       "verifiedAt": "2026-09-09T10:26:25.460Z"
     },
     "exactHeadCi": {
-      "runId": 34339798752,
-      "sha": "c1d54388a3390d394b73f4afffa77229f45d2a90",
+      "runId": 34340239149,
+      "sha": "f7a9111c4123e45ce8a90ac6ca4af071c6ec707d",
       "conclusion": "success",
+      "unitTests": 110,
       "browserTests": 30
     },
     "browserQa": {
-      "status": "awaiting-layout-fix-rerun",
-      "runId": 34339798752,
+      "status": "passed",
+      "runId": 34340239149,
       "tests": 30,
       "pass": 30,
-      "artifactId": 10099285455,
+      "fail": 0,
+      "artifactId": 10099446994,
       "visualReview": {
+        "status": "passed",
         "reviewed": [
-          "Chromium 360 total, subject, timeline detail",
-          "Chromium 1280 timeline detail",
-          "WebKit 390 total"
+          "Chromium 360 total / subject / corrected timeline detail",
+          "Chromium 1280 corrected timeline detail",
+          "WebKit 390 total / corrected timeline detail"
         ],
-        "findings": [
-          "Mobile subject label squeezed against detail values",
-          "Desktop timeline chevron placed on a second row"
-        ],
-        "resolution": "Scoped grid tracks and spacing fixed; added label-width, gap and chevron-alignment assertions. Revised screenshots pending."
+        "fixed": [
+          "Subject labels now keep their two-character width and spacing",
+          "Timeline chevron aligned at trailing edge"
+        ]
       },
-      "fixture": "Synthetic data only; no production records changed."
+      "fixture": "Synthetic data only; no production records changed.",
+      "limitations": [
+        "WebKit mobile viewport is emulation, not a physical device",
+        "Reduced transparency verified by source contract, not browser emulation"
+      ]
     },
-    "mainCi": null,
-    "productionHealth": null
+    "mainCi": {
+      "runId": 34340563160,
+      "sha": "a6984b15103cae58a570558a90d24d68543e88b0",
+      "conclusion": "success",
+      "unitTests": 110,
+      "browserTests": 30
+    },
+    "productionHealth": {
+      "appVersion": "0.8.1",
+      "buildSha": "a6984b15103cae58a570558a90d24d68543e88b0",
+      "ok": true,
+      "schemaVersion": 1,
+      "storage": "workers-kv"
+    },
+    "deployment": {
+      "runId": 34340703760,
+      "sha": "a6984b15103cae58a570558a90d24d68543e88b0",
+      "conclusion": "success"
+    },
+    "productionResources": {
+      "status": "passed",
+      "entries": 3,
+      "assets": [
+        {
+          "path": "/styles.css",
+          "sha256": "77d37cea766dee6b92882f57e23b9e7234dc9042f3f5d1f986e69e6bf6a2f931"
+        },
+        {
+          "path": "/onboarding-v050.css",
+          "sha256": "664de8a282197960cde80287960d307b905d63ad86441646ac88ae54f6dd55cc"
+        },
+        {
+          "path": "/ui-v050.css",
+          "sha256": "df32d9f86f183c3bef66bfa0de612394c1b0723efd37e453642ea9edaca958bc"
+        },
+        {
+          "path": "/ui-v070.css",
+          "sha256": "ca5b1e721f978f276517b0ed428af148b7b4dfe07f573fb4fdb72622fb3bbefd"
+        },
+        {
+          "path": "/ui-v080.css",
+          "sha256": "86393454b57d9ba9ed17307e032740c16dab39dd295d5c32b366e286206d366b"
+        },
+        {
+          "path": "/ui-v081-share-ink.css",
+          "sha256": "6c3921fe0f22222fe3df509a3889dd0245f62ac7d607a6ec7e22da335ce2f3de"
+        },
+        {
+          "path": "/router-v2.js",
+          "sha256": "e650301c5cf13c9e5f103dc9f62035eb4ad4604b27f61c06b783cc4f66307bb2"
+        },
+        {
+          "path": "/onboarding-v050.js",
+          "sha256": "980b39539874ea5a394d352f7fec83ea49ce2b5cfe1e591c54ab854dd3d24080"
+        },
+        {
+          "path": "/app.js",
+          "sha256": "00275480324977ce5b59077e47b6fd650c988c8df209b82bf529755d1808909e"
+        },
+        {
+          "path": "/draft.js",
+          "sha256": "ff09066413088039d896c43fa718c1833c76572cb106eedcd7f91e1c0ada7c46"
+        },
+        {
+          "path": "/trajectory-core-v060.js",
+          "sha256": "c5142eeb30090bafd7f41d5db687d07c125670798959f40bf559a931c16ca661"
+        }
+      ],
+      "source": "https://github.com/cashen/score/actions/runs/34340703760"
+    },
+    "independentHealthCheck": {
+      "command": "curl --fail --silent --show-error --max-time 20 https://score-track.cashen.workers.dev/api/health",
+      "conclusion": "success",
+      "payload": {
+        "appVersion": "0.8.1",
+        "buildSha": "a6984b15103cae58a570558a90d24d68543e88b0",
+        "ok": true,
+        "schemaVersion": 1,
+        "storage": "workers-kv"
+      }
+    },
+    "openPrs": []
   },
   "reconciliation": {
     "priorCheckpointStale": true,
-    "reason": "The v0.8 checkpoint merged into main predates final CI, merge and production evidence; live GitHub and production facts are authoritative."
+    "reason": "The v0.8 checkpoint merged into main predates final CI, merge and production evidence; live GitHub and production facts are authoritative.",
+    "finalCheckpointNote": "Final post-deployment checkpoint is archived separately so the tested/deployed main SHA and original PR head stay unchanged. This final record supersedes the pre-merge checkpoint present in main."
   },
   "lastFailure": null,
-  "verifiedAt": "2026-09-09T10:26:25.465Z",
+  "verifiedAt": "2026-09-09T10:34:58.056Z",
   "recoveryRule": [
     "Read this checkpoint and live GitHub state before every continuation.",
     "Do not repeat completed v0.8.0 work.",
     "Only committed code with matching tests counts as complete.",
     "Never overwrite unrelated user changes.",
     "Merge only after final PR-head CI succeeds."
-  ]
+  ],
+  "mergeSha": "a6984b15103cae58a570558a90d24d68543e88b0",
+  "status": "completed",
+  "checkpointBranch": "codex/checkpoints/score-v081"
 }
