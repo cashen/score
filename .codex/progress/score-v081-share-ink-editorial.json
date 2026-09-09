@@ -3,17 +3,17 @@
   "repository": "cashen/score",
   "branch": "feat/score-v081-share-ink-editorial",
   "baseSha": "659344d5aa914fcf14d9bfeca9567ea7ae4ee518",
-  "headSha": "659344d5aa914fcf14d9bfeca9567ea7ae4ee518",
-  "pr": null,
+  "headSha": "4ebd64db6053588acbb6c1b11ca5d22b9f00c7ea",
+  "pr": 23,
   "version": "0.8.1",
   "completed": [
     "S0-live-baseline",
     "S0-branch",
-    "S0-plan-written"
+    "S0-plan-written",
+    "S0-plan-commit-pr"
   ],
-  "inProgress": "S0-plan-commit-pr",
+  "inProgress": "S1-single-exam-share-semantics",
   "pending": [
-    "S0-plan-commit-pr",
     "S1-single-exam-share-semantics",
     "S2-pen-ink-share-ui",
     "S3-accessibility-version-regression",
