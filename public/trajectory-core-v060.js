@@ -23,6 +23,9 @@ function normalizedComparison(exam) {
 
 export function comparisonEligibility(latest, previous) {
   if (!latest || !previous) return { status: "baseline", reason: "还没有第二次可比考试" };
+  const unavailable = exam => exam?.status && exam.status !== "normal";
+  if (unavailable(latest)) return { status: "not_comparable", reason: "当前考试有特殊情况，不自动比较" };
+  if (unavailable(previous)) return { status: "not_comparable", reason: "参考考试有特殊情况，不自动比较" };
   if (comparisonCategory(latest.type) !== comparisonCategory(previous.type)) {
     return { status: "not_comparable", reason: "考试类别不同，暂不直接比较" };
   }
@@ -38,6 +41,21 @@ export function comparisonEligibility(latest, previous) {
     return { status: "comparable", reason: "同类别考试；部分比较口径未标注" };
   }
   return { status: "comparable", reason: "按" + a.level + "口径比较" };
+}
+
+export function findComparableExam(exams = [], current = exams[0] || null) {
+  if (!current) return { status: "baseline", current: null, reference: null, skipped: [], reason: "还没有考试记录" };
+  const start = Math.max(0, exams.findIndex(exam => exam.id === current.id));
+  const skipped = [];
+  for (const candidate of exams.slice(start + 1)) {
+    const eligibility = comparisonEligibility(current, candidate);
+    if (eligibility.status === "comparable") return { ...eligibility, current, reference: candidate, skipped };
+    skipped.push({ id: candidate.id, reason: eligibility.reason });
+  }
+  return {
+    status: "baseline", current, reference: null, skipped,
+    reason: skipped.length ? `之前有 ${skipped.length} 场考试，但没有找到口径足够一致的比较对象` : "还没有第二次可比考试"
+  };
 }
 
 export function comparisonReason(latest, previous) {

@@ -1,3 +1,5 @@
+import { examScoreSummary } from "../../public/score-core-v090.js";
+
 export const SUBJECTS = ["chinese", "math", "english", "physics", "chemistry", "biology"];
 export const ROLES = new Set(["owner", "editor", "viewer"]);
 export const EXAM_TYPES = new Set(["weekly", "monthly", "midterm", "final", "school", "joint", "mock1", "mock2", "mock3", "other"]);
@@ -101,11 +103,14 @@ export function normalizeExam(input, existing = null) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) throw Object.assign(new Error("考试日期无效"), { code: "invalid_exam_date", field: "date" });
   const type = EXAM_TYPES.has(input.type) ? input.type : "other";
   const officialScore = numberOrNull(input.overall?.officialScore, 0, 2000);
-  const calculatedScore = SUBJECTS.reduce((sum, key) => {
-    const score = subjects[key].finalScore ?? subjects[key].rawScore;
-    return score == null ? sum : sum + score;
-  }, 0);
+  const recordedScores = SUBJECTS.map(key => subjects[key].finalScore ?? subjects[key].rawScore).filter(score => score != null);
+  const calculatedScore = recordedScores.length ? recordedScores.reduce((sum, score) => sum + score, 0) : null;
   const comparison = input.comparison === undefined ? (existing?.comparison || null) : normalizeComparison(input.comparison);
+  const reflectionInput = input.reflection === undefined ? existing?.reflection : input.reflection;
+  const reflection = reflectionInput && typeof reflectionInput === "object" ? {
+    studentNote: safeText(reflectionInput.studentNote, 500),
+    nextTry: safeText(reflectionInput.nextTry, 500)
+  } : { studentNote: "", nextTry: "" };
   return {
     schemaVersion: 1,
     id,
@@ -122,11 +127,12 @@ export function normalizeExam(input, existing = null) {
     comparison,
     overall: {
       officialScore,
-      calculatedScore: Math.round(calculatedScore * 10) / 10,
+      calculatedScore: calculatedScore == null ? null : Math.round(calculatedScore * 10) / 10,
       rankings: normalizeRankings(input.overall?.rankings)
     },
     subjects,
     notes: safeText(input.notes, 1500),
+    reflection,
     dataStatus: input.dataStatus === "complete" ? "complete" : "partial",
     revision: existing ? existing.revision + 1 : 1,
     createdAt: existing?.createdAt || new Date().toISOString(),
@@ -185,7 +191,11 @@ export function publicProjection(student, exams, fields) {
     };
     if (fields.examStatus || fields.status) projected.status = exam.status || "normal";
     if (fields.comparisonContext || fields.comparison) projected.comparison = exam.comparison ? { series: exam.comparison.series || null, level: exam.comparison.level || null } : null;
-    if (fields.overallScore) projected.overallScore = exam.overall?.officialScore ?? exam.overall?.calculatedScore ?? null;
+    if (fields.overallScore) {
+      const summary = examScoreSummary(exam);
+      projected.scoreSummary = summary;
+      projected.overallScore = summary.value;
+    }
     if (fields.overallRank) projected.overallRankings = exam.overall?.rankings || [];
     if (fields.subjectScores || fields.subjectRanks) {
       projected.subjects = {};

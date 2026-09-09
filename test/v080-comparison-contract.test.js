@@ -1,12 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { comparisonEligibility, comparisonReason, comparableSet } from "../public/trajectory-core-v060.js";
+import { comparisonEligibility, comparisonReason, comparableSet, findComparableExam } from "../public/trajectory-core-v060.js";
 
 const exam = (id, overrides = {}) => ({
   id,
   type: "monthly",
   comparison: { series: "2026-A", level: "school" },
   ...overrides
+});
+
+test("comparison search can pass an incompatible immediate predecessor", () => {
+  const latest = exam("latest");
+  const result = findComparableExam([latest, exam("wrong", { type: "weekly" }), exam("older")]);
+  assert.equal(result.reference.id, "older");
 });
 
 test("comparison eligibility is explicit for baseline and incompatible metadata", () => {

@@ -96,7 +96,9 @@ async function handleCreate(request, env, session, studentId) {
   if (!exams.length) {
     return errorJson(body.examId ? "指定的考试不存在" : "还没有可分享的考试记录", 400, body.examId ? "exam_not_found" : "no_exam_to_share");
   }
-  if (scope === "trajectory" && exams.length < 2) return errorJson("至少记录 2 次考试后才能分享高三轨迹", 400, "trajectory_needs_two_exams");
+  if (scope === "trajectory" && mode === "live" && exams.length === 1 && body.futureExamsAcknowledged !== true) {
+    return errorJson("请先确认以后新增的考试会自动进入这个分享链接", 400, "future_exams_acknowledgement_required");
+  }
 
   const selectedExam = scope === "single" ? exams[0] : null;
   const createdAt = new Date().toISOString();
@@ -160,7 +162,10 @@ async function handleExternal(env, kind, rawLocator) {
       scope: grant.scope,
       examId: grant.examId || null,
       examName: grant.examName || null,
-      expiresAt: grant.expiresAt
+      expiresAt: grant.expiresAt,
+      fields: grant.fields,
+      examCount: data.exams?.length || 0,
+      includesFutureExams: grant.scope === "trajectory" && grant.mode === "live"
     },
     data
   });

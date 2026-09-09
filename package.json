@@ -1,11 +1,11 @@
 {
   "name": "score-track",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "check": "node --check src/index.js && node --check src/v020.js && node --check src/family.js && node --check src/onboarding.js && node --check src/sharing-v2.js && node --check src/lib/crypto.js && node --check src/lib/model.js && node --check src/lib/http.js && node --check public/router-v2.js && node --check public/app.js && node --check public/draft.js && node --check public/onboarding-v050.js",
+    "check": "node --check src/index.js && node --check src/v020.js && node --check src/family.js && node --check src/onboarding.js && node --check src/sharing-v2.js && node --check src/lib/crypto.js && node --check src/lib/model.js && node --check src/lib/http.js && node --check public/router-v2.js && node --check public/app.js && node --check public/draft.js && node --check public/onboarding-v050.js && node --check public/score-core-v090.js",
     "verify": "npm run check && npm test",
     "dev": "npx --yes wrangler@4 dev",
     "deploy": "npx --yes wrangler@4 deploy"

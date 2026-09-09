@@ -119,6 +119,12 @@
 .public-reading-section h2 { margin: 4px 0 12px; }
 .public-subject-picker { margin-bottom: 14px; }
 
+.completion-note {
+  margin: 10px 0 0;
+  color: var(--v80-muted);
+  font-size: 13px;
+}
+
 @media (max-width: 620px) {
   .timeline-row { grid-template-columns: minmax(0, 1fr) auto; }
   .timeline-row .history-coordinate { grid-column: 1 / -1; justify-content: flex-start; }

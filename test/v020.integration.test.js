@@ -105,6 +105,27 @@ test("single-exam share stays pinned while trajectory share includes multiple ex
   assert.deepEqual(external.data.exams.map((exam) => exam.name), ["10月联考", "9月月考"]);
 });
 
+test("one-exam live trajectory requires an explicit future-exam acknowledgement", async () => {
+  const env = makeEnv();
+  const root = await rootAccount(env);
+  await createExam(env, root, root.provision.studentId, { name: "第一次记录", date: "2026-09-01", score: 570, rank: 180, participants: 1000, math: 110, mathRank: 210 });
+  const body = { kind: "public", slug: "growth", mode: "live", scope: "trajectory", fields: { history: true, overallScore: true, overallRank: true, subjectScores: true, subjectRanks: true } };
+  let response = await call(env, `/api/students/${root.provision.studentId}/shares`, { method: "POST", headers: { cookie: root.cookie, "x-score-csrf": root.csrf, origin: "https://score.example" }, body: JSON.stringify(body) });
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "future_exams_acknowledgement_required");
+  response = await call(env, `/api/students/${root.provision.studentId}/shares`, { method: "POST", headers: { cookie: root.cookie, "x-score-csrf": root.csrf, origin: "https://score.example" }, body: JSON.stringify({ ...body, futureExamsAcknowledged: true }) });
+  assert.equal(response.status, 201);
+  const created = await response.json();
+  response = await call(env, "/api/share/public/growth");
+  const external = await response.json();
+  assert.equal(external.share.includesFutureExams, true);
+  assert.equal(external.share.examCount, 1);
+  await createExam(env, root, root.provision.studentId, { name: "第二次记录", date: "2026-10-01", score: 590, rank: 130, participants: 1000, math: 125, mathRank: 145 });
+  response = await call(env, "/api/share/public/growth");
+  assert.deepEqual((await response.json()).data.exams.map((exam) => exam.name), ["第二次记录", "第一次记录"]);
+  assert.equal(created.share.scope, "trajectory");
+});
+
 test("invited family is isolated and recovery rotates password, code and sessions", async () => {
   const env = makeEnv();
   const root = await rootAccount(env);
