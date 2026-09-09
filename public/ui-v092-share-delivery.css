@@ -6,9 +6,13 @@
 .share-item-actions { margin-top: 10px; }
 .share-item-actions .btn, .share-result-actions .btn { min-height: 44px; }
 .share-item > div { min-width: 0; }
+.public-share-actions { display: flex; align-items: center; gap: 10px; margin: 12px 0 8px; }
+.public-share-actions small { color: var(--muted); line-height: 1.45; }
 @media (max-width: 560px) {
   .share-result-actions, .share-item-actions { display: grid; grid-template-columns: 1fr; }
   .share-result-actions .btn, .share-result-actions a, .share-item-actions .btn, .share-item-actions a { width: 100%; text-align: center; }
+  .public-share-actions { display: grid; grid-template-columns: 1fr; }
+  .public-share-actions .btn { width: 100%; min-height: 44px; }
 }
 @media (prefers-contrast: more) {
   .share-result { border-width: 2px; }

@@ -3,6 +3,7 @@ import { brandMark } from "./brand-logo-b.js";
 import { comparisonCategory as coreComparisonCategory, comparisonReason as coreComparisonReason, comparisonEligibility as coreComparisonEligibility, comparableSet as coreComparableSet, comparableRanking as coreComparableRanking, findComparableExam as coreFindComparableExam } from "./trajectory-core-v060.js";
 import { examScoreSummary, examCompleteness, scoreSummaryText, subjectScore } from "./score-core-v090.js";
 import { shareUrlFor, shareFileName } from "./share-delivery-v092.js";
+import { deliverShareImage } from "./share-image-v092.js";
 
 const PRODUCT_NAME = "高三坐标";
 const PRODUCT_TAGLINE = "看见现在的位置，也看见一路的变化";
@@ -782,10 +783,22 @@ async function copyShareUrl(url) {
   setNotice(copied ? "完整分享地址已复制" : "未能自动复制，请长按或手动选择地址", copied ? "success" : "error");
 }
 
-function openShareImage(button) {
-  setNotice("分享图功能即将准备；当前先打开分享页，仍可长按保存页面内容", "notice");
-  const url = button.dataset.url || (button.dataset.kind === "public" && button.dataset.locator ? shareUrlFor(location.origin, { kind: "public", locator: button.dataset.locator }) : "");
-  if (url) window.open(url, "_blank", "noopener,noreferrer");
+async function openShareImage(button) {
+  button.disabled = true;
+  button.textContent = "正在准备图片…";
+  try {
+    const kind = button.dataset.kind || "public";
+    const locator = button.dataset.locator || "";
+    const result = await api(`/api/students/${state.student.id}/shares/${kind}/${encodeURIComponent(locator)}/preview`);
+    const view = result.share.scope === "trajectory" ? "timeline" : "total";
+    const outcome = await deliverShareImage({ data: result.data, share: result.share, view, filename: shareFileName(result.share) });
+    setNotice(outcome.message, outcome.mode === "cancelled" ? "notice" : "success");
+  } catch (error) {
+    setNotice(`分享图未生成：${error.message}`, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "生成分享图";
+  }
 }
 
 async function revokeShare(kind, locator) {
@@ -1223,7 +1236,21 @@ function renderPublicV080(result) {
   const meta = [data.student?.graduationYear ? `${data.student.graduationYear}届` : null, data.student?.schoolLabel, data.student?.className].filter(Boolean).map(esc).join(" · ");
   const total = `<section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "只分享当前内容" : result.share.scope === "trajectory" ? "成长轨迹 · 持续更新" : "持续更新"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>位置未分享</span>`}</div>${publicBaselineV081("total", data.exams || [], result.share)}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share)}</div>` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
   const body = view === "subject" ? publicSubjectComparisonV080(data.exams || [], subject, result.share) : view === "timeline" ? publicTimelineV080(data.exams || [], selectedExamId, result.share) : total;
-  app.innerHTML = `<main class="public-shell ink-share" data-share-view="${view}" data-exam-count="${data.exams?.length || 0}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span><i class="ink-share-flourish" aria-hidden="true"></i></div><div class="privacy-note">此页面由家庭主动分享 · 请勿未经允许转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">分享地址可由家庭随时撤销</footer>`;
+  app.innerHTML = `<main class="public-shell ink-share" data-share-view="${view}" data-exam-count="${data.exams?.length || 0}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span><i class="ink-share-flourish" aria-hidden="true"></i></div><div class="privacy-note">此页面由家庭主动分享 · 请勿未经允许转发</div>${publicViewNavV080(view, subject)}<div class="public-share-actions"><button class="btn btn-outline" type="button" data-action="public-share-image">下载 / 分享图片</button><small>图片只包含当前分享白名单；不方便下载时可打开预览后长按保存。</small></div>${body}</main><footer class="footer">分享地址可由家庭随时撤销</footer>`;
+  document.querySelector("[data-action='public-share-image']")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    button.textContent = "正在准备图片…";
+    try {
+      const outcome = await deliverShareImage({ data, share: result.share, view, subject, filename: shareFileName(result.share) });
+      button.textContent = outcome.message;
+      setTimeout(() => { button.disabled = false; button.textContent = "下载 / 分享图片"; }, 1800);
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = "下载 / 分享图片";
+      window.alert(error.message || "分享图未生成");
+    }
+  });
 }
 
 async function renderExternal(kind, locator) {
