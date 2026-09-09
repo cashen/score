@@ -11,11 +11,11 @@
     "S0-branch",
     "S0-plan-written",
     "S0-plan-commit-pr",
-    "S1-single-exam-share-semantics"
+    "S1-single-exam-share-semantics",
+    "S2-pen-ink-share-ui"
   ],
-  "inProgress": "S2-pen-ink-share-ui",
+  "inProgress": "S3-accessibility-version-regression",
   "pending": [
-    "S2-pen-ink-share-ui",
     "S3-accessibility-version-regression",
     "S4-exact-head-ci-merge-production"
   ],
@@ -40,6 +40,12 @@
         "command": "node --check public/app.js && node --test test/v081-share-ink.test.js",
         "tests": 2,
         "pass": 2,
+        "fail": 0
+      },
+      "S2": {
+        "command": "node --check public/app.js && node --test test/v081-share-ink.test.js test/v080-share-timeline.test.js test/v080-accessibility.test.js",
+        "tests": 7,
+        "pass": 7,
         "fail": 0
       }
     },

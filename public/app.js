@@ -1153,6 +1153,7 @@ function publicTimelineV080(exams, selectedExamId = null) {
 
 function renderPublicV080(result) {
   const data = result.data || {};
+  app.classList.add("share-ink-root");
   const params = new URLSearchParams(location.search);
   const view = ["total", "subject", "timeline"].includes(params.get("view")) ? params.get("view") : "total";
   const subject = SUBJECTS.some(([key]) => key === params.get("subject")) ? params.get("subject") : "chinese";
