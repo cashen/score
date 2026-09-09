@@ -18,6 +18,8 @@ test("share delivery UI keeps copy/open/image actions reachable on mobile", asyn
   assert.match(app, /target=\"_blank\" rel=\"noopener noreferrer\"/);
   assert.match(css, /min-height: 44px/);
   assert.match(css, /overflow-wrap: anywhere/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+  assert.match(css, /prefers-contrast: more/);
 });
 
 test("image names are deterministic and privacy-neutral", () => {

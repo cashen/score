@@ -8,6 +8,7 @@
 .share-item > div { min-width: 0; }
 .public-share-actions { display: flex; align-items: center; gap: 10px; margin: 12px 0 8px; }
 .public-share-actions small { color: var(--muted); line-height: 1.45; }
+.share-result .btn:focus-visible, .share-item .btn:focus-visible, .share-item a:focus-visible, .public-share-actions .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 @media (max-width: 560px) {
   .share-result-actions, .share-item-actions { display: grid; grid-template-columns: 1fr; }
   .share-result-actions .btn, .share-result-actions a, .share-item-actions .btn, .share-item-actions a { width: 100%; text-align: center; }
@@ -16,4 +17,7 @@
 }
 @media (prefers-contrast: more) {
   .share-result { border-width: 2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .share-result *, .share-item *, .public-share-actions * { transition: none !important; animation: none !important; }
 }
