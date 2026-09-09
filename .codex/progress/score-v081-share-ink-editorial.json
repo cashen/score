@@ -3,7 +3,7 @@
   "repository": "cashen/score",
   "branch": "feat/score-v081-share-ink-editorial",
   "baseSha": "659344d5aa914fcf14d9bfeca9567ea7ae4ee518",
-  "headSha": "10ab0c0136c99a6665aafd852a6e042e757d8388",
+  "headSha": "4d7c10459397745742f1ed6d208a9c61ce5dbc42",
   "pr": 23,
   "version": "0.8.1",
   "completed": [
@@ -15,7 +15,7 @@
     "S2-pen-ink-share-ui",
     "S3-accessibility-version-regression"
   ],
-  "inProgress": "blocked-browser-preview-access",
+  "inProgress": "S4-ci-browser-regression",
   "pending": [
     "S4-exact-head-ci-merge-production"
   ],
@@ -68,12 +68,13 @@
       "verifiedAt": "2026-09-09T04:25:28Z"
     },
     "exactHeadCi": {
-      "runId": 34311041993,
-      "sha": "10ab0c0136c99a6665aafd852a6e042e757d8388",
+      "runId": 34339235573,
+      "sha": "4d7c10459397745742f1ed6d208a9c61ce5dbc42",
       "conclusion": "success"
     },
     "browserQa": {
-      "status": "blocked",
+      "status": "pending-project-ci",
+      "recovery": "Added reproducible project browser tests in a dedicated CI job; no temporary public preview or production data writes.",
       "fixture": "Synthetic data only; no production student records changed.",
       "attempt": "Cloud Browser navigation to http://127.0.0.1:4173/qa?w=360",
       "error": "net::ERR_BLOCKED_BY_CLIENT",

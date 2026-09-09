@@ -199,6 +199,20 @@ XXD Panel 092 原始风格用于网页时对应以下规则：
 
 ## 风险与回滚
 
+### 浏览器验收补充（2026-09-09）
+
+当前交互浏览器不能访问本地预览。通过项目 CI 内独立的 `share-browser` job 执行可复现验收，不发布临时公网预览，不调用生产写接口。
+
+- 固定开发工具版本 `@playwright/test@1.63.0`（已核对 npm registry），不加入生产依赖；参考 [Playwright 官方 CI 指南](https://playwright.dev/docs/ci)。
+- `browser-tests/server.mjs` 仅提供仓库静态资源；分享 API 使用通过真实 `publicProjection` 生成的虚构数据。
+- Chromium 覆盖 360 / 390 / 768 / 1280px，WebKit 覆盖 390px。
+- 验收总成绩、全部六科切换、单场 / 多场时间轴、详情、刷新返回、空数据、白名单缺省、快照文案、键盘焦点、减少动效与高对比度。
+- 检查实际页面横向溢出与可点击区域尺寸；保存截图、失败追踪与 HTML 报告，供视觉复核。
+- 减少透明度继续由现有源码回归约束；不把未模拟的偏好称为浏览器已验收。
+- 本地复现：`npm ci`、`npm install --no-save --package-lock=false @playwright/test@1.63.0`、`npx playwright install --with-deps chromium webkit`、`npx playwright test`。
+- `verify` 与 `share-browser` 两个 job 均成功才允许合并；main 的完整 CI 成功后原有部署 workflow 才能运行。
+- 若 CI 工具安装或浏览器执行失败，记录实际原因，保持 PR 未合并，不降级为源码断言通过。
+
 - **风格压过信息**：限制排线面积，数字区域保持纯纸白；可通过移除 v0.8.1 CSS 引用回滚。
 - **分享页选择器污染私有页面**：所有新增规则以 `.public-shell.ink-share` 开头，并用测试约束。
 - **单次状态误导**：文案只陈述记录数量和当前基线，不推断趋势。
