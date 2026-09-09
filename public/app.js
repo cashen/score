@@ -1248,7 +1248,8 @@ function renderPublicV080(result) {
     } catch (error) {
       button.disabled = false;
       button.textContent = "下载 / 分享图片";
-      window.alert(error.message || "分享图未生成");
+      const message = error.message || "分享图未生成";
+      if (typeof setNotice === "function") setNotice(message, "error");
     }
   });
 }
