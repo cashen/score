@@ -2,6 +2,8 @@ import "./draft.js";
 import { brandMark } from "./brand-logo-b.js";
 import { comparisonCategory as coreComparisonCategory, comparisonReason as coreComparisonReason, comparisonEligibility as coreComparisonEligibility, comparableSet as coreComparableSet, comparableRanking as coreComparableRanking, findComparableExam as coreFindComparableExam } from "./trajectory-core-v060.js";
 import { examScoreSummary, examCompleteness, scoreSummaryText, subjectScore } from "./score-core-v090.js";
+import { shareUrlFor, shareFileName } from "./share-delivery-v092.js";
+import { deliverShareImage } from "./share-image-v092.js";
 
 const PRODUCT_NAME = "高三坐标";
 const PRODUCT_TAGLINE = "看见现在的位置，也看见一路的变化";
@@ -42,6 +44,7 @@ const state = {
   exams: [],
   trash: [],
   shares: [],
+  shareResult: null,
   familyMembers: [],
   invitations: [],
  tab: "overview",
@@ -427,11 +430,20 @@ function shareSummary(prefix) {
 
 function renderShareList() {
   if (!state.shares.length) return `<div class="empty compact">当前没有外部分享。</div>`;
-  return state.shares.map((item) => `<div class="share-item"><div><div><strong>${item.kind === "secret" ? "分享链接" : "公开链接"}</strong><span class="badge">${item.mode === "snapshot" ? "只分享当前内容" : "持续更新"}</span>${item.scope === "single" ? `<span class="badge">单次${item.examName ? ` · ${esc(item.examName)}` : ""}</span>` : `<span class="badge">高三轨迹</span>`}</div><small>创建于 ${esc(item.createdAt?.slice(0, 10) || "")}${item.expiresAt ? ` · ${esc(item.expiresAt.slice(0, 10))} 自动失效` : ""}${item.kind === "secret" ? " · 出于安全考虑，这个地址不会再次显示。需要重新分享时，请生成新的链接。" : ` · /p/${esc(item.locator)}`}</small></div><button class="btn btn-danger btn-small" data-action="revoke-share" data-kind="${item.kind}" data-locator="${esc(item.locator)}">撤销</button></div>`).join("");
+  return state.shares.map((item) => {
+    const url = item.kind === "public" ? shareUrlFor(location.origin, item) : "";
+    return `<div class="share-item"><div><div><strong>${item.kind === "secret" ? "分享链接" : "公开链接"}</strong><span class="badge">${item.mode === "snapshot" ? "只分享当前内容" : "持续更新"}</span>${item.scope === "single" ? `<span class="badge">单次${item.examName ? ` · ${esc(item.examName)}` : ""}</span>` : `<span class="badge">高三轨迹</span>`}</div>${url ? `<div class="share-url" title="完整分享地址">${esc(url)}</div>` : ""}<small>创建于 ${esc(item.createdAt?.slice(0, 10) || "")}${item.expiresAt ? ` · ${esc(item.expiresAt.slice(0, 10))} 自动失效` : ""}${item.kind === "secret" ? " · 出于安全考虑，这个地址不会再次显示；创建时复制的链接仍可继续使用。" : ""}</small><div class="share-item-actions">${url ? `<button class="btn btn-outline btn-small" data-action="copy-share" data-url="${esc(url)}">复制地址</button><a class="btn btn-outline btn-small" href="${esc(url)}" target="_blank" rel="noopener noreferrer">打开分享页</a>` : ""}<button class="btn btn-outline btn-small" data-action="share-image" data-kind="${item.kind}" data-locator="${esc(item.locator)}" data-scope="${esc(item.scope)}">生成分享图</button></div></div><button class="btn btn-danger btn-small" data-action="revoke-share" data-kind="${item.kind}" data-locator="${esc(item.locator)}">撤销</button></div>`;
+  }).join("");
+}
+
+function renderShareResult() {
+  const result = state.shareResult;
+  if (!result?.url) return "";
+  return `<section class="share-result" aria-labelledby="share-result-title"><div><div class="section-label">刚刚生成</div><h2 id="share-result-title">链接已准备好</h2><p>复制后可以发给家人；也可以打开确认页面，或生成一张适合手机保存的分享图。</p></div><div class="share-url" title="完整分享地址">${esc(result.url)}</div><div class="share-result-actions"><button class="btn btn-primary" data-action="copy-share" data-url="${esc(result.url)}">复制完整地址</button><a class="btn btn-outline" href="${esc(result.url)}" target="_blank" rel="noopener noreferrer">打开分享页</a><button class="btn btn-outline" data-action="share-image" data-kind="${esc(result.item?.kind || "public")}" data-locator="${esc(result.item?.locator || "")}" data-token="${esc(result.token || "")}" data-scope="${esc(result.item?.scope || "single")}">生成分享图</button></div><small class="muted">${result.item?.kind === "secret" ? "此随机地址只在本次显示；刷新后不会再次回显。" : "这是完整地址，不需要手动补齐 /p/。"}</small></section>`;
 }
 
 function renderSharing() {
-  return `<section><div class="page-heading"><div><h1>分享</h1><p>默认只在家庭内可见。生成链接前，先确认别人会看到什么。</p></div></div><div class="share-layout"><article class="section-surface share-card" data-share-card="secret"><h2>分享链接</h2><p>只有拿到这个随机地址的人才能查看。需要时可以随时撤销。</p>${shareScope("secret")}${shareSummary("secret")}<details class="advanced"><summary>修改分享内容与自动失效</summary><div class="advanced-body"><div class="field"><label>更新方式</label><select id="secret-mode"><option value="live">持续更新</option><option value="snapshot">只分享当前内容</option></select></div><div class="field"><label>自动失效（可选）</label><input id="secret-expiry" type="date"></div>${shareFieldControls("secret", state.exams.length >= 2 ? "trajectory" : "single")}</div></details><button class="btn btn-primary btn-block" data-action="create-secret">生成并复制链接</button></article><details class="public-advanced"><summary><span><strong>公开链接（高级）</strong><small>任何拿到这个地址的人都可以查看。不会主动进入搜索，但这不等于私密。</small></span><span aria-hidden="true">＋</span></summary><article class="section-surface share-card" data-share-card="public">${shareScope("public")}${shareSummary("public")}<div class="field"><label>公开地址</label><div class="slug-field"><span>/p/</span><input id="public-slug" minlength="3" maxlength="50" autocapitalize="none" spellcheck="false" placeholder="例如 wang-2027"></div><small>3–50 位字母、数字或短横线。</small></div><details class="advanced"><summary>修改分享内容</summary><div class="advanced-body"><div class="field"><label>更新方式</label><select id="public-mode"><option value="live">持续更新</option><option value="snapshot">只分享当前内容</option></select></div>${shareFieldControls("public", state.exams.length >= 2 ? "trajectory" : "single")}</div></details><button class="btn btn-primary btn-block" data-action="create-public">创建公开链接</button></article></details><section class="reading-section current-shares"><div class="section-head-simple"><div><div class="section-label">当前分享</div><h2>已经创建的外部地址</h2></div></div><div>${renderShareList()}</div></section></div></section>`;
+  return `<section><div class="page-heading"><div><h1>分享</h1><p>默认只在家庭内可见。生成链接前，先确认别人会看到什么。</p></div></div>${renderShareResult()}<div class="share-layout"><article class="section-surface share-card" data-share-card="secret"><h2>分享链接</h2><p>只有拿到这个随机地址的人才能查看。需要时可以随时撤销。</p>${shareScope("secret")}${shareSummary("secret")}<details class="advanced"><summary>修改分享内容与自动失效</summary><div class="advanced-body"><div class="field"><label>更新方式</label><select id="secret-mode"><option value="live">持续更新</option><option value="snapshot">只分享当前内容</option></select></div><div class="field"><label>自动失效（可选）</label><input id="secret-expiry" type="date"></div>${shareFieldControls("secret", state.exams.length >= 2 ? "trajectory" : "single")}</div></details><button class="btn btn-primary btn-block" data-action="create-secret">生成并复制链接</button></article><details class="public-advanced"><summary><span><strong>公开链接（高级）</strong><small>任何拿到这个地址的人都可以查看。不会主动进入搜索，但这不等于私密。</small></span><span aria-hidden="true">＋</span></summary><article class="section-surface share-card" data-share-card="public">${shareScope("public")}${shareSummary("public")}<div class="field"><label>公开地址</label><div class="slug-field"><span>/p/</span><input id="public-slug" minlength="3" maxlength="50" autocapitalize="none" spellcheck="false" placeholder="例如 wang-2027"></div><small>3–50 位字母、数字或短横线。</small></div><details class="advanced"><summary>修改分享内容</summary><div class="advanced-body"><div class="field"><label>更新方式</label><select id="public-mode"><option value="live">持续更新</option><option value="snapshot">只分享当前内容</option></select></div>${shareFieldControls("public", state.exams.length >= 2 ? "trajectory" : "single")}</div></details><button class="btn btn-primary btn-block" data-action="create-public">创建公开链接</button></article></details><section class="reading-section current-shares"><div class="section-head-simple"><div><div class="section-label">当前分享</div><h2>已经创建的外部地址</h2></div></div><div>${renderShareList()}</div></section></div></section>`;
 }
 
 function memberRow(member) {
@@ -753,8 +765,9 @@ async function createShare(kind) {
   try {
     const result = await api(`/api/students/${state.student.id}/shares`, { method: "POST", body: JSON.stringify(body) });
     await loadShares();
-    const url = kind === "secret" ? `${location.origin}/share/${result.token}` : `${location.origin}/p/${result.share.locator}`;
+    const url = kind === "secret" ? `${location.origin}/share/${encodeURIComponent(result.token)}` : shareUrlFor(location.origin, result.share);
     const copied = await copyText(url);
+    state.shareResult = { url, token: result.token, item: result.share };
     state.notice = `${kind === "secret" ? "分享链接" : "公开链接"}已生成${copied ? "并复制" : ""}：${url}`;
     state.noticeTone = "success";
     renderDashboard();
@@ -762,6 +775,29 @@ async function createShare(kind) {
     button.disabled = false;
     button.textContent = kind === "secret" ? "生成并复制链接" : "创建公开链接";
     setNotice(`创建失败：${error.message}`, "error");
+  }
+}
+
+async function copyShareUrl(url) {
+  const copied = await copyText(url);
+  setNotice(copied ? "完整分享地址已复制" : "未能自动复制，请长按或手动选择地址", copied ? "success" : "error");
+}
+
+async function openShareImage(button) {
+  button.disabled = true;
+  button.textContent = "正在准备图片…";
+  try {
+    const kind = button.dataset.kind || "public";
+    const locator = button.dataset.locator || "";
+    const result = await api(`/api/students/${state.student.id}/shares/${kind}/${encodeURIComponent(locator)}/preview`);
+    const view = result.share.scope === "trajectory" ? "timeline" : "total";
+    const outcome = await deliverShareImage({ data: result.data, share: result.share, view, filename: shareFileName(result.share) });
+    setNotice(outcome.message, outcome.mode === "cancelled" ? "notice" : "success");
+  } catch (error) {
+    setNotice(`分享图未生成：${error.message}`, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "生成分享图";
   }
 }
 
@@ -1021,6 +1057,8 @@ function bindDashboard() {
   document.querySelector("[data-action='create-secret']")?.addEventListener("click", () => createShare("secret"));
   document.querySelector("[data-action='create-public']")?.addEventListener("click", () => createShare("public"));
   document.querySelectorAll("[data-action='revoke-share']").forEach((button) => button.addEventListener("click", () => revokeShare(button.dataset.kind, button.dataset.locator)));
+  document.querySelectorAll("[data-action='copy-share']").forEach((button) => button.addEventListener("click", () => copyShareUrl(button.dataset.url)));
+  document.querySelectorAll("[data-action='share-image']").forEach((button) => button.addEventListener("click", () => openShareImage(button)));
   document.querySelector("#profile-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
     try {
@@ -1198,7 +1236,22 @@ function renderPublicV080(result) {
   const meta = [data.student?.graduationYear ? `${data.student.graduationYear}届` : null, data.student?.schoolLabel, data.student?.className].filter(Boolean).map(esc).join(" · ");
   const total = `<section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "只分享当前内容" : result.share.scope === "trajectory" ? "成长轨迹 · 持续更新" : "持续更新"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>位置未分享</span>`}</div>${publicBaselineV081("total", data.exams || [], result.share)}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share)}</div>` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
   const body = view === "subject" ? publicSubjectComparisonV080(data.exams || [], subject, result.share) : view === "timeline" ? publicTimelineV080(data.exams || [], selectedExamId, result.share) : total;
-  app.innerHTML = `<main class="public-shell ink-share" data-share-view="${view}" data-exam-count="${data.exams?.length || 0}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span><i class="ink-share-flourish" aria-hidden="true"></i></div><div class="privacy-note">此页面由家庭主动分享 · 请勿未经允许转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">分享地址可由家庭随时撤销</footer>`;
+  app.innerHTML = `<main class="public-shell ink-share" data-share-view="${view}" data-exam-count="${data.exams?.length || 0}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span><i class="ink-share-flourish" aria-hidden="true"></i></div><div class="privacy-note">此页面由家庭主动分享 · 请勿未经允许转发</div>${publicViewNavV080(view, subject)}<div class="public-share-actions"><button class="btn btn-outline" type="button" data-action="public-share-image">下载 / 分享图片</button><small>图片只包含当前分享白名单；不方便下载时可打开预览后长按保存。</small></div>${body}</main><footer class="footer">分享地址可由家庭随时撤销</footer>`;
+  document.querySelector("[data-action='public-share-image']")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    button.textContent = "正在准备图片…";
+    try {
+      const outcome = await deliverShareImage({ data, share: result.share, view, subject, filename: shareFileName(result.share) });
+      button.textContent = outcome.message;
+      setTimeout(() => { button.disabled = false; button.textContent = "下载 / 分享图片"; }, 1800);
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = "下载 / 分享图片";
+      const message = error.message || "分享图未生成";
+      if (typeof setNotice === "function") setNotice(message, "error");
+    }
+  });
 }
 
 async function renderExternal(kind, locator) {

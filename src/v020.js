@@ -23,6 +23,7 @@ function needsPrivateV2(path, method) {
   if (path === "/api/admin/recovery-links" && method === "POST") return true;
   if (path === "/api/me/recovery-code" && method === "POST") return true;
   if (/^\/api\/students\/[^/]+\/shares$/.test(path) && method === "POST") return true;
+  if (/^\/api\/students\/[^/]+\/shares\/(secret|public)\/[^/]+\/preview$/.test(path) && method === "GET") return true;
   return false;
 }
 
