@@ -3,7 +3,7 @@
   "repository": "cashen/score",
   "branch": "feat/share-link-copy-image-v092",
   "baseSha": "979e02a2f0a5dcb33a16fa74fe2962860cb650a9",
-  "headSha": "cddc1e72d613b3e3fc5106b8e43bac5233c925a1",
+  "headSha": "e63cae574f9621d53d355378ef08db8ffecb3d35",
   "pr": 28,
   "version": "0.9.2",
   "completed": ["S0-live-baseline", "S0-branch", "S0-plan-written", "S0-plan-pr", "S1-link-copy", "S2-share-preview-api", "S3-share-image", "S4-multiterminal-a11y"],
@@ -17,8 +17,8 @@
     "openPrs": [28],
     "localTests": {"npmCi": "success", "npmRunVerify": "success", "tests": 127}
   },
-  "lastFailure": null,
-  "verifiedAt": "2026-09-10T00:32:00Z",
+  "lastFailure": "PR CI run 34418898579 failed because the remote mirror omitted the final public app.js alert-removal fix; fixed in e63cae5 and re-queued CI.",
+  "verifiedAt": "2026-09-10T00:46:00Z",
   "recoveryRule": [
     "Before every continuation read this checkpoint and live GitHub main, PR head, Actions and production.",
     "Do not overwrite older worktrees or user changes.",
