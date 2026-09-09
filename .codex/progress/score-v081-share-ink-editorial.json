@@ -10,11 +10,11 @@
     "S0-live-baseline",
     "S0-branch",
     "S0-plan-written",
-    "S0-plan-commit-pr"
+    "S0-plan-commit-pr",
+    "S1-single-exam-share-semantics"
   ],
-  "inProgress": "S1-single-exam-share-semantics",
+  "inProgress": "S2-pen-ink-share-ui",
   "pending": [
-    "S1-single-exam-share-semantics",
     "S2-pen-ink-share-ui",
     "S3-accessibility-version-regression",
     "S4-exact-head-ci-merge-production"
@@ -34,6 +34,14 @@
       "buildSha": "659344d5aa914fcf14d9bfeca9567ea7ae4ee518",
       "schemaVersion": 1,
       "storage": "workers-kv"
+    },
+    "stageTests": {
+      "S1": {
+        "command": "node --check public/app.js && node --test test/v081-share-ink.test.js",
+        "tests": 2,
+        "pass": 2,
+        "fail": 0
+      }
     },
     "localVerify": null,
     "exactHeadCi": null,
