@@ -3,21 +3,21 @@
   "repository": "cashen/score",
   "branch": "feat/share-link-copy-image-v092",
   "baseSha": "979e02a2f0a5dcb33a16fa74fe2962860cb650a9",
-  "headSha": "979e02a2f0a5dcb33a16fa74fe2962860cb650a9",
-  "pr": null,
+  "headSha": "e83d830eb61957ded14360187918afd7cad423cf",
+  "pr": 28,
   "version": "0.9.2",
-  "completed": ["S0-live-baseline", "S0-branch", "S0-plan-written"],
-  "inProgress": "S0-plan-pr",
-  "pending": ["S0-plan-pr", "S1-link-copy", "S2-share-preview-api", "S3-share-image", "S4-multiterminal-a11y", "S5-tests-release", "S6-merge-production"],
+  "completed": ["S0-live-baseline", "S0-branch", "S0-plan-written", "S0-plan-pr"],
+  "inProgress": "S1-link-copy",
+  "pending": ["S1-link-copy", "S2-share-preview-api", "S3-share-image", "S4-multiterminal-a11y", "S5-tests-release", "S6-merge-production"],
   "verification": {
     "mainSha": "979e02a2f0a5dcb33a16fa74fe2962860cb650a9",
     "mainCi": {"runId": 34413119104, "conclusion": "success"},
     "deployment": {"runId": 34413314329, "attempt": 2, "conclusion": "success"},
     "productionHealth": {"ok": true, "appVersion": "0.9.1", "buildSha": "979e02a2f0a5dcb33a16fa74fe2962860cb650a9", "schemaVersion": 1, "storage": "workers-kv"},
-    "openPrs": []
+    "openPrs": [28]
   },
   "lastFailure": null,
-  "verifiedAt": "2026-09-10T00:00:00Z",
+  "verifiedAt": "2026-09-09T23:40:00Z",
   "recoveryRule": [
     "Before every continuation read this checkpoint and live GitHub main, PR head, Actions and production.",
     "Do not overwrite older worktrees or user changes.",
