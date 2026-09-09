@@ -1,0 +1,27 @@
+{
+  "task": "score-v090-trustworthy-growth",
+  "repository": "cashen/score",
+  "branch": "feat/score-v090-trustworthy-growth",
+  "baseSha": "a6984b15103cae58a570558a90d24d68543e88b0",
+  "headSha": "a6984b15103cae58a570558a90d24d68543e88b0",
+  "pr": null,
+  "version": "0.9.0",
+  "completed": ["S0-live-baseline", "S0-branch", "S0-plan-written"],
+  "inProgress": "S0-plan-commit-pr",
+  "pending": ["S1-trustworthy-score", "S2-comparison", "S3-draft-entry", "S4-growth-share", "S5-reflection-ui", "S6-release"],
+  "verification": {
+    "baselineMainCi": {"runId": 34340563160, "conclusion": "success"},
+    "baselineDeployment": {"runId": 34340703760, "conclusion": "success"},
+    "baselineProductionHealth": {"ok": true, "appVersion": "0.8.1", "buildSha": "a6984b15103cae58a570558a90d24d68543e88b0", "schemaVersion": 1, "storage": "workers-kv"},
+    "openPrs": []
+  },
+  "lastFailure": null,
+  "verifiedAt": "2026-09-09T10:45:00Z",
+  "recoveryRule": [
+    "Read this checkpoint and live GitHub main, PR head, Actions and production before continuing.",
+    "Do not repeat a completed stage for an unchanged input SHA.",
+    "Do not overwrite older worktrees or user changes.",
+    "Commit code, tests and checkpoint after each stage.",
+    "Merge only after final exact-head PR CI succeeds."
+  ]
+}
