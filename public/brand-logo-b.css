@@ -1,0 +1,53 @@
+/* Logo B: a score record page, three exam nodes, and a small effort cue. */
+.brand-mark-score {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--text, #242525);
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.brand-mark-score .brand-logo-svg {
+  display: block;
+  width: 82%;
+  height: 82%;
+  overflow: visible;
+}
+
+.brand-mark-score .brand-logo-page,
+.brand-mark-score .brand-logo-rule,
+.brand-mark-score .brand-logo-track {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.brand-mark-score .brand-logo-page { stroke-width: 2.2; }
+.brand-mark-score .brand-logo-rule { stroke: color-mix(in srgb, currentColor 52%, transparent); stroke-width: 1.3; }
+.brand-mark-score .brand-logo-track { stroke: color-mix(in srgb, currentColor 76%, var(--accent, #5e8581)); stroke-width: 1.8; }
+.brand-mark-score .brand-logo-node { fill: var(--text, #242525); }
+.brand-mark-score .brand-logo-node-current { fill: var(--accent, #5e8581); }
+.brand-mark-score .brand-logo-sweat { fill: var(--accent, #5e8581); opacity: .82; }
+
+.ink-share .brand-mark-score {
+  width: 36px;
+  height: 36px;
+  color: var(--ink-text, #242525);
+}
+
+.ink-share .brand-mark-score .brand-logo-rule { stroke: var(--ink-line, #c9c9c2); }
+.ink-share .brand-mark-score .brand-logo-track { stroke: var(--ink-text, #242525); }
+.ink-share .brand-mark-score .brand-logo-node { fill: var(--ink-text, #242525); }
+.ink-share .brand-mark-score .brand-logo-node-current,
+.ink-share .brand-mark-score .brand-logo-sweat { fill: #5e8581; }
+
+@media (prefers-contrast: more) {
+  .brand-mark-score .brand-logo-rule,
+  .brand-mark-score .brand-logo-track,
+  .brand-mark-score .brand-logo-node-current,
+  .brand-mark-score .brand-logo-sweat { color: currentColor; stroke: currentColor; fill: currentColor; }
+}

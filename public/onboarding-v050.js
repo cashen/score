@@ -1,3 +1,5 @@
+import { brandMark } from "./brand-logo-b.js";
+
 const PRODUCT_NAME = "高三坐标";
 const app = document.querySelector("#app");
 const path = location.pathname;
@@ -42,7 +44,7 @@ async function copyText(text, button) {
 }
 
 function shell(title, intro, body) {
-  app.innerHTML = `<main class="onboarding-shell"><section class="onboarding-card"><div class="brand-mark">标</div><div class="eyebrow">${PRODUCT_NAME}</div><h1>${esc(title)}</h1><p class="muted">${esc(intro)}</p>${body}</section></main>`;
+  app.innerHTML = `<main class="onboarding-shell"><section class="onboarding-card">${brandMark()}<div class="eyebrow">${PRODUCT_NAME}</div><h1>${esc(title)}</h1><p class="muted">${esc(intro)}</p>${body}</section></main>`;
 }
 
 function recoveryResult(code, { loggedIn = false } = {}) {

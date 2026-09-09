@@ -1,4 +1,5 @@
 import "./draft.js";
+import { brandMark } from "./brand-logo-b.js";
 import { comparisonCategory as coreComparisonCategory, comparisonReason as coreComparisonReason, comparisonEligibility as coreComparisonEligibility, comparableSet as coreComparableSet, comparableRanking as coreComparableRanking, findComparableExam as coreFindComparableExam } from "./trajectory-core-v060.js";
 import { examScoreSummary, examCompleteness, scoreSummaryText, subjectScore } from "./score-core-v090.js";
 
@@ -326,7 +327,7 @@ function renderTimelineView() {
 function renderHeader() {
   const students = state.me?.students || [];
   const selector = students.length > 1 ? `<select id="student-select" aria-label="切换孩子">${students.map((student) => `<option value="${esc(student.id)}" ${state.student?.id === student.id ? "selected" : ""}>${esc(student.displayName)}</option>`).join("")}</select>` : "";
-  return `<header class="topbar"><div class="topbar-inner"><div class="brand"><div class="brand-mark">标</div><span>${PRODUCT_NAME}</span></div><div class="top-actions"><span class="privacy-pill" aria-label="数据默认仅家庭成员可见">仅家庭可见</span>${selector}<details class="account-menu"><summary class="btn btn-outline btn-small">账号</summary><div class="account-menu-panel"><button type="button" data-tab-jump="family">家庭与账号</button><button type="button" data-action="export">导出全部数据</button><button type="button" data-action="logout">退出登录</button></div></details></div></div></header>`;
+  return `<header class="topbar"><div class="topbar-inner"><div class="brand">${brandMark()}<span>${PRODUCT_NAME}</span></div><div class="top-actions"><span class="privacy-pill" aria-label="数据默认仅家庭成员可见">仅家庭可见</span>${selector}<details class="account-menu"><summary class="btn btn-outline btn-small">账号</summary><div class="account-menu-panel"><button type="button" data-tab-jump="family">家庭与账号</button><button type="button" data-action="export">导出全部数据</button><button type="button" data-action="logout">退出登录</button></div></details></div></div></header>`;
 }
 
 function renderSubjectRows(exam) {
@@ -366,7 +367,7 @@ function renderOverview() {
   if (state.trajectoryView === "timeline") return renderTimelineView();
   const exam = latestExam();
   if (!exam) {
-    return `<section class="empty-state"><div class="brand-mark">标</div><h1>先记录第一场考试</h1><p>不用一次填完所有数据。先把考试、总分和你手头已有的排名记下来即可。</p>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录第一次考试</button>` : `<p class="muted">当前账号只有查看权限。</p>`}</section>`;
+    return `<section class="empty-state">${brandMark()}<h1>先记录第一场考试</h1><p>不用一次填完所有数据。先把考试、总分和你手头已有的排名记下来即可。</p>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录第一次考试</button>` : `<p class="muted">当前账号只有查看权限。</p>`}</section>`;
   }
   const comparison = comparisonState();
   const previous = comparison.status === "comparable" ? comparison.previous : null;
@@ -465,7 +466,7 @@ function renderDashboard() {
 }
 
 function renderLogin(error = "") {
-  app.innerHTML = `<main class="login-shell"><section class="login-card"><div class="brand-mark">标</div><h1>${PRODUCT_NAME}</h1><p>${PRODUCT_TAGLINE}。</p>${error ? `<div class="error-box" role="alert">${esc(error)}</div>` : ""}<form id="login-form"><div class="field"><label>登录账号</label><input name="username" autocomplete="username" required></div><div class="field"><label>密码</label><input name="password" type="password" autocomplete="current-password" minlength="10" required></div><button class="btn btn-primary btn-block" type="submit">登录</button></form><div class="login-help"><a href="/forgot">忘记密码？使用恢复码</a></div><small class="login-privacy">数据默认只对家庭成员可见。</small></section></main>`;
+  app.innerHTML = `<main class="login-shell"><section class="login-card">${brandMark()}<h1>${PRODUCT_NAME}</h1><p>${PRODUCT_TAGLINE}。</p>${error ? `<div class="error-box" role="alert">${esc(error)}</div>` : ""}<form id="login-form"><div class="field"><label>登录账号</label><input name="username" autocomplete="username" required></div><div class="field"><label>密码</label><input name="password" type="password" autocomplete="current-password" minlength="10" required></div><button class="btn btn-primary btn-block" type="submit">登录</button></form><div class="login-help"><a href="/forgot">忘记密码？使用恢复码</a></div><small class="login-privacy">数据默认只对家庭成员可见。</small></section></main>`;
   document.querySelector("#login-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const button = event.currentTarget.querySelector("button[type='submit']");
@@ -838,7 +839,7 @@ async function generateRecoveryCode() {
 }
 
 function renderRecoveryRequired() {
-  app.innerHTML = `<main class="login-shell"><section class="login-card recovery-required"><div class="brand-mark">标</div><h1>先保存账户恢复码</h1><p>这是第一次登录。恢复码用于忘记密码时找回账号，只显示一次，请离线保存。</p><button class="btn btn-primary btn-block" data-action="recovery-required">生成恢复码</button><div data-recovery-required-result></div><p class="muted">保存后即可进入高三坐标；恢复码不会分享给其他家庭成员。</p></section></main>`;
+  app.innerHTML = `<main class="login-shell"><section class="login-card recovery-required">${brandMark()}<h1>先保存账户恢复码</h1><p>这是第一次登录。恢复码用于忘记密码时找回账号，只显示一次，请离线保存。</p><button class="btn btn-primary btn-block" data-action="recovery-required">生成恢复码</button><div data-recovery-required-result></div><p class="muted">保存后即可进入高三坐标；恢复码不会分享给其他家庭成员。</p></section></main>`;
   document.querySelector("[data-action='recovery-required']")?.addEventListener("click", async (event) => {
     event.currentTarget.disabled = true;
     await generateRecoveryCode();
@@ -1197,7 +1198,7 @@ function renderPublicV080(result) {
   const meta = [data.student?.graduationYear ? `${data.student.graduationYear}届` : null, data.student?.schoolLabel, data.student?.className].filter(Boolean).map(esc).join(" · ");
   const total = `<section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "只分享当前内容" : result.share.scope === "trajectory" ? "成长轨迹 · 持续更新" : "持续更新"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>位置未分享</span>`}</div>${publicBaselineV081("total", data.exams || [], result.share)}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share)}</div>` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
   const body = view === "subject" ? publicSubjectComparisonV080(data.exams || [], subject, result.share) : view === "timeline" ? publicTimelineV080(data.exams || [], selectedExamId, result.share) : total;
-  app.innerHTML = `<main class="public-shell ink-share" data-share-view="${view}" data-exam-count="${data.exams?.length || 0}"><div class="public-brand"><div class="brand-mark">标</div><span>${PRODUCT_NAME} · 分享</span><i class="ink-share-flourish" aria-hidden="true"></i></div><div class="privacy-note">此页面由家庭主动分享 · 请勿未经允许转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">分享地址可由家庭随时撤销</footer>`;
+  app.innerHTML = `<main class="public-shell ink-share" data-share-view="${view}" data-exam-count="${data.exams?.length || 0}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span><i class="ink-share-flourish" aria-hidden="true"></i></div><div class="privacy-note">此页面由家庭主动分享 · 请勿未经允许转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">分享地址可由家庭随时撤销</footer>`;
 }
 
 async function renderExternal(kind, locator) {
@@ -1212,9 +1213,9 @@ async function renderExternal(kind, locator) {
     const schoolPct = percentile(school?.rank, school?.participants);
     const meta = [data.student?.graduationYear ? `${data.student.graduationYear}届` : null, data.student?.schoolLabel, data.student?.className].filter(Boolean).map(esc).join(" · ");
     const coordinate = latest ? [school?.rank ? `校第 ${school.rank} 名` : null, clazz?.rank ? `班第 ${clazz.rank} 名` : null, latest.overallScore != null ? `${fmtNumber(latest.overallScore)} 分` : null].filter(Boolean) : [];
-    app.innerHTML = `<main class="public-shell"><div class="public-brand"><div class="brand-mark">标</div><span>${PRODUCT_NAME} · 分享</span></div><div class="privacy-note">此页面由家庭主动分享 · 请勿未经允许转发</div><section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "只分享当前内容" : "持续更新"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>位置未分享</span>`}</div>${schoolPct != null || school?.participants ? `<div class="coordinate-note">${schoolPct != null ? `校前 ${fmtNumber(schoolPct)}%` : ""}${schoolPct != null && school?.participants ? " · " : ""}${school?.participants ? `本次共 ${school.participants} 人` : ""}</div>` : ""}<div class="subject-rows public-subjects">${publicSubjectRows(latest)}</div>` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>${publicHistory(data.exams)}</main><footer class="footer">分享地址可由家庭随时撤销</footer>`;
+    app.innerHTML = `<main class="public-shell"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span></div><div class="privacy-note">此页面由家庭主动分享 · 请勿未经允许转发</div><section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "只分享当前内容" : "持续更新"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>位置未分享</span>`}</div>${schoolPct != null || school?.participants ? `<div class="coordinate-note">${schoolPct != null ? `校前 ${fmtNumber(schoolPct)}%` : ""}${schoolPct != null && school?.participants ? " · " : ""}${school?.participants ? `本次共 ${school.participants} 人` : ""}</div>` : ""}<div class="subject-rows public-subjects">${publicSubjectRows(latest)}</div>` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>${publicHistory(data.exams)}</main><footer class="footer">分享地址可由家庭随时撤销</footer>`;
   } catch (error) {
-    app.innerHTML = `<main class="login-shell"><section class="login-card"><div class="brand-mark">标</div><h1>分享已失效</h1><p>${esc(error.message)}</p></section></main>`;
+    app.innerHTML = `<main class="login-shell"><section class="login-card">${brandMark()}<h1>分享已失效</h1><p>${esc(error.message)}</p></section></main>`;
   }
 }
 

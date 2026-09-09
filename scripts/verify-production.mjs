@@ -53,6 +53,7 @@ export async function verifyProduction({ origin, buildSha, version, publicRoot, 
     queue.push(...references(expected.toString(), path));
   }
   assert(seen.has("/ui-v081-share-ink.css"), "Missing release stylesheet");
+  assert(seen.has("/brand-logo-b.css"), "Missing Logo B stylesheet");
   assert(seen.has("/app.js"), "Missing application module");
   return { health, entries: 3, assets };
 }
