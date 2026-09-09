@@ -12,11 +12,11 @@
     "S0-plan-written",
     "S0-plan-commit-pr",
     "S1-single-exam-share-semantics",
-    "S2-pen-ink-share-ui"
+    "S2-pen-ink-share-ui",
+    "S3-accessibility-version-regression"
   ],
-  "inProgress": "S3-accessibility-version-regression",
+  "inProgress": "S4-exact-head-ci-merge-production",
   "pending": [
-    "S3-accessibility-version-regression",
     "S4-exact-head-ci-merge-production"
   ],
   "verification": {
@@ -49,7 +49,24 @@
         "fail": 0
       }
     },
-    "localVerify": null,
+    "resolvedFailures": [
+      {
+        "stage": "S3",
+        "command": "npm run verify",
+        "reason": "One carried-forward version assertion still expected 0.8.0.",
+        "resolution": "Updated the assertion to the required 0.8.1 contract."
+      }
+    ],
+    "localVerify": {
+      "commands": [
+        "npm ci",
+        "npm run verify"
+      ],
+      "tests": 107,
+      "pass": 107,
+      "fail": 0,
+      "verifiedAt": "2026-09-09T04:25:28Z"
+    },
     "exactHeadCi": null,
     "mainCi": null,
     "productionHealth": null
@@ -59,7 +76,7 @@
     "reason": "The v0.8 checkpoint merged into main predates final CI, merge and production evidence; live GitHub and production facts are authoritative."
   },
   "lastFailure": null,
-  "verifiedAt": "2026-09-09T04:18:55Z",
+  "verifiedAt": "2026-09-09T04:25:28Z",
   "recoveryRule": [
     "Read this checkpoint and live GitHub state before every continuation.",
     "Do not repeat completed v0.8.0 work.",
