@@ -4,7 +4,6 @@ const VERSION = 2;
 let activeForm = null;
 let activeKey = null;
 let timer = null;
-let submittedAt = 0;
 
 function openDb() {
   return new Promise((resolve, reject) => {
@@ -106,20 +105,21 @@ async function attach(form) {
   };
   form.addEventListener("input", save);
   form.addEventListener("change", save);
-  form.addEventListener("submit", () => { submittedAt = Date.now(); });
+  form.addEventListener("score:save-succeeded", () => {
+    const savedKey = activeKey;
+    clearTimeout(timer);
+    if (savedKey) deleteDraft(savedKey).catch(() => {});
+    setDraftState(form, "考试已保存，可以离开");
+  });
 }
 
 function scanDialogLifecycle() {
   const form = document.querySelector("#exam-form");
   if (form) attach(form);
   if (!form && activeForm) {
-    const key = activeKey;
-    const wasSubmittedRecently = Date.now() - submittedAt < 10000;
     activeForm = null;
     activeKey = null;
     clearTimeout(timer);
-    if (wasSubmittedRecently && key) deleteDraft(key).catch(() => {});
-    submittedAt = 0;
   }
 }
 
