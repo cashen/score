@@ -3,12 +3,12 @@
   "repository": "cashen/score",
   "branch": "feat/score-v090-trustworthy-growth",
   "baseSha": "a6984b15103cae58a570558a90d24d68543e88b0",
-  "headSha": "180f25b2b187720aff46ac7b07eab6cff458e6d2",
+  "headSha": "988552e2927cdb503c22ee275876c6ceb0db01b5",
   "pr": 24,
   "version": "0.9.0",
-  "completed": ["S0-live-baseline", "S0-branch", "S0-plan-written", "S0-plan-commit-pr", "S1-trustworthy-score", "S2-comparison", "S3-draft-entry"],
-  "inProgress": "S4-growth-share",
-  "pending": ["S4-growth-share", "S5-reflection-ui", "S6-release"],
+  "completed": ["S0-live-baseline", "S0-branch", "S0-plan-written", "S0-plan-commit-pr", "S1-trustworthy-score", "S2-comparison", "S3-draft-entry", "S4-growth-share", "S5-reflection-ui"],
+  "inProgress": "S6-release",
+  "pending": ["S6-release"],
   "verification": {
     "baselineMainCi": {"runId": 34340563160, "conclusion": "success"},
     "baselineDeployment": {"runId": 34340703760, "conclusion": "success"},
@@ -16,7 +16,8 @@
     "openPrs": [],
     "S1": {"command": "npm run check && node --test test/model.test.js test/v090-score-semantics.test.js test/v080-share-timeline.test.js", "tests": 14, "pass": 14, "fail": 0},
     "S2": {"command": "npm run check && node --test test/v080-comparison-contract.test.js test/v090-comparison-trust.test.js test/v090-score-semantics.test.js test/v030-comparison-ui.test.js", "tests": 13, "pass": 13, "fail": 0},
-    "S3": {"command": "npm run check && node --test test/v090-draft-entry-contract.test.js test/v090-score-semantics.test.js test/observer-stability.test.js test/v070-ui.test.js", "tests": 15, "pass": 15, "fail": 0}
+    "S3": {"command": "npm run check && node --test test/v090-draft-entry-contract.test.js test/v090-score-semantics.test.js test/observer-stability.test.js test/v070-ui.test.js", "tests": 15, "pass": 15, "fail": 0},
+    "S4S5": {"command": "npm run verify", "tests": 120, "pass": 120, "fail": 0, "notes": "Includes one-exam live trajectory acknowledgement, fields boundary, reflection privacy, and v0.9.0 version contract."}
   },
   "lastFailure": null,
   "verifiedAt": "2026-09-09T10:45:00Z",
