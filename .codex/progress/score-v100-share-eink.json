@@ -3,11 +3,11 @@
   "repository": "cashen/score",
   "branch": "feat/score-v100-share-eink",
   "baseSha": "495d868221698b4ca0446e2d0c218065fe778059",
-  "headSha": "8cc8a5f",
+  "headSha": "fe3787c432f56f5b8a73c56d956a9d65e1c6d766",
   "pr": 25,
   "version": "0.10.0",
   "completed": ["S0-live-baseline", "S0-branch", "S0-plan-written", "S0-plan-pr", "S1-eink-tokens", "S2-total", "S3-subject-timeline", "S4-boundary"],
-  "inProgress": "S5-a11y-and-browser",
+  "inProgress": "S6-browser",
   "pending": ["S5-a11y-and-browser", "S6-browser", "S7-release"],
   "verification": {
     "mainSha": "495d868221698b4ca0446e2d0c218065fe778059",
