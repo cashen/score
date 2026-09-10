@@ -33,21 +33,41 @@ export function shareProjectionRows({ data = {}, share = {}, view = "timeline", 
 }
 
 export function buildShareSvg({ data = {}, share = {}, view = "timeline", subject = "chinese" } = {}) {
-  const rows = shareProjectionRows({ data, share, view, subject });
+  const exams = Array.isArray(data.exams) ? data.exams : [];
   const name = share.fields?.displayName === false ? "学生" : data.student?.displayName || "学生";
-  const title = view === "subject" ? "单科轨迹" : view === "total" ? "总成绩坐标" : "考试时间轴";
+  const title = "高三坐标 · 分享页";
+  const rows = shareProjectionRows({ data, share, view: "total", subject });
   const maxRows = Math.max(1, Math.min(rows.length, 42));
-  const height = Math.min(MAX_HEIGHT, 300 + maxRows * 108);
+  const subjectLabels = { chinese: "语文", math: "数学", english: "英语", physics: "物理", chemistry: "化学", biology: "生物" };
+  const latest = exams[0];
+  const sections = [];
+  let y = 300;
+  sections.push(line("总成绩", 70, y, 30, 700, "#5e8581")); y += 46;
+  if (latest) {
+    const latestRow = rows[0] || {};
+    sections.push(`<rect x="60" y="${y - 30}" width="960" height="112" rx="16" fill="#fbfbf7" stroke="#c8cec7"/>`);
+    sections.push(line(latest.name || "最近一次考试", 88, y + 8, 28, 700));
+    sections.push(line(latest.date || "", 88, y + 42, 20, 400, "#727974"));
+    sections.push(line(latestRow.value || "未分享", 690, y + 24, 42, 750, "#242525", "end"));
+    sections.push(line(latestRow.detail || "", 990, y + 50, 20, 400, "#727974", "end"));
+    y += 150;
+  } else { sections.push(line("暂未分享考试数据", 70, y + 26, 26, 500, "#727974")); y += 90; }
+  sections.push(line("单科成绩", 70, y, 30, 700, "#5e8581")); y += 42;
+  const subjectValues = Object.entries(subjectLabels).map(([key, label]) => {
+    const item = latest?.subjects?.[key];
+    const value = share.fields?.subjectScores === false ? "未分享" : item?.finalScore ?? item?.rawScore ?? "—";
+    return { label, value };
+  });
+  const cellW = 300;
+  subjectValues.forEach((item, index) => { const x = 60 + (index % 3) * cellW; const rowY = y + Math.floor(index / 3) * 66; sections.push(`<rect x="${x}" y="${rowY - 26}" width="280" height="52" rx="10" fill="#f5f5f0" stroke="#d7dad2"/>${line(item.label, x + 18, rowY + 8, 22, 600)}${line(item.value, x + 262, rowY + 8, 24, 700, "#242525", "end")}`); });
+  y += 150;
+  sections.push(line("考试时间轴", 70, y, 30, 700, "#5e8581")); y += 42;
   const visibleRows = rows.slice(0, maxRows);
-  const subjectLabel = subject === "math" ? "数学" : subject === "english" ? "英语" : subject === "physics" ? "物理" : subject === "chemistry" ? "化学" : subject === "biology" ? "生物" : "语文";
-  const header = [line("高三坐标", 70, 82, 28, 700, "#5e8581"), line(title, 70, 150, 56, 750), line(name, 70, 205, 30, 500, "#5b625f"), line(view === "subject" ? subjectLabel : share.scope === "trajectory" ? "成长轨迹 · 分享白名单" : "本次考试 · 分享白名单", WIDTH - 70, 150, 24, 500, "#5b625f", "end")].join("");
-  const rowsSvg = visibleRows.map((row, index) => {
-    const y = 320 + index * 108;
-    const shade = index % 2 ? "#f5f5f0" : "#fbfbf7";
-    return `<rect x="60" y="${y - 56}" width="960" height="88" rx="14" fill="${shade}" stroke="#d7dad2"/>${line(row.label, 88, y - 16, 25, 650)}${line(row.date || "", 88, y + 18, 20, 400, "#727974")}${line(row.value, 690, y - 8, 34, 750, "#242525", "end")}${line(row.detail, 990, y + 21, 20, 400, "#727974", "end")}`;
-  }).join("");
-  const footer = rows.length > maxRows ? line(`时间轴较长，已分为前 ${maxRows} 条；网页仍可查看完整记录。`, 70, height - 62, 20, 400, "#727974") : line("页面只包含家庭主动选择的分享字段。", 70, height - 62, 20, 400, "#727974");
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${height}" viewBox="0 0 ${WIDTH} ${height}" role="img" aria-labelledby="title desc"><title id="title">${xml(title)}</title><desc id="desc">${xml(name)}的${xml(title)}分享图</desc><rect width="100%" height="100%" fill="#fbfbf7"/>${header}<line x1="70" y1="245" x2="1010" y2="245" stroke="#c8cec7" stroke-width="2"/>${rowsSvg}${footer}</svg>`;
+  visibleRows.forEach((row, index) => { const rowY = y + index * 78; sections.push(`<line x1="86" y1="${rowY - 14}" x2="86" y2="${rowY + 42}" stroke="#7fa29e" stroke-width="4"/>${line(row.label, 112, rowY + 8, 23, 650)}${line(row.date || "", 112, rowY + 36, 18, 400, "#727974")}${line(row.value || "", 720, rowY + 14, 25, 700, "#242525", "end")}${line(row.detail || "", 990, rowY + 36, 18, 400, "#727974", "end")}`); });
+  y += visibleRows.length * 78 + 32;
+  sections.push(line(rows.length > maxRows ? `时间轴较长，网页仍可查看完整 ${rows.length} 条记录。` : "页面只包含家庭主动选择的分享字段。", 70, y, 20, 400, "#727974"));
+  const height = Math.min(MAX_HEIGHT, y + 80);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${height}" viewBox="0 0 ${WIDTH} ${height}" role="img" aria-labelledby="title desc"><title id="title">${xml(title)}</title><desc id="desc">${xml(name)}的完整分享页</desc><rect width="100%" height="100%" fill="#fbfbf7"/>${line("高三坐标", 70, 82, 28, 700, "#5e8581")}${line(title, 70, 150, 56, 750)}${line(name, 70, 205, 30, 500, "#5b625f")}${line(share.scope === "trajectory" ? "成长轨迹 · 分享白名单" : "本次考试 · 分享白名单", WIDTH - 70, 150, 24, 500, "#5b625f", "end")}<line x1="70" y1="245" x2="1010" y2="245" stroke="#c8cec7" stroke-width="2"/>${sections.join("")}</svg>`;
 }
 
 function svgBlob(svg) {

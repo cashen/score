@@ -439,7 +439,7 @@ function renderShareList() {
 function renderShareResult() {
   const result = state.shareResult;
   if (!result?.url) return "";
-  return `<section class="share-result" aria-labelledby="share-result-title"><div><div class="section-label">刚刚生成</div><h2 id="share-result-title">链接已准备好</h2><p>复制后可以发给家人；也可以打开确认页面，或生成一张适合手机保存的分享图。</p></div><div class="share-url" title="完整分享地址">${esc(result.url)}</div><div class="share-result-actions"><button class="btn btn-primary" data-action="copy-share" data-url="${esc(result.url)}">复制完整地址</button><a class="btn btn-outline" href="${esc(result.url)}" target="_blank" rel="noopener noreferrer">打开分享页</a><button class="btn btn-outline" data-action="share-image" data-kind="${esc(result.item?.kind || "public")}" data-locator="${esc(result.item?.locator || "")}" data-token="${esc(result.token || "")}" data-scope="${esc(result.item?.scope || "single")}">生成分享图</button></div><small class="muted">${result.item?.kind === "secret" ? "此随机地址只在本次显示；刷新后不会再次回显。" : "这是完整地址，不需要手动补齐 /p/。"}</small></section>`;
+  return `<section class="share-result" aria-labelledby="share-result-title"><div><div class="section-label">刚刚生成</div><h2 id="share-result-title">链接已准备好</h2><p>复制后可以发给家人，也可以打开分享页确认内容。</p></div><div class="share-url" title="完整分享地址">${esc(result.url)}</div><div class="share-result-actions"><button class="btn btn-primary" data-action="copy-share" data-url="${esc(result.url)}">复制完整地址</button><a class="btn btn-outline" href="${esc(result.url)}" target="_blank" rel="noopener noreferrer">打开分享页</a><button class="btn btn-outline" data-action="share-image" data-kind="${esc(result.item?.kind || "public")}" data-locator="${esc(result.item?.locator || "")}" data-token="${esc(result.token || "")}" data-scope="${esc(result.item?.scope || "single")}">生成完整分享页图</button></div><small class="muted">${result.item?.kind === "secret" ? "此随机地址只在本次显示；刷新后不会再次回显。" : "这是完整地址，不需要手动补齐 /p/。"}</small></section>`;
 }
 
 function renderSharing() {
@@ -1236,22 +1236,7 @@ function renderPublicV080(result) {
   const meta = [data.student?.graduationYear ? `${data.student.graduationYear}届` : null, data.student?.schoolLabel, data.student?.className].filter(Boolean).map(esc).join(" · ");
   const total = `<section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "只分享当前内容" : result.share.scope === "trajectory" ? "成长轨迹 · 持续更新" : "持续更新"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>位置未分享</span>`}</div>${publicBaselineV081("total", data.exams || [], result.share)}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share)}</div>` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
   const body = view === "subject" ? publicSubjectComparisonV080(data.exams || [], subject, result.share) : view === "timeline" ? publicTimelineV080(data.exams || [], selectedExamId, result.share) : total;
-  app.innerHTML = `<main class="public-shell ink-share" data-share-view="${view}" data-exam-count="${data.exams?.length || 0}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span><i class="ink-share-flourish" aria-hidden="true"></i></div><div class="privacy-note">此页面由家庭主动分享 · 请勿未经允许转发</div>${publicViewNavV080(view, subject)}<div class="public-share-actions"><button class="btn btn-outline" type="button" data-action="public-share-image">下载 / 分享图片</button><small>图片只包含当前分享白名单；不方便下载时可打开预览后长按保存。</small></div>${body}</main><footer class="footer">分享地址可由家庭随时撤销</footer>`;
-  document.querySelector("[data-action='public-share-image']")?.addEventListener("click", async (event) => {
-    const button = event.currentTarget;
-    button.disabled = true;
-    button.textContent = "正在准备图片…";
-    try {
-      const outcome = await deliverShareImage({ data, share: result.share, view, subject, filename: shareFileName(result.share) });
-      button.textContent = outcome.message;
-      setTimeout(() => { button.disabled = false; button.textContent = "下载 / 分享图片"; }, 1800);
-    } catch (error) {
-      button.disabled = false;
-      button.textContent = "下载 / 分享图片";
-      const message = error.message || "分享图未生成";
-      if (typeof setNotice === "function") setNotice(message, "error");
-    }
-  });
+  app.innerHTML = `<main class="public-shell ink-share" data-share-view="${view}" data-exam-count="${data.exams?.length || 0}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span><i class="ink-share-flourish" aria-hidden="true"></i></div><div class="privacy-note">此页面由家庭主动分享 · 请勿未经允许转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">分享地址可由家庭随时撤销</footer>`;
 }
 
 async function renderExternal(kind, locator) {
