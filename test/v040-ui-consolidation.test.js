@@ -28,7 +28,7 @@ test("v0.5 entry no longer loads v0.4 patch assets", () => {
   for (const asset of ["ui-v040", "ui-v041", "ui-v042", "trajectory-v3", "exam-humanize", "brand-v021"]) {
     assert.doesNotMatch(index, new RegExp(asset));
   }
-  assert.match(index, /ui-v050\.css/);
+  assert.match(index, /app-v094\.css/);
 });
 
 test("academic changes are described without red-good green-bad judgment", () => {

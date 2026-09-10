@@ -23,7 +23,7 @@ test("the ink treatment is scoped to external share rendering", () => {
   assert.match(app, /publicBaselineV081\("subject"/);
   assert.match(app, /publicBaselineV081\("timeline"/);
   assert.match(app, /classList\.add\("share-ink-root"\)/);
-  assert.ok(index.indexOf("ui-v081-share-ink.css") > index.indexOf("ui-v080.css"));
+  assert.match(index, /app-v094\.css/);
   assert.match(css, /\.public-shell\.ink-share/);
   assert.match(css, /\.ink-share \.public-view-tab/);
   assert.doesNotMatch(css, /(^|\n)\s*(\.trajectory|\.container|\.tabs|\.share-card)\b/);

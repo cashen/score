@@ -20,8 +20,9 @@ function expectAll(source, values) {
   for (const value of values) assert.ok(source.includes(value), `missing contract: ${value}`);
 }
 
-test("production entry is a single v0.5 source path", () => {
-  expectAll(index, ["/styles.css", "/onboarding-v050.css", "/ui-v050.css", "/router-v2.js"]);
+test("production entry is a single versioned CSS bundle", () => {
+  expectAll(index, ["/css/app-v094.css", "/router-v2.js"]);
+  assert.equal((index.match(/<link rel="stylesheet"/g) || []).length, 1);
   for (const asset of [
     "brand-v021.js",
     "exam-humanize.js",
@@ -137,11 +138,11 @@ test("coordinate visual hierarchy is restrained and equal-weight", () => {
   assert.match(cssFlat, /@media \(max-width: 760px\).*\.coordinate-row > span \+ span::before\s*\{\s*display:\s*none/);
 });
 
-test("version contract is exactly 0.9.3", () => {
-  assert.equal(pkg.version, "0.9.3");
-  assert.equal(lock.version, "0.9.3");
-  assert.equal(lock.packages[""].version, "0.9.3");
-  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.9\.3"/);
+test("version contract is exactly 0.9.4", () => {
+  assert.equal(pkg.version, "0.9.4");
+  assert.equal(lock.version, "0.9.4");
+  assert.equal(lock.packages[""].version, "0.9.4");
+  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.9\.4"/);
   assert.match(pkg.scripts.check, /public\/app\.js/);
   assert.match(pkg.scripts.check, /public\/onboarding-v050\.js/);
 });
