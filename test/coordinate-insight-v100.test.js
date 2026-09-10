@@ -24,6 +24,7 @@ function exam({ id, date, type = "monthly", series = "A", level = "school", scho
 const a = exam({ id: "a", date: "2026-09-01", schoolRank: 200, chemistryRank: 200 });
 const b = exam({ id: "b", date: "2026-08-20", schoolRank: 250, chemistryRank: 150 });
 const c = exam({ id: "c", date: "2026-08-10", schoolRank: 300, chemistryRank: 100 });
+const d = exam({ id: "d", date: "2026-08-30", schoolRank: 200, chemistryRank: 200, series: "B" });
 
 test("single exam is an honest baseline", () => {
   const result = analyzeCoordinate([a]);
@@ -70,8 +71,17 @@ test("different exam categories do not produce a false trend", () => {
   assert.equal(result.overall, null);
 });
 
+test("different series do not produce a false trend", () => {
+  const result = analyzeCoordinate([a, d]);
+  assert.equal(result.status, "baseline");
+  assert.equal(result.overall, null);
+});
+
 test("repeated subject decline becomes an observation point", () => {
-  const result = analyzeCoordinate([a, b, c]);
+  const current = exam({ id: "a2", date: "2026-09-01", schoolRank: 200, chemistryRank: 200 });
+  const previous = exam({ id: "b2", date: "2026-08-20", schoolRank: 250, chemistryRank: 150 });
+  const older = exam({ id: "c2", date: "2026-08-10", schoolRank: 300, chemistryRank: 100 });
+  const result = analyzeCoordinate([current, previous, older]);
   assert.equal(result.attention?.key, "chemistry");
   assert.equal(result.attention?.backward, 2);
   assert.ok(result.drivers.some((item) => item.key === "chemistry" && item.direction === "backward"));
