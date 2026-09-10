@@ -21,9 +21,9 @@ function exam({ id, date, type = "monthly", series = "A", level = "school", scho
   };
 }
 
-const a = exam({ id: "a", date: "2026-09-01", schoolRank: 200, chemistryRank: 100 });
+const a = exam({ id: "a", date: "2026-09-01", schoolRank: 200, chemistryRank: 200 });
 const b = exam({ id: "b", date: "2026-08-20", schoolRank: 250, chemistryRank: 150 });
-const c = exam({ id: "c", date: "2026-08-10", schoolRank: 300, chemistryRank: 200 });
+const c = exam({ id: "c", date: "2026-08-10", schoolRank: 300, chemistryRank: 100 });
 
 test("single exam is an honest baseline", () => {
   const result = analyzeCoordinate([a]);
@@ -74,7 +74,7 @@ test("repeated subject decline becomes an observation point", () => {
   const result = analyzeCoordinate([a, b, c]);
   assert.equal(result.attention?.key, "chemistry");
   assert.equal(result.attention?.backward, 2);
-  assert.ok(result.drivers.some((item) => item.key === "chemistry" && item.direction === "forward"));
+  assert.ok(result.drivers.some((item) => item.key === "chemistry" && item.direction === "backward"));
 });
 
 test("missing subject data is ignored rather than invented", () => {
