@@ -1,5 +1,6 @@
 const path = location.pathname;
 const onboarding = path === "/forgot" || path.startsWith("/join/") || path.startsWith("/recover/");
+const externalShare = path.startsWith("/share/") || path.startsWith("/p/");
 
 const slowTimer = setTimeout(() => {
   const loading = document.querySelector(".loading-screen p");
@@ -10,7 +11,7 @@ try {
   if (onboarding) await import("./onboarding-v050.js");
   else {
     await import("./app.js");
-    await import("./coordinate-insight-v100.js");
+    if (!externalShare) await import("./coordinate-insight-v100.js");
   }
 } finally {
   clearTimeout(slowTimer);
