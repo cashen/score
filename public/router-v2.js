@@ -8,7 +8,10 @@ const slowTimer = setTimeout(() => {
 
 try {
   if (onboarding) await import("./onboarding-v050.js");
-  else await import("./app.js");
+  else {
+    await import("./app.js");
+    await import("./coordinate-insight-v100.js");
+  }
 } finally {
   clearTimeout(slowTimer);
 }
