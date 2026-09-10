@@ -1,0 +1,16 @@
+{
+  "task": "share-page-long-image-v093",
+  "repository": "cashen/score",
+  "branch": "feat/share-page-long-image-v093",
+  "baseSha": "b46484f593615ff37d768a5edee5e96f2aa394eb",
+  "headSha": "fe43c8c1bf3328ca535caf38de63afbf45cd32ab",
+  "pr": null,
+  "version": "0.9.3",
+  "completed": ["S0-live-baseline", "S0-branch", "S1-plan-and-long-image", "S2-public-entry-removal", "S3-multiterminal-contract", "S4-local-verify"],
+  "inProgress": "S5-pr-ci",
+  "pending": ["S5-pr-ci", "S6-merge-production"],
+  "verification": {"localTests": {"npmCi": "success", "npmRunVerify": "success", "tests": 126}},
+  "lastFailure": null,
+  "verifiedAt": "2026-09-10T02:00:00Z",
+  "recoveryRule": ["Read this checkpoint and live GitHub state before every continuation.", "Merge only exact final head with green CI; unknown network results are not success."]
+}
