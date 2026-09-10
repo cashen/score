@@ -44,6 +44,9 @@ test("router has one normal app path and one onboarding path", () => {
   expectAll(router, [
     'await import("./onboarding-v050.js")',
     'await import("./app.js")',
+    'await import("./coordinate-insight-v100.js")',
+    "const externalShare = path.startsWith(\"/share/\") || path.startsWith(\"/p/\")",
+    "if (!externalShare) await import(\"./coordinate-insight-v100.js\")",
     "1500",
     "网络有点慢，数据还在读取"
   ]);
