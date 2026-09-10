@@ -19,6 +19,6 @@ test("mobile wrapping is natural rather than forced nowrap", () => {
 });
 
 test("v0.5 entry owns coordinate behavior directly", () => {
-  assert.match(index, /ui-v050\.css/);
+assert.match(index, /app-v094\.css/);
   assert.doesNotMatch(index, /ui-v042\.css/);
 });

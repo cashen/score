@@ -52,8 +52,7 @@ export async function verifyProduction({ origin, buildSha, version, publicRoot, 
     assets.push({ path, sha256: hash(actual) });
     queue.push(...references(expected.toString(), path));
   }
-  assert(seen.has("/ui-v081-share-ink.css"), "Missing release stylesheet");
-  assert(seen.has("/brand-logo-b.css"), "Missing Logo B stylesheet");
+  assert(seen.has("/css/app-v094.css"), "Missing v0.9.4 runtime stylesheet bundle");
   assert(seen.has("/app.js"), "Missing application module");
   return { health, entries: 3, assets };
 }

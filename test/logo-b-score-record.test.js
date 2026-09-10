@@ -9,7 +9,7 @@ const [index, app, onboarding, helper, css] = await Promise.all([
 ]);
 
 test("Logo B is a source-rendered score record mark", () => {
-  assert.match(index, /brand-logo-b\.css/);
+  assert.match(index, /app-v094\.css/);
   assert.match(index, /data-brand-logo="score-record"/);
   assert.match(helper, /brand-logo-page/);
   assert.match(helper, /brand-logo-track/);

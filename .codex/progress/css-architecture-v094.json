@@ -1,0 +1,27 @@
+{
+  "task": "css-architecture-v094",
+  "repository": "cashen/score",
+  "branch": "feat/css-architecture-v094",
+  "baseSha": "d5fbca3d18a1fedf74c59f69ff5777994f8d40bd",
+  "headSha": "d5fbca3d18a1fedf74c59f69ff5777994f8d40bd",
+  "pr": null,
+  "version": "0.9.4",
+  "completed": ["S0-live-baseline", "S0-branch", "S1-plan", "S1-version-and-css", "S2-runtime-bundle", "S3-regression"],
+  "inProgress": "S4-pr-ci",
+  "pending": ["S4-pr-ci", "S5-merge-production"],
+  "verification": {
+    "npmCi": "success",
+    "npmRunVerify": "success",
+    "tests": 128,
+    "runtimeStylesheets": 1,
+    "bundle": "/css/app-v094.css",
+    "historicalSourcesRetained": true
+  },
+  "lastFailure": null,
+  "verifiedAt": "2026-09-10T00:00:00Z",
+  "recoveryRule": [
+    "Read this checkpoint and live GitHub state before every continuation.",
+    "Merge only exact final head with green CI; unknown network results are not success.",
+    "Do not delete historical CSS sources; entry rollback must remain possible."
+  ]
+}

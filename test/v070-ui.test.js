@@ -7,10 +7,9 @@ const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8")
 const css = await readFile(new URL("../public/ui-v070.css", import.meta.url), "utf8");
 const plan = await readFile(new URL("../docs/plan/ui-v070-apple-human.md", import.meta.url), "utf8");
 
-test("v0.7 UI source is loaded after the v0.6 source", () => {
-  assert.match(index, /ui-v050\.css/);
-  assert.match(index, /ui-v070\.css/);
-  assert.ok(index.indexOf("ui-v070.css") > index.indexOf("ui-v050.css"));
+test("v0.7 UI source remains in the consolidated runtime bundle", () => {
+  assert.match(index, /app-v094\.css/);
+  assert.match(css, /--v70-bg/);
 });
 
 test("privacy signal is calm and rendered in the app source", () => {

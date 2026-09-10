@@ -22,7 +22,7 @@ test("mobile exam list keeps coordinates instead of hiding metrics", () => {
 });
 
 test("entry shell is minimal and has one active application router", () => {
-  assert.match(index, /ui-v050\.css/);
+  assert.match(index, /app-v094\.css/);
   assert.match(index, /router-v2\.js/);
   assert.doesNotMatch(index, /ui-v04[0-9]\.js/);
 });
