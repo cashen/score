@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { trajectoryAnalysis, chooseTrajectoryMetric, changeDrivers } from "../public/trajectory-analysis-v010.js";
+import { trajectoryAnalysis, chooseTrajectoryMetric, changeDrivers, subjectObservationExams } from "../public/trajectory-analysis-v010.js";
 
 const exam = (id, date, series = "月考", schoolRank = null, participants = 100, score = null) => ({
   id, name: id, date, type: "monthly", status: "normal",
@@ -68,4 +68,20 @@ test("change drivers identify subject movement from the same semantic metric", (
   const drivers = changeDrivers(exams);
   assert.equal(drivers[0].key, "math");
   assert.equal(drivers[0].analysis.longDirection, "forward");
+});
+
+
+test("single-subject trajectory ignores exams without that subject, including the latest exam", () => {
+  const exams = [
+    withMath(exam("e1", "2026-03-01"), 30, 100, 105),
+    exam("e2", "2026-04-01"),
+    withMath(exam("e3", "2026-05-01"), 18, 100, 118)
+  ];
+  const observed = subjectObservationExams(exams, "math");
+  assert.deepEqual(observed.map((item) => item.id), ["e3", "e1"]);
+  const result = trajectoryAnalysis(exams, "math");
+  assert.equal(result.comparableCount, 2);
+  assert.equal(result.current.examId, "e3");
+  assert.equal(result.previous.examId, "e1");
+  assert.equal(result.skipped.length, 0);
 });
