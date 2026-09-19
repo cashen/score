@@ -9,7 +9,7 @@ const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "u
 test("home is a continuous reading flow instead of a three-card dashboard", () => {
   assert.match(app, /coordinate-hero/);
   assert.match(app, /和以前相比/);
-  assert.match(app, /哪些科目的变化比较明显/);
+  assert.match(app, /哪些科目有明显变化/);
   assert.match(app, /六科/);
   assert.match(app, /查看全部记录/);
   assert.doesNotMatch(app, /现在在哪/);
