@@ -12,11 +12,6 @@ export const COORDINATE_SUBJECTS = Object.freeze([
 
 const CHANGE_THRESHOLDS = Object.freeze({ percentile: 0.4, score: 1 });
 
-function ranked(exam, key, scope) {
-  const rankings = key ? exam?.subjects?.[key]?.rankings : exam?.overall?.rankings || exam?.overallRankings;
-  return (rankings || []).find((item) => item?.scope === scope && (item.rank != null || item.participants != null)) || null;
-}
-
 export function metricBetween(current, previous, key = null) {
   const source = coreMetricBetween(current, previous, key, "auto");
   if (!source) return null;
@@ -41,7 +36,7 @@ export function changeDirection(metric) {
 
 function latestComparablePair(exams) {
   const list = sortExamsChronologically(exams);
-  const latest = list[0] || null;
+  const latest = latestExam(list);
   if (!latest) return { list, latest: null, previous: null, eligibility: { status: "baseline", reason: "还没有考试记录" } };
   for (const candidate of list.slice(1)) {
     const eligibility = comparisonEligibility(latest, candidate);
