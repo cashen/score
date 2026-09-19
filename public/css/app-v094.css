@@ -1858,3 +1858,17 @@ summary:focus-visible,
   .share-result *, .share-item * { transition: none !important; animation: none !important; }
 }
 
+
+
+/* ---- v0.12.13 trajectory reading ---- */
+.trajectory-reading-grid, .public-analysis-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:16px 0; }
+.trajectory-reading-grid > div, .public-analysis-grid > div { display:grid; gap:5px; padding:14px; border:1px solid var(--line); border-radius:14px; background:var(--surface-2); }
+.trajectory-reading-grid small, .public-analysis-grid small { color:var(--muted); font-size:12px; }
+.trajectory-reading-grid strong, .public-analysis-grid strong { font-size:18px; line-height:1.35; }
+.trajectory-reading-grid span, .public-analysis-grid span { color:var(--muted); font-size:13px; line-height:1.5; }
+.trajectory-driver { margin-top:14px; }
+.public-analysis-note { margin:16px 0; padding:16px; border:1px solid var(--line); border-radius:16px; background:var(--surface-2); }
+.public-analysis-note > small { display:block; color:var(--muted); margin-top:10px; line-height:1.5; }
+@media (max-width: 700px) {
+  .trajectory-reading-grid, .public-analysis-grid { grid-template-columns:1fr; }
+}
