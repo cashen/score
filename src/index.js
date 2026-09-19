@@ -34,7 +34,7 @@ const DUMMY_PASSWORD_RECORD = Object.freeze({
 });
 
 function passwordIterations(env) {
-  return Math.max(PASSWORD_MIN_ITERATIONS, Math.min(PASSWORD_MAX_ITERATIONS, Number(env.PASSWORD_ITERATIONS) || PASSWORD_MIN_ITERATIONS));
+  return Math.max(10000, Math.min(PASSWORD_MAX_ITERATIONS, Number(env.PASSWORD_ITERATIONS) || PASSWORD_MIN_ITERATIONS));
 }
 
 function now() {
