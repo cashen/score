@@ -18,10 +18,10 @@ function normalizedComparison(exam) {
 }
 
 export function comparisonEligibility(latest, previous) {
-  if (!latest || !previous) return { status: "baseline", reason: "还没有第二次可比考试" };
+  if (!latest || !previous) return { status: "baseline", reason: "还没有第二次可以直接比较的考试" };
   const unavailable = exam => exam?.status && exam.status !== "normal";
-  if (unavailable(latest)) return { status: "not_comparable", reason: "当前考试有特殊情况，不自动比较" };
-  if (unavailable(previous)) return { status: "not_comparable", reason: "参考考试有特殊情况，不自动比较" };
+  if (unavailable(latest)) return { status: "not_comparable", reason: "这次考试有特殊情况，暂不直接比较" };
+  if (unavailable(previous)) return { status: "not_comparable", reason: "对比的考试有特殊情况，暂不直接比较" };
   if (examComparisonCategory(latest) !== examComparisonCategory(previous)) {
     return { status: "not_comparable", reason: "考试类别不同，暂不直接比较" };
   }
@@ -29,8 +29,8 @@ export function comparisonEligibility(latest, previous) {
   const b = normalizedComparison(previous);
   if (a.series !== b.series) return { status: "not_comparable", reason: "考试系列不同，暂不直接比较" };
   if (a.level !== b.level) return { status: "not_comparable", reason: "考试范围不同，暂不直接比较" };
-  if (!a.series || !a.level) return { status: "comparable", reason: "同类别考试；部分比较口径未标注" };
-  return { status: "comparable", reason: "按" + a.level + "口径比较" };
+  if (!a.series || !a.level) return { status: "comparable", reason: "考试类别相同，但比较范围信息不完整" };
+  return { status: "comparable", reason: "按" + a.level + "范围比较" };
 }
 
 export const comparisonCategory = examComparisonCategory;
@@ -120,7 +120,7 @@ export function metricBetween(latest, previous, key = null, metric = "auto") {
           delta: schoolPrevious.percentile - schoolCurrent.percentile,
           currentValue: schoolCurrent.percentile,
           previousValue: schoolPrevious.percentile,
-          detail: `校前 ${schoolPrevious.percentile}% → 校前 ${schoolCurrent.percentile}%`
+          detail: `校内前 ${schoolPrevious.percentile}% → 校内前 ${schoolCurrent.percentile}%`
         };
       }
       if (schoolCurrent.rank != null && schoolPrevious.rank != null) {
@@ -130,7 +130,7 @@ export function metricBetween(latest, previous, key = null, metric = "auto") {
           delta: schoolPrevious.rank - schoolCurrent.rank,
           currentValue: schoolCurrent.rank,
           previousValue: schoolPrevious.rank,
-          detail: `校第 ${schoolPrevious.rank} → 校第 ${schoolCurrent.rank}`
+          detail: `校内第 ${schoolPrevious.rank} → 校内第 ${schoolCurrent.rank}`
         };
       }
     }
@@ -186,7 +186,7 @@ export function findComparableExam(exams = [], current = latestExam(exams)) {
     current,
     reference: null,
     skipped,
-    reason: skipped.length ? `之前有 ${skipped.length} 场考试，但没有找到口径足够一致的比较对象` : "还没有第二次可比考试"
+    reason: skipped.length ? `之前有 ${skipped.length} 场考试，但没有找到可以直接比较的考试` : "还没有第二次可以直接比较的考试"
   };
 }
 
@@ -224,9 +224,9 @@ export function findComparableExamForSubject(exams = [], current = latestExam(ex
     });
   }
 
-  let reason = "还没有第二次可比考试";
-  if (comparisonCandidateFound && skipped.length) reason = "有同类别考试，但当前科目缺少足够共同数据，暂不判断变化";
-  else if (skipped.length) reason = "已有历史记录，但之前考试的比较口径不一致，暂不直接比较";
+  let reason = "还没有第二次可以直接比较的考试";
+  if (comparisonCandidateFound && skipped.length) reason = "有同类别考试，但这门课缺少足够的共同数据，暂不判断变化";
+  else if (skipped.length) reason = "已有历史记录，但之前的考试条件不同，暂不直接比较";
   return { status: "not_comparable", current, reference: null, metric: null, skipped, reason };
 }
 
