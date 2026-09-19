@@ -102,7 +102,7 @@ test("successful login lazily upgrades a legacy password record", async () => {
     headers: { "content-type": "application/json", "CF-Connecting-IP": "127.0.0.10" },
     body: JSON.stringify({ username: "legacy001", password })
   });
-  assert.equal(response.status, 400);
+  assert.equal(response.status, 200);
 });
 
 test("rate limiting blocks after the configured identity threshold", async () => {
