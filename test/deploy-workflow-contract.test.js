@@ -17,7 +17,7 @@ test('deploy workflow is triggered only by main CI completions', () => {
 });
 
 test('release version is aligned', () => {
-  assert.equal(pkg.version, '0.12.28');
+  assert.equal(pkg.version, '0.12.28.1');
   assert.match(wrangler, /APP_VERSION = "0\.12\.27\.1"/);
 });
 
