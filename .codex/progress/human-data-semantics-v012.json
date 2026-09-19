@@ -3,7 +3,7 @@
   "repository": "cashen/score",
   "baseSha": "fff7fd60bd3ff025452879813cdeec5dcd937ada",
   "baseVersion": "0.11.0",
-  "targetVersion": "0.12.0",
+  "targetVersion": "0.12.1",
   "status": "implementation-in-progress",
   "branch": "feat/human-data-semantics-v012",
   "phases": {
@@ -25,5 +25,6 @@
     "read pages no longer fabricate missing subject/rank placeholders",
     "public share uses same latest/subject/comparison semantics",
     "family tab jump persists URL state"
-  ]
+  ],
+  "revisionNote": "v0.12.1 increments version for post-implementation regression fixes."
 }
