@@ -4,7 +4,8 @@ import {
   assertUsername,
   normalizeExam,
   normalizeUsername,
-  safeText
+  safeText,
+  sortExamsChronologically
 } from "./lib/model.js";
 import {
   clearSessionCookie,
@@ -98,7 +99,7 @@ async function loadExamIndex(env, studentId) {
     const summaries = await Promise.all((listed?.keys || []).map((key) => getJson(env, key.name)));
     const items = summaries.filter(Boolean);
     if (items.length) {
-      items.sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.updatedAt).localeCompare(String(a.updatedAt)));
+      items.sort((a, b) => sortExamsChronologically([a, b])[0] === a ? -1 : 1);
       return { studentId, items: items.slice(0, MAX_EXAMS), updatedAt: now() };
     }
   } catch {
@@ -108,8 +109,7 @@ async function loadExamIndex(env, studentId) {
 }
 
 async function saveExamIndex(env, studentId, items) {
-  const normalized = items
-    .sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.updatedAt).localeCompare(String(a.updatedAt)));
+  const normalized = sortExamsChronologically(items);
   const bounded = normalized.slice(0, MAX_EXAMS);
   await Promise.all(bounded.map((item) => putJson(env, `exam-summary:${studentId}:${item.id}`, item)));
   await putJson(env, `exam-index:${studentId}`, { studentId, items: bounded, updatedAt: now() });
@@ -123,7 +123,7 @@ async function loadExams(env, studentId, { latestOnly = false } = {}) {
 }
 
 function examSummary(exam) {
-  return { id: exam.id, name: exam.name, date: exam.date, type: exam.type, status: exam.status, revision: exam.revision, updatedAt: exam.updatedAt };
+  return { id: exam.id, name: exam.name, date: exam.date, type: exam.type, status: exam.status, revision: exam.revision, createdAt: exam.createdAt || null, updatedAt: exam.updatedAt };
 }
 
 function assertRevision(body, existing) {
