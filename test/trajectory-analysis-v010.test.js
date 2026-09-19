@@ -34,7 +34,7 @@ test("auto metric does not mix school position with class rank when school data 
   const exams = [
     withMath(exam("e1", "2026-03-01"), 20),
     withMath(exam("e2", "2026-04-01"), 18),
-    withMath(exam("e3", "2026-05-01"), null, 100, 125)
+    withMath(exam("e3", "2026-05-01"), 17, 100, null)
   ];
   assert.equal(chooseTrajectoryMetric(exams, "math"), "schoolRank");
 });
