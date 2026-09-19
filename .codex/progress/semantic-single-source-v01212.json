@@ -1,0 +1,38 @@
+{
+  "task": "semantic-single-source-v01212",
+  "repository": "cashen/score",
+  "baseSha": "48b1b3e52ae6989dd4cfe9baced85f0e34ad7762",
+  "baseVersion": "0.12.11",
+  "targetVersion": "0.12.12",
+  "status": "ci-failure-corrected",
+  "branch": "fix/semantic-single-source-v01212",
+  "purpose": "完成成绩事实语义从编辑页、轨迹到首页坐标判断的最后一处单一来源收口，并补发布版本契约。",
+  "findings": [
+    "coordinate-insight-v100 之前按 date + updatedAt 独立排序，与 record-semantics-v120 的 date + createdAt + id 规则不一致。",
+    "coordinate-insight-v100 之前重复维护总体/单科比较指标算法。",
+    "coordinate-insight-v100 之前监听整个 document.body subtree。",
+    "0.12.11 的生产版本已通过 exact-SHA deployment attestation，本轮不重做旧发布逻辑。"
+  ],
+  "changes": [
+    "坐标判断改用 record-semantics-v120 的 metricBetween、latestExam、sortExamsChronologically、rankingState。",
+    "同日考试改为稳定创建顺序，旧考试重新编辑不改变最近一次身份。",
+    "坐标判断监听范围收窄为 #app 直接子节点。",
+    "补同日排序、学校排名不可用时班级排名回退、observer 范围测试。",
+    "版本统一升级为 0.12.12，并增加通用 package/lock/wrangler/changelog 同步测试。"
+  ],
+  "gates": {
+    "code_check": "awaiting rerun",
+    "unit_tests": "awaiting rerun",
+    "browser_chromium": "awaiting rerun",
+    "browser_webkit": "awaiting rerun",
+    "pr_ci": "pending",
+    "main_ci": "pending",
+    "production_attestation": "pending",
+    "production_smoke": "pending"
+  },
+  "nextGate": "Wait for CI on corrected PR head; merge only after all PR jobs pass.",
+  "schemaVersion": 1,
+  "dataStorage": "workers-kv",
+  "shareContract": "Share v2 unchanged",
+  "pr_ci": "previous run failed on stale version/resource tests; fixes committed"
+}

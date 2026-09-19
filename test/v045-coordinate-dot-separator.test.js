@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "utf8");
-const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 
 test("desktop peer coordinates use a quiet neutral middle dot", () => {
   assert.match(css, /\.coordinate-row > span \+ span::before\s*\{[\s\S]*content:\s*"·"/);
@@ -13,8 +12,4 @@ test("desktop peer coordinates use a quiet neutral middle dot", () => {
 
 test("mobile removes separator punctuation so wrapping never begins with a dot", () => {
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.coordinate-row > span \+ span::before\s*\{\s*display:\s*none/);
-});
-
-test("separator contract is carried forward by v0.5", () => {
-  assert.equal(pkg.version, "0.12.11");
 });

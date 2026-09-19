@@ -3,6 +3,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const workflow = readFileSync(new URL("../.github/workflows/deploy.yml", import.meta.url), "utf8");
+const packageJson = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+const lockJson = JSON.parse(readFileSync(new URL("../package-lock.json", import.meta.url), "utf8"));
+const wrangler = readFileSync(new URL("../wrangler.toml", import.meta.url), "utf8");
+const changelog = readFileSync(new URL("../CHANGELOG.md", import.meta.url), "utf8");
 
 test("deployment checks out the exact SHA that passed CI", () => {
   assert.match(workflow, /ref:\s*\$\{\{ github\.event\.workflow_run\.head_sha \}\}/);
@@ -23,4 +27,12 @@ test("deployment still preserves required Worker secret hardening", () => {
   assert.match(workflow, /SCORE_AUTH_PEPPER/);
   assert.match(workflow, /SCORE_ADMIN_BOOTSTRAP_SECRET/);
   assert.match(workflow, /--keep-vars --secrets-file \.runtime-secrets\.json/);
+});
+
+test("release version is synchronized across package and Worker contracts", () => {
+  const escapedVersion = packageJson.version.replaceAll(".", "\\.");
+  assert.equal(lockJson.version, packageJson.version);
+  assert.equal(lockJson.packages[""].version, packageJson.version);
+  assert.match(wrangler, new RegExp(`^APP_VERSION\\s*=\\s*"${escapedVersion}"`, "m"));
+  assert.match(changelog, new RegExp(`^## ${escapedVersion}$`, "m"));
 });

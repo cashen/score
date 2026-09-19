@@ -4,7 +4,6 @@ import { readFile } from "node:fs/promises";
 
 const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "utf8");
 const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
-const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 
 test("identity stays larger than peer coordinate metrics", () => {
   assert.match(css, /\.hero-head h1,[\s\S]*\.public-coordinate h1[\s\S]*font-size:\s*31px/);
@@ -19,5 +18,4 @@ test("mobile coordinate typography remains compact", () => {
 test("coordinate copy is semantic, not a ranking poster", () => {
   assert.match(app, /compactRank\("校"/);
   assert.match(app, /compactRank\("班"/);
-  assert.equal(pkg.version, "0.12.11");
 });
