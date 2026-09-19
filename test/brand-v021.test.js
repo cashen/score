@@ -11,7 +11,7 @@ test("高三坐标 brand mark is rendered directly instead of patched at runtime
   assert.match(index, /data-brand-logo="score-record"/);
   assert.match(index, /brand-logo-page/);
   assert.match(app, /const PRODUCT_NAME = "高三坐标"/);
-  assert.match(app, /看见现在的位置，也看见一路的变化/);
+  assert.match(app, /看见这次成绩，也看见前后的变化/);
   assert.match(onboarding, /const PRODUCT_NAME = "高三坐标"/);
   assert.match(app, /from "\.\/brand-logo-b\.js"/);
   assert.match(onboarding, /from "\.\/brand-logo-b\.js"/);
