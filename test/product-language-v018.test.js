@@ -11,7 +11,9 @@ const forbiddenUiPhrases = [
   "成长轨迹 · 持续更新",
   "整体向前",
   "整体向后",
-  "按已分享的考试口径比较"
+  "按已分享的考试口径比较",
+  "同口径",
+  "先看同一种指标"
 ];
 
 const preferredPhrases = [
@@ -24,12 +26,12 @@ const preferredPhrases = [
   "只按已分享的考试比较"
 ];
 
-test("v0.12.18 user-facing language removes known internal/AI-style phrases", () => {
+test("v0.12.20 user-facing language removes known internal/AI-style phrases", () => {
   for (const phrase of forbiddenUiPhrases) assert.equal(app.includes(phrase), false, `forbidden UI phrase remains: ${phrase}`);
   for (const phrase of preferredPhrases) assert.equal(app.includes(phrase), true, `preferred UI phrase missing: ${phrase}`);
 });
 
-test("v0.12.18 keeps precise total-score wording distinct from calculated subtotals", () => {
+test("v0.12.20 keeps precise total-score wording distinct from calculated subtotals", () => {
   assert.equal(app.includes("六科合计 "), true);
   assert.equal(app.includes("/6 科小计 "), true);
   assert.equal(app.includes("总分未分享"), true);
