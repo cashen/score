@@ -1,0 +1,24 @@
+{
+  "version":"0.12.26",
+  "generation":"v01226-deploy-closure",
+  "project":"cashen/score",
+  "branch":"fix/v01226-deploy-after-main-ci",
+  "baseSha":"ee1fa72358a16c1a44af44d7c7669ed17409f9c2",
+  "phase":"deployment-closure-after-v01225",
+  "status":"ready_for_ci",
+  "completed":[
+    "verified v0.12.25 main CI run 552 succeeded",
+    "verified deploy workflow runs for main SHA ee1fa72358a16c1a44af44d7c7669ed17409f9c2 were skipped",
+    "changed deploy gating to successful CI from the same repository",
+    "added a pre-deploy current-main SHA equality check",
+    "bumped package, lockfile and Worker APP_VERSION to 0.12.26",
+    "added deployment contract regression"
+  ],
+  "next":[
+    "run complete CI",
+    "merge only after green",
+    "verify main SHA and Worker deployment attestation",
+    "verify formal site version when externally reachable"
+  ],
+  "handoffRule":"On reconnection, verify current main SHA, open PR state, Actions, version and deployment before changing anything. Never assume prior state."
+}
