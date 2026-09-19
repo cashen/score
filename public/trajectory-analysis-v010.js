@@ -2,6 +2,12 @@ import { SUBJECT_KEYS, comparisonEligibility, sortExamsChronologically, percenti
 
 const RECENT_WINDOW = 5;
 
+export function subjectObservationExams(exams = [], key = null) {
+  const ordered = sortExamsChronologically(exams);
+  if (!key) return ordered;
+  return ordered.filter((exam) => subjectRecordState(exam, key).hasAny);
+}
+
 function rankItem(exam, key, scope) {
   const rankings = key
     ? exam?.subjects?.[key]?.rankings
@@ -49,7 +55,7 @@ function canCompareMetric(a, b, metric) {
 
 export function chooseTrajectoryMetric(exams = [], key = null, preferred = "auto") {
   if (preferred && preferred !== "auto") return preferred;
-  const ordered = sortExamsChronologically(exams);
+  const ordered = subjectObservationExams(exams, key);
   const current = ordered[0];
   if (!current) return "score";
   const candidates = ["schoolRank", "classRank", "score"];
@@ -70,7 +76,7 @@ export function chooseTrajectoryMetric(exams = [], key = null, preferred = "auto
 }
 
 export function trajectorySeries(exams = [], key = null, preferred = "auto") {
-  const ordered = sortExamsChronologically(exams);
+  const ordered = subjectObservationExams(exams, key);
   const current = ordered[0];
   if (!current) return { metric: "score", rows: [], skipped: [], comparableCount: 0 };
   const metric = chooseTrajectoryMetric(ordered, key, preferred);
