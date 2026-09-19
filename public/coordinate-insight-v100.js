@@ -16,7 +16,7 @@ export function metricBetween(current, previous, key = null) {
   const source = coreMetricBetween(current, previous, key, "auto");
   if (!source) return null;
   return {
-    kind: source.kind === "school-rank" ? "rank" : source.kind,
+    kind: ["school-rank", "class-rank"].includes(source.kind) ? "rank" : source.kind,
     metric: source.metric,
     scope: source.kind === "class-rank" ? "class" : source.kind === "school-rank" || source.kind === "percentile" ? "school" : undefined,
     value: source.delta,
