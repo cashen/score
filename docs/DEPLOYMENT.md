@@ -67,3 +67,12 @@ curl -X POST 'https://score-track.cashen.workers.dev/api/admin/provision' \
 ```
 
 建户后可以继续保留管理员 Secret 供人工创建其他家庭；如果只创建一次，也可以之后移除 `ADMIN_BOOTSTRAP_SECRET` 并同步调整部署契约，使建户接口关闭。
+
+
+## Bootstrap 安全策略
+
+生产配置 `BOOTSTRAP_ENABLED = "false"`。管理员建户接口默认关闭；临时开启只用于一次初始化，成功创建一个家庭后会写入 `bootstrap:completed`，之后即使误开启配置，该接口也不会再次开放。常规新增家庭应通过家庭邀请流程完成，而不是长期保留高权限 Bootstrap Bearer Secret。
+
+## Secret Share URL
+
+新生成的私密分享地址采用 `/share/#<token>`。浏览器读取 fragment 后立即从地址栏移除，再通过同源 POST `/api/share/secret/redeem` 兑换。旧的 `/share/<token>` 链接继续兼容，但新分享不再把原始 token 放进 HTTP request URL。
