@@ -1,5 +1,5 @@
-import { comparisonEligibility, comparableRanking, percentile as corePercentile } from "./trajectory-core-v060.js";
-import { examScoreSummary, subjectScore } from "./score-core-v090.js";
+import { comparisonEligibility, latestExam, metricBetween as coreMetricBetween, rankingState, sortExamsChronologically } from "./record-semantics-v120.js";
+import { examScoreSummary } from "./score-core-v090.js";
 
 export const COORDINATE_SUBJECTS = Object.freeze([
   ["chinese", "语文"],
@@ -17,26 +17,18 @@ function ranked(exam, key, scope) {
   return (rankings || []).find((item) => item?.scope === scope && (item.rank != null || item.participants != null)) || null;
 }
 
-function scoreDelta(current, previous, key) {
-  const a = key ? subjectScore(current?.subjects?.[key]) : examScoreSummary(current).value;
-  const b = key ? subjectScore(previous?.subjects?.[key]) : examScoreSummary(previous).value;
-  return a != null && b != null ? { kind: "score", value: Number(a) - Number(b), current: a, previous: b } : null;
-}
-
 export function metricBetween(current, previous, key = null) {
-  if (!current || !previous || comparisonEligibility(current, previous).status !== "comparable") return null;
-  for (const scope of ["school", "class"]) {
-    const a = ranked(current, key, scope);
-    const b = ranked(previous, key, scope);
-    if (!a?.rank || !b?.rank || !comparableRanking(a, b)) continue;
-    const currentPct = corePercentile(a.rank, a.participants);
-    const previousPct = corePercentile(b.rank, b.participants);
-    if (currentPct != null && previousPct != null) {
-      return { kind: "percentile", scope, value: previousPct - currentPct, current: currentPct, previous: previousPct };
-    }
-    return { kind: "rank", scope, value: b.rank - a.rank, current: a.rank, previous: b.rank };
-  }
-  return scoreDelta(current, previous, key);
+  const source = coreMetricBetween(current, previous, key, "auto");
+  if (!source) return null;
+  return {
+    kind: source.kind === "school-rank" ? "rank" : source.kind,
+    metric: source.metric,
+    scope: source.kind === "class-rank" ? "class" : source.kind === "school-rank" || source.kind === "percentile" ? "school" : undefined,
+    value: source.delta,
+    current: source.currentValue,
+    previous: source.previousValue,
+    detail: source.detail
+  };
 }
 
 export function changeDirection(metric) {
@@ -47,12 +39,8 @@ export function changeDirection(metric) {
   return "steady";
 }
 
-function sortedExams(exams) {
-  return (Array.isArray(exams) ? exams : []).filter(Boolean).slice().sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) || String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
-}
-
 function latestComparablePair(exams) {
-  const list = sortedExams(exams);
+  const list = sortExamsChronologically(exams);
   const latest = list[0] || null;
   if (!latest) return { list, latest: null, previous: null, eligibility: { status: "baseline", reason: "还没有考试记录" } };
   for (const candidate of list.slice(1)) {
@@ -98,12 +86,12 @@ function attentionSubject(exams) {
 
 function currentPosition(latest) {
   if (!latest) return null;
-  const school = ranked(latest, null, "school");
-  const clazz = ranked(latest, null, "class");
+  const school = rankingState(latest?.overall?.rankings || latest?.overallRankings, "school");
+  const clazz = rankingState(latest?.overall?.rankings || latest?.overallRankings, "class");
   const score = examScoreSummary(latest);
   return {
-    school: school ? { rank: school.rank ?? null, participants: school.participants ?? null, percentile: corePercentile(school.rank, school.participants) } : null,
-    class: clazz ? { rank: clazz.rank ?? null, participants: clazz.participants ?? null } : null,
+    school: school.exists ? { rank: school.rank, participants: school.participants, percentile: school.percentile } : null,
+    class: clazz.exists ? { rank: clazz.rank, participants: clazz.participants } : null,
     score: score.value == null ? null : { value: score.value, kind: score.kind }
   };
 }
@@ -136,17 +124,17 @@ function fmt(value) {
 }
 
 function positionText(position) {
-  if (!position) return "位置待补";
+  if (!position) return "本场尚无总分或排名记录";
   const parts = [];
   if (position.school?.percentile != null) parts.push(`校内前 ${fmt(position.school.percentile)}%`);
   else if (position.school?.rank != null) parts.push(`校第 ${position.school.rank} 名`);
   if (position.class?.rank != null) parts.push(`班第 ${position.class.rank} 名`);
   if (position.score?.value != null) parts.push(`${fmt(position.score.value)} 分`);
-  return parts.join(" · ") || "位置待补";
+  return parts.join(" · ") || "本场尚无总分或排名记录";
 }
 
 function changeText(overall) {
-  if (!overall) return "先积累第二场同口径考试";
+  if (!overall) return "暂时没有足够的同口径数据";
   const direction = overall.direction;
   if (overall.kind === "percentile") {
     if (direction === "forward") return `校内位置向前 ${fmt(Math.abs(overall.value))} 个百分点`;
@@ -240,7 +228,8 @@ if (typeof window !== "undefined" && typeof document !== "undefined") {
   const observer = new MutationObserver(() => {
     if (document.querySelector(".coordinate-hero") && !document.querySelector("[data-coordinate-insight]")) boot();
   });
-  observer.observe(document.body, { childList: true, subtree: true });
+  const appRoot = document.querySelector("#app");
+  if (appRoot) observer.observe(appRoot, { childList: true });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot, { once: true });
   else boot();
 }
