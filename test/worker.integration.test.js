@@ -19,6 +19,7 @@ function env() {
     SESSION_SECRET: "session-secret-for-tests-only",
     AUTH_PEPPER: "pepper-for-tests-only",
     ADMIN_BOOTSTRAP_SECRET: "admin-secret",
+    BOOTSTRAP_ENABLED: "true",
     PASSWORD_ITERATIONS: "10000",
     APP_VERSION: "test",
     SCHEMA_VERSION: "1",
