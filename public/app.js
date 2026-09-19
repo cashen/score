@@ -881,7 +881,7 @@ async function createShare(kind) {
   try {
     const result = await api(`/api/students/${state.student.id}/shares`, { method: "POST", body: JSON.stringify(body) });
     await loadShares();
-    const url = kind === "secret" ? `${location.origin}/share/${encodeURIComponent(result.token)}` : shareUrlFor(location.origin, result.share);
+    const url = kind === "secret" ? `${location.origin}/share/#${encodeURIComponent(result.token)}` : shareUrlFor(location.origin, result.share);
     const copied = await copyText(url);
     state.shareResult = { url, token: result.token, item: result.share };
     state.notice = `${kind === "secret" ? "分享链接" : "公开链接"}已生成${copied ? "并复制" : ""}：${url}`;
@@ -1427,7 +1427,15 @@ function renderPublicV080(result) {
 
 async function renderExternal(kind, locator) {
   try {
-    const result = await api(`/api/share/${kind}/${encodeURIComponent(locator)}`);
+    let result;
+    if (kind === "secret" && !locator) {
+      const token = decodeURIComponent(String(location.hash || "").replace(/^#/, ""));
+      if (!token) throw new Error("分享链接无效");
+      history.replaceState(null, "", location.pathname + location.search);
+      result = await api("/api/share/secret/redeem", { method: "POST", body: JSON.stringify({ token }) });
+    } else {
+      result = await api(`/api/share/${kind}/${encodeURIComponent(locator)}`);
+    }
     renderPublicV080(result);
   } catch (error) {
     app.innerHTML = `<main class="login-shell"><section class="login-card">${brandMark()}<h1>分享已失效</h1><p>${esc(error.message)}</p></section></main>`;
