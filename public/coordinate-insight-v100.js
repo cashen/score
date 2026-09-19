@@ -42,7 +42,7 @@ function latestComparablePair(exams) {
     const eligibility = comparisonEligibility(latest, candidate);
     if (eligibility.status === "comparable") return { list, latest, previous: candidate, eligibility };
   }
-  return { list, latest, previous: null, eligibility: { status: "baseline", reason: list.length > 1 ? "之前有考试，但没有找到口径足够一致的比较对象" : "还没有第二次可比考试" } };
+  return { list, latest, previous: null, eligibility: { status: "baseline", reason: list.length > 1 ? "之前有考试，但没有找到可以直接比较的考试" : "还没有第二次可以直接比较的考试" } };
 }
 
 function subjectDrivers(current, previous) {
