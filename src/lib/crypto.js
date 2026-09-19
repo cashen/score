@@ -67,7 +67,13 @@ export function timingSafeEqualBytes(a, b) {
   return diff === 0;
 }
 
-export async function hashPassword(password, pepper, iterations = 600000, salt = randomToken(18)) {
+const CLOUDFLARE_PBKDF2_MAX_ITERATIONS = 100000;
+
+export async function hashPassword(password, pepper, iterations = CLOUDFLARE_PBKDF2_MAX_ITERATIONS, salt = randomToken(18)) {
+  const resolvedIterations = Number(iterations);
+  if (!Number.isInteger(resolvedIterations) || resolvedIterations < 10000 || resolvedIterations > CLOUDFLARE_PBKDF2_MAX_ITERATIONS) {
+    throw Object.assign(new Error(`PBKDF2 iterations must be between 10000 and ${CLOUDFLARE_PBKDF2_MAX_ITERATIONS}`), { code: "unsupported_kdf_iterations", status: 500 });
+  }
   const material = await crypto.subtle.importKey(
     "raw",
     encoder.encode(`${password}\u0000${pepper}`),
@@ -76,14 +82,14 @@ export async function hashPassword(password, pepper, iterations = 600000, salt =
     ["deriveBits"]
   );
   const bits = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", hash: "SHA-256", salt: encoder.encode(salt), iterations },
+    { name: "PBKDF2", hash: "SHA-256", salt: encoder.encode(salt), iterations: resolvedIterations },
     material,
     256
   );
   return {
     algorithm: "PBKDF2-SHA256",
     version: 2,
-    iterations,
+    iterations: resolvedIterations,
     salt,
     hash: toBase64Url(new Uint8Array(bits))
   };
