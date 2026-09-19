@@ -71,7 +71,7 @@ test("single record: total, six subjects, timeline and complete detail", async (
     await page.getByRole("link", { name: label, exact: true }).click();
     await expect(page.getByRole("heading", { name: `${label}的历次记录` })).toBeVisible();
     await expect(page.locator(".subject-compare-row")).toHaveCount(1);
-    await expect(page.getByText("当前基线", { exact: true })).toBeVisible();
+    await expect(page.getByText("目前的记录", { exact: true })).toBeVisible();
     await layout(page);
   }
   await info.attach("subject", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
