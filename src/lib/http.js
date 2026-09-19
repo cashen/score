@@ -5,8 +5,8 @@ export function json(data, status = 200, extraHeaders = {}) {
   });
 }
 
-export function errorJson(message, status = 400, code = "bad_request", field = null) {
-  return json({ error: code, message, ...(field ? { field } : {}) }, status);
+export function errorJson(message, status = 400, code = "bad_request", field = null, extraHeaders = {}) {
+  return json({ error: code, message, ...(field ? { field } : {}) }, status, extraHeaders);
 }
 
 export async function readJson(request) {
