@@ -19,9 +19,23 @@ import {
 } from "./lib/http.js";
 import { handleFamilyMemberPatch, handleFamilyMembers, handleFamilyStudentCreate } from "./family.js";
 import { routePrivateSharingV2, routePublicSharingV2 } from "./sharing-v2.js";
+import { enforceRateLimit, rateLimitHeaders } from "./lib/rate-limit.js";
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_EXAMS = 80;
+const PASSWORD_MIN_ITERATIONS = 600000;
+const PASSWORD_MAX_ITERATIONS = 800000;
+const DUMMY_PASSWORD_RECORD = Object.freeze({
+  algorithm: "PBKDF2-SHA256",
+  version: 2,
+  iterations: PASSWORD_MIN_ITERATIONS,
+  salt: "login-dummy-v2",
+  hash: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+});
+
+function passwordIterations(env) {
+  return Math.max(10000, Math.min(PASSWORD_MAX_ITERATIONS, Number(env.PASSWORD_ITERATIONS) || PASSWORD_MIN_ITERATIONS));
+}
 
 function now() {
   return new Date().toISOString();
@@ -151,6 +165,7 @@ async function getShareIndex(env, studentId) {
 }
 
 async function handleAdminProvision(request, env) {
+  await enforceRateLimit(env, request, { scope: "admin-provision", ipMax: 5, windowSeconds: 900 });
   if (!env.ADMIN_BOOTSTRAP_SECRET) return errorJson("管理员建户入口未启用", 404, "not_found");
   const authHeader = request.headers.get("authorization") || "";
   if (authHeader !== `Bearer ${env.ADMIN_BOOTSTRAP_SECRET}`) return errorJson("管理员凭据无效", 403, "forbidden");
@@ -164,8 +179,7 @@ async function handleAdminProvision(request, env) {
   const familyId = id("fam");
   const memberId = id("mem");
   const studentId = id("stu");
-  const iterations = Math.max(10000, Math.min(500000, Number(env.PASSWORD_ITERATIONS) || 20000));
-  const passwordRecord = await hashPassword(password, env.AUTH_PEPPER, iterations);
+  const passwordRecord = await hashPassword(password, env.AUTH_PEPPER, passwordIterations(env));
   const createdAt = now();
   const member = {
     schemaVersion: 1,
@@ -216,11 +230,19 @@ async function handleLogin(request, env) {
   const body = await readJson(request);
   const username = assertUsername(body.username);
   const password = assertPassword(body.password);
+  await enforceRateLimit(env, request, { scope: "login", identity: username, identityMax: 8, ipMax: 40, windowSeconds: 600 });
   const mapping = await getJson(env, await usernameKey(username));
-  if (!mapping) return errorJson("账号或密码错误", 401, "invalid_credentials");
-  const member = await getJson(env, `member:${mapping.memberId}`);
+  if (!mapping) {
+    await verifyPassword(password, env.AUTH_PEPPER, DUMMY_PASSWORD_RECORD);
+    return errorJson("账号或密码错误", 401, "invalid_credentials");
+  }
+  let member = await getJson(env, `member:${mapping.memberId}`);
   if (!member || member.disabledAt || !(await verifyPassword(password, env.AUTH_PEPPER, member.password))) {
     return errorJson("账号或密码错误", 401, "invalid_credentials");
+  }
+  if (member.password?.version !== 2 || member.password?.iterations < passwordIterations(env)) {
+    member = { ...member, password: await hashPassword(password, env.AUTH_PEPPER, passwordIterations(env)), passwordHashUpgradedAt: now() };
+    await putJson(env, `member:${member.id}`, member);
   }
   const session = await createSession(member, env);
   return json(
@@ -255,7 +277,7 @@ async function handleChangePassword(request, env, session) {
   const iterations = Math.max(10000, Math.min(500000, Number(env.PASSWORD_ITERATIONS) || 20000));
   const updated = {
     ...session.member,
-    password: await hashPassword(newPassword, env.AUTH_PEPPER, iterations),
+    password: await hashPassword(newPassword, env.AUTH_PEPPER, passwordIterations(env)),
     sessionVersion: session.member.sessionVersion + 1,
     passwordChangedAt: now()
   };
@@ -497,10 +519,10 @@ export default {
       return withSecurity(asset, { noStore: isSensitiveShell });
     } catch (error) {
       const status = error?.status || 400;
-      const response = errorJson(error?.message || "请求处理失败", status, error?.code || "request_failed", error?.field || null);
+      const response = errorJson(error?.message || "请求处理失败", status, error?.code || "request_failed", error?.field || null, status === 429 ? rateLimitHeaders(error?.retryAfter) : {});
       if (error?.current) {
         const payload = await response.json();
-        return withSecurity(json({ ...payload, current: error.current }, status), { noStore: true });
+        return withSecurity(json({ ...payload, current: error.current }, status, status === 429 ? rateLimitHeaders(error?.retryAfter) : {}), { noStore: true });
       }
       return withSecurity(response, { noStore: true });
     }

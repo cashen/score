@@ -1,6 +1,7 @@
 import baseWorker from "./index.js";
 import { verifySessionToken } from "./lib/crypto.js";
 import { errorJson, parseCookies, withSecurity } from "./lib/http.js";
+import { rateLimitHeaders } from "./lib/rate-limit.js";
 import { routePrivateOnboarding, routePublicOnboarding } from "./onboarding.js";
 import { routePrivateSharingV2, routePublicSharingV2 } from "./sharing-v2.js";
 
@@ -53,7 +54,8 @@ export default {
 
       return baseWorker.fetch(request, env, ctx);
     } catch (error) {
-      return withSecurity(errorJson(error?.message || "请求处理失败", error?.status || 400, error?.code || "request_failed", error?.field || null), { noStore: true });
+      const status = error?.status || 400;
+      return withSecurity(errorJson(error?.message || "请求处理失败", status, error?.code || "request_failed", error?.field || null, status === 429 ? rateLimitHeaders(error?.retryAfter) : {}), { noStore: true });
     }
   }
 };

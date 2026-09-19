@@ -1,4 +1,4 @@
-import { randomToken, sha256 } from "./lib/crypto.js";
+import { randomToken, sha256, tokenHash } from "./lib/crypto.js";
 import { normalizePublicSlug, normalizeShareFields, publicProjection } from "./lib/model.js";
 import { errorJson, json, readJson } from "./lib/http.js";
 
@@ -118,9 +118,11 @@ async function handleCreate(request, env, session, studentId) {
   let locator;
   let lookupKey;
   let rawToken = null;
+  let tokenVersion = null;
   if (kind === "secret") {
     rawToken = randomToken(32);
-    locator = await sha256(rawToken);
+    locator = await tokenHash(rawToken, env, "share");
+    tokenVersion = 2;
     lookupKey = `share:secret:${locator}`;
   } else {
     locator = normalizePublicSlug(body.slug);
@@ -128,12 +130,12 @@ async function handleCreate(request, env, session, studentId) {
     if (await env.SCORE_KV.get(lookupKey)) return errorJson("这个公开地址已被占用", 409, "slug_exists");
   }
 
-  const grant = { ...base, locator };
+  const grant = { ...base, locator, ...(tokenVersion ? { tokenVersion } : {}) };
   if (mode === "snapshot") grant.snapshot = publicProjection(student, exams, fields);
   await putJson(env, lookupKey, grant);
 
   const index = await shareIndex(env, studentId);
-  const item = { kind, mode, scope, examId: base.examId, examName: base.examName, fields, expiresAt, createdAt, locator };
+  const item = { kind, mode, scope, examId: base.examId, examName: base.examName, fields, expiresAt, createdAt, locator, ...(tokenVersion ? { tokenVersion } : {}) };
   await putJson(env, shareIndexKey(studentId), {
     studentId,
     items: [item, ...(index.items || []).filter((x) => !(x.kind === kind && x.locator === locator))]
@@ -154,8 +156,15 @@ async function normalizeGrant(grant) {
 }
 
 async function handleExternal(env, kind, rawLocator) {
-  const locator = kind === "secret" ? await sha256(rawLocator) : rawLocator;
-  const grant = await getJson(env, `share:${kind}:${locator}`);
+  const locators = kind === "secret"
+    ? [await tokenHash(rawLocator, env, "share"), await sha256(rawLocator)]
+    : [rawLocator];
+  let locator = null;
+  let grant = null;
+  for (const candidate of [...new Set(locators)]) {
+    const found = await getJson(env, `share:${kind}:${candidate}`);
+    if (found) { locator = candidate; grant = found; break; }
+  }
   if (!grant || isExpired(grant)) return errorJson("分享链接不存在或已失效", 404, "share_not_found");
   const normalized = await normalizeGrant(grant);
   const student = await getJson(env, `student:${normalized.studentId}`);
@@ -176,6 +185,7 @@ async function handleExternal(env, kind, rawLocator) {
       examName: normalized.examName,
       expiresAt: normalized.expiresAt,
       fields: normalized.fields,
+      tokenVersion: normalized.tokenVersion || 1,
       examCount: data.exams?.length || 0,
       includesFutureExams: normalized.scope === "trajectory" && normalized.mode === "live"
     },
@@ -208,6 +218,7 @@ async function handlePreview(request, env, session, studentId, kind, locator) {
       expiresAt: normalized.expiresAt,
       fields: normalized.fields,
       locator,
+      tokenVersion: normalized.tokenVersion || 1,
       examCount: data.exams?.length || 0,
       includesFutureExams: normalized.scope === "trajectory" && normalized.mode === "live"
     },
