@@ -3,7 +3,8 @@ import {
   examComparisonCategory as semanticExamComparisonCategory,
   comparableRanking as semanticComparableRanking,
   percentile as semanticPercentile,
-  sortExamsChronologically
+  sortExamsChronologically,
+  compareExamsChronologically
 } from "../../public/record-semantics-v120.js";
 
 export const SUBJECTS = ["chinese", "math", "english", "physics", "chemistry", "biology"];
@@ -176,7 +177,7 @@ export function comparableRanking(a, b) {
   return semanticComparableRanking(a, b);
 }
 
-export { sortExamsChronologically };
+export { sortExamsChronologically, compareExamsChronologically };
 
 export function publicProjection(student, exams, fields) {
   const result = {
