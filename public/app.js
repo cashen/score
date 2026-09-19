@@ -1303,8 +1303,8 @@ function publicSubjectComparisonV080(exams, key, share = {}) {
 
 function publicExamDetailV080(exam, share = {}) {
   if (!exam) return "";
-  const scoreShared = share.fields?.subjectScores !== false;
-  const rankShared = share.fields?.subjectRanks !== false;
+  const scoreShared = share.fields?.subjectScores === true;
+  const rankShared = share.fields?.subjectRanks === true;
   const rows = SUBJECTS.map(([key, label]) => {
     const subject = exam.subjects?.[key] || {};
     const score = scoreShared ? scoreOf(subject) : null;
