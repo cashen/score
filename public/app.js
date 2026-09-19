@@ -2,7 +2,7 @@ import "./draft.js";
 import { brandMark } from "./brand-logo-b.js";
 import { comparisonCategory as coreComparisonCategory, comparisonReason as coreComparisonReason, comparisonEligibility as coreComparisonEligibility, comparableSet as coreComparableSet, comparableRanking as coreComparableRanking, findComparableExam as coreFindComparableExam, findComparableExamForSubject as coreFindComparableExamForSubject, metricBetween as coreMetricBetween, latestExam as coreLatestExam, sortExamsChronologically, subjectRecordState, percentile as corePercentile } from "./record-semantics-v120.js";
 import { examScoreSummary, examCompleteness, scoreSummaryText, subjectScore } from "./score-core-v090.js";
-import { trajectoryAnalysis, changeDrivers, subjectObservationExams } from "./trajectory-analysis-v010.js";
+import { changeDrivers, subjectObservationExams } from "./trajectory-analysis-v010.js";
 import { shareUrlFor, shareFileName } from "./share-delivery-v092.js";
 import { deliverShareImage } from "./share-image-v092.js";
 import { formatComparisonState, formatComparisonSummary, formatExamScore, formatMissingSubjects, formatRanking } from "./product-language-v001.js";
@@ -283,28 +283,6 @@ function trajectoryMetricLabel(metric) {
 
 function trajectoryDirectionLabel(direction) {
   return direction === "forward" ? "比之前靠前" : direction === "backward" ? "比之前靠后" : direction === "steady" ? "和之前接近" : "记录还少";
-}
-
-function renderTrajectoryReading(exams = state.exams) {
-  const analysis = trajectoryAnalysis(exams);
-  if (!analysis.current) return "";
-  const recent = analysis.recent;
-  const recentText = recent.length >= 3
-    ? `最近 ${recent.length} 次：${recent.map(row => row.display).join(" → ")}`
-    : `目前记录了 ${recent.length} 次考试`;
-  const longText = analysis.baseline && analysis.current && analysis.baseline.display !== analysis.current.display
-    ? `从最早一次到现在：${analysis.baseline.display} → ${analysis.current.display}`
-    : "目前只有已记录的考试，还看不出变化";
-  const driverItems = changeDrivers(exams).slice(0, 3);
-  const driverText = driverItems.length
-    ? driverItems.map(item => {
-        const label = SUBJECTS.find(([key]) => key === item.key)?.[1] || item.key;
-        return `<div class="change-source-row"><strong>${esc(label)}</strong><span>${esc(directionText(item.metric))}</span><small>${esc(item.analysis.stability.detail)} · ${esc(trajectoryMetricLabel(item.analysis.metric))}</small></div>`;
-      }).join("")
-    : "";
-  const driverSection = driverText ? `<div class="trajectory-driver"><div class="section-label">哪些科目有明显变化</div>${driverText}</div>` : "";
-  const comparisonLine = analysis.previous ? `和 ${analysis.previous.display} 相比` : "暂时没有可以直接比较的考试";
-  return `<section class="reading-section trajectory-reading"><div class="section-head-simple"><div><div class="section-label">和以前相比</div><h2>先看这次，再看前几次</h2></div></div><div class="trajectory-reading-grid"><div><small>这次考试</small><strong>${esc(analysis.current.display)}</strong><span>${esc(comparisonLine)}</span></div><div><small>最近几次</small><strong>${esc(recentText)}</strong><span>${esc(analysis.stability.detail)}</span></div><div><small>从最早一次到现在</small><strong>${esc(longText)}</strong></div></div>${driverSection}</section>`;
 }
 
 function coordinateItems(exam) {
