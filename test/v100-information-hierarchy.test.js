@@ -8,9 +8,9 @@ const index = await readFile(new URL("../public/index.html", import.meta.url), "
 const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
 
-test("v0.12.24 is a versioned visual hierarchy release", () => {
-  assert.equal(pkg.version, "0.12.24");
-  assert.match(wrangler, /APP_VERSION = "0\.12\.24"/);
+test("v0.12.25 is a versioned visual hierarchy patch", () => {
+  assert.equal(pkg.version, "0.12.25");
+  assert.match(wrangler, /APP_VERSION = "0.12.25"/);
 });
 
 test("overview keeps current exam before comparison, score list and history", () => {
@@ -30,14 +30,14 @@ test("empty subject-change analysis is not rendered as a placeholder block", () 
 
 test("desktop comparison is a narrow reading block while current scores stay wider", () => {
   assert.match(bundle, /--v100-reading-width:\s*720px/);
-  assert.match(css, /\.change-section\s*\{[\s\S]*?width:\s*min\(100%, var\(--v100-reading-width\)\)/);
-  assert.match(css, /\.subjects-section\s*\{[\s\S]*?max-width:\s*960px/);
+  assert.match(bundle, /\.change-section\s*\{[\s\S]*?width:\s*min\(100%, var\(--v100-reading-width\)\)/);
+  assert.match(bundle, /\.subjects-section\s*\{[\s\S]*?max-width:\s*960px/);
 });
 
 test("small screens release the desktop reading constraint", () => {
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.change-section\s*\{[\s\S]*?width:\s*100%/);
-  assert.match(css, /@media \(max-width: 520px\)/);
-  assert.match(css, /@media \(max-width: 380px\)/);
+  assert.match(bundle, /@media \(max-width: 760px\)[\s\S]*?\.change-section\s*\{[\s\S]*?width:\s*100%/);
+  assert.match(bundle, /@media \(max-width: 520px\)/);
+  assert.match(bundle, /@media \(max-width: 380px\)/);
 });
 
 test("runtime bundle contains the same hierarchy layer", () => {
