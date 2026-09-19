@@ -50,5 +50,5 @@ test("runtime bundle contains the same hierarchy layer", () => {
 test("public share no longer exposes the multi-card trajectory analysis", () => {
   const publicPart = app.slice(app.indexOf("function renderPublicV080"), app.indexOf("async function renderExternal"));
   assert.doesNotMatch(publicPart, /public-analysis-note|从最早一次到现在/);
-  assert.match(publicPart, /public-comparison-note/);
+  assert.match(publicPart, /publicComparisonNote\(/);
 });
