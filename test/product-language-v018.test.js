@@ -27,7 +27,10 @@ const forbiddenUiPhrases = [
   "校内位置向前",
   "校内位置向后",
   "· 最新",
-  "· 最新记录"
+  "· 最新记录",
+  "校前 ",
+  "校第 ",
+  "班第 "
 ];
 
 const preferredPhrases = [
@@ -37,7 +40,9 @@ const preferredPhrases = [
   "历次成绩 · 持续更新",
   "比之前靠前",
   "比之前靠后",
-  "只按已分享的考试比较"
+  "只按已分享的考试比较",
+  "最近一次考试",
+  "校内前 "
 ];
 
 test("v0.12.21 user-facing language removes known internal/AI-style phrases", () => {
