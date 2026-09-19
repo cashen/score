@@ -41,8 +41,13 @@ export async function deriveDomainSecret(masterSecret, domain) {
   return hmacHex(masterSecret, `score-domain-v1:${domain}`);
 }
 
+export async function deriveCompositeDomainSecret(primarySecret, secondarySecret, domain) {
+  if (!primarySecret || !secondarySecret) throw new Error("复合域密钥尚未配置");
+  return hmacHex(primarySecret, `${secondarySecret}\u0000score-domain-v2:${domain}`);
+}
+
 export async function tokenHash(raw, env, domain = "token") {
-  const secret = env.TOKEN_PEPPER || await deriveDomainSecret(env.AUTH_PEPPER, domain);
+  const secret = env.TOKEN_PEPPER || await deriveCompositeDomainSecret(env.AUTH_PEPPER, env.SESSION_SECRET, domain);
   return hmacHex(secret, String(raw || ""));
 }
 
