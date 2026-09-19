@@ -102,3 +102,28 @@ test("special exam status is not compared", () => {
   assert.equal(result.status, "baseline");
   assert.equal(result.overall, null);
 });
+
+test("same-date ordering follows creation time, not later edits", () => {
+  const earlierCreated = exam({ id: "same-old", date: "2026-09-01", schoolRank: 300, score: 600 });
+  earlierCreated.createdAt = "2026-09-01T08:00:00.000Z";
+  earlierCreated.updatedAt = "2026-09-19T09:00:00.000Z";
+  const laterCreated = exam({ id: "same-new", date: "2026-09-01", schoolRank: 200, score: 590 });
+  laterCreated.createdAt = "2026-09-01T09:00:00.000Z";
+  laterCreated.updatedAt = "2026-09-01T09:30:00.000Z";
+
+  const result = analyzeCoordinate([earlierCreated, laterCreated]);
+  assert.equal(result.latest.id, "same-new");
+  assert.equal(result.previous, null);
+  assert.equal(result.position.school.rank, 200);
+});
+
+test("coordinate metric source follows the shared record semantics contract", () => {
+  const current = exam({ id: "cur", date: "2026-09-01", schoolRank: 20, schoolParticipants: null, score: 590 });
+  const previous = exam({ id: "prev", date: "2026-08-20", schoolRank: null, schoolParticipants: null, score: 580 });
+  current.overall.rankings.push({ scope: "class", label: "高三1班", rank: 3, participants: 40, basis: "final_score" });
+  previous.overall.rankings.push({ scope: "class", label: "高三1班", rank: 5, participants: 40, basis: "final_score" });
+  const metric = metricBetween(current, previous);
+  assert.equal(metric.kind, "rank");
+  assert.equal(metric.scope, "class");
+  assert.equal(metric.value, 2);
+});
