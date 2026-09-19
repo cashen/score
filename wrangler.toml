@@ -18,6 +18,6 @@ required = [ "SESSION_SECRET", "AUTH_PEPPER", "ADMIN_BOOTSTRAP_SECRET" ]
 
 [vars]
 # APP_VERSION = "0.12.23" is the current release runtime.
-APP_VERSION = "0.12.22"
+APP_VERSION = "0.12.23"
 SCHEMA_VERSION = "1"
 PASSWORD_ITERATIONS = "20000"
