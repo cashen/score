@@ -674,6 +674,7 @@ function validateExamEntry(subjects, form) {
   for (const [key, label] of SUBJECTS) {
     const full = subjects[key].fullScore;
     if (subjects[key].rawScore != null && full != null && subjects[key].rawScore > full) return `${label}原始分不能高于 ${full} 分`;
+    if (subjects[key].finalScore != null && full != null && subjects[key].finalScore > full) return `${label}赋分后不能高于 ${full} 分`;
     for (const scope of ["school", "class"]) {
       const rank = intOrNull(value(form, `${key}-${scope}-rank`));
       const participants = intOrNull(value(form, `${key}-${scope}-participants`));
