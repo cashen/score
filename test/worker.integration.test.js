@@ -144,7 +144,7 @@ test("three-character public share carries multiple exams and rank-only data", a
   let response = await call(e, `/api/students/${provision.studentId}/shares`, {
     method: "POST",
     headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
-    body: JSON.stringify({ kind: "public", slug: "ABC", mode: "live", fields: { history: true, overallRank: true, overallScore: true, subjectScores: true } })
+    body: JSON.stringify({ kind: "public", slug: "ABC", mode: "live", scope: "trajectory", fields: { history: true, overallRank: true, overallScore: true, subjectScores: true } })
   });
   assert.equal(response.status, 201);
   const createdShare = await response.json();
