@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
-const css = await readFile(new URL("../public/ui-v100.css", import.meta.url), "utf8");
 const bundle = await readFile(new URL("../public/css/app-v094.css", import.meta.url), "utf8");
 const index = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
 const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
@@ -30,7 +29,7 @@ test("empty subject-change analysis is not rendered as a placeholder block", () 
 });
 
 test("desktop comparison is a narrow reading block while current scores stay wider", () => {
-  assert.match(css, /--v100-reading-width:\s*720px/);
+  assert.match(bundle, /--v100-reading-width:\s*720px/);
   assert.match(css, /\.change-section\s*\{[\s\S]*?width:\s*min\(100%, var\(--v100-reading-width\)\)/);
   assert.match(css, /\.subjects-section\s*\{[\s\S]*?max-width:\s*960px/);
 });
