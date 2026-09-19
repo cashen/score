@@ -5,7 +5,7 @@ import { examScoreSummary, examCompleteness, scoreSummaryText, subjectScore } fr
 import { trajectoryAnalysis, changeDrivers, subjectObservationExams } from "./trajectory-analysis-v010.js";
 import { shareUrlFor, shareFileName } from "./share-delivery-v092.js";
 import { deliverShareImage } from "./share-image-v092.js";
-import { formatComparisonState, formatExamScore, formatMissingSubjects, formatRanking } from "./product-language-v001.js";
+import { formatComparisonState, formatComparisonSummary, formatExamScore, formatMissingSubjects, formatRanking } from "./product-language-v001.js";
 
 const PRODUCT_NAME = "高三坐标";
 const PRODUCT_TAGLINE = "看见这次成绩，也看见前后的变化";
@@ -457,7 +457,7 @@ function renderSubjectRows(exam) {
     const clazz = subjectRank(exam, key, "class");
     const score = scoreOf(subject);
     const rankParts = [school?.rank != null ? `校内第 ${school.rank}` : null, clazz?.rank != null ? `班级第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
-    return `<div class="subject-row"><strong>${label}</strong><b>${score == null ? "" : esc(fmtNumber(score))}</b><span>${esc(rankParts)}</span></div>`;
+    return `<div class="subject-row"><strong>${label}</strong><b>${score == null ? "—" : esc(fmtNumber(score))}</b><span>${esc(rankParts)}</span></div>`;
   }).join("");
 }
 
@@ -467,16 +467,16 @@ function renderDeepTrajectory() {
   const overallRows = exams.map((exam) => `<div class="history-row" data-action="edit-exam" data-id="${esc(exam.id)}" tabindex="0" role="button"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div>${coordinateRow(exam, "history-coordinate")}</div>`).join("");
   const subjectHistory = SUBJECTS.map(([key, label]) => {
     const rows = exams.map((exam) => {
-      const score = scoreOf(exam.subjects?.[key]);
+      const subject = exam.subjects?.[key] || {};
+      const score = scoreOf(subject);
       const school = subjectRank(exam, key, "school");
       const clazz = subjectRank(exam, key, "class");
-      if (score == null && !school?.rank && !clazz?.rank) return "";
       const values = [score != null ? `${score} 分` : null, school?.rank ? `校内第 ${school.rank}` : null, clazz?.rank ? `班级第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
-      return `<div class="subject-history-row"><span>${fmtDate(exam.date)}</span><strong>${esc(exam.name)}</strong><b>${esc(values)}</b></div>`;
-    }).filter(Boolean).join("");
+      return `<div class="subject-history-row"><span>${fmtDate(exam.date)}</span><strong>${esc(exam.name)}</strong><b>${esc(values || "—")}</b></div>`;
+    }).join("");
     return rows ? `<details class="subject-history"><summary>${label}<span>查看历次记录</span></summary><div>${rows}</div></details>` : "";
   }).join("");
-  return `<details class="deep-trajectory" id="deep-trajectory" data-deep-trajectory><summary><span><strong>查看全部记录</strong><small>历次考试与六科历史</small></span><span aria-hidden="true">＋</span></summary><div class="deep-trajectory-body"><p class="trajectory-boundary-note">只有可以直接对照的考试会拿来比较，其他考试仍会保留。</p><section><h3>历次考试</h3><div class="history-list">${overallRows}</div></section><section><h3>六科历史</h3><div class="subject-history-list">${subjectHistory}</div></section></div></details>`;
+  return `<details class="deep-trajectory" id="deep-trajectory" data-deep-trajectory><summary><span><strong>查看历次考试</strong><small>历次考试、各科历史</small></span><span aria-hidden="true">＋</span></summary><div class="deep-trajectory-body"><section><h3>历次考试</h3><div class="history-list">${overallRows}</div></section><section><h3>各科历史</h3><div class="subject-history-list">${subjectHistory}</div></section></div></details>`;
 }
 
 // Legacy source wording retained: 变化较明显的科目；先看事实，再决定下一步
@@ -498,8 +498,16 @@ function renderOverview() {
   const completionText = completeness.complete ? "" : `已录 ${6 - completeness.missingSubjects.length}/6 科，还缺 ${completeness.missingSubjects.map(key => subjectNames[key]).join("、")}`;
   const primaryLabel = completeness.complete ? "记录下一次考试" : "继续补充这次考试";
   const primaryAction = completeness.complete ? "new-exam" : "continue-exam";
-  const comparisonNote = previous ? `和 ${fmtDate(previous.date)} 相比` : humanComparisonState(comparison, state.exams.length - 1);
-  return `<section class="coordinate-hero"><div class="hero-head"><div><h1>${esc(state.student.displayName)}</h1><p>${identityMeta(state.student) || "孩子资料可以稍后补充"}</p></div>${canEdit() ? `<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="${esc(exam.id)}">编辑这次考试</button>` : ""}</div><div class="exam-context"><strong>${esc(exam.name)}</strong><span>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</span></div>${coordinateRow(exam)}${completionText ? `<p class="completion-note">${esc(completionText)}</p>` : ""}${schoolPct != null || school?.participants ? `<div class="coordinate-note">${schoolPct != null ? `校内前 ${fmtNumber(schoolPct)}%` : ""}${schoolPct != null && school?.participants ? " · " : ""}${school?.participants ? `本次共 ${school.participants} 人` : ""}</div>` : ""}</section><section class="reading-section change-section"><div class="section-label">和以前相比</div><div class="change-main"><strong>${esc(directionText(overallMetric))}</strong><span>${esc(overallMetric?.detail || comparisonNote)}</span><p class="human-summary">${esc(humanChangeSummary(overallMetric))}</p></div>${previous ? `<small>${esc(comparisonNote)}</small>` : `<small>${esc(comparisonNote)}</small>`}</section><section class="reading-section"><div class="section-head-simple"><div><div class="section-label">有明显变化的科目</div><h2>哪些科目有明显变化</h2></div></div>${sources.length ? `<div class="change-source-list">${sources.map(({ key, label, metric }) => { const current = subjectRank(exam, key, "school") || subjectRank(exam, key, "class"); return `<div class="change-source-row"><strong>${label}</strong><span>${esc(metric.detail)}</span><small>${esc(metric.metric === "schoolRank" ? "以学校排名为依据" : metric.metric === "classRank" ? "以班级排名为依据" : "以分数为依据")}</small></div>`; }).join("")}</div>` : `<p class="muted">暂时没有可以直接比较的考试。历史记录仍会保留。</p>`}</section><section class="reading-section subjects-section"><div class="section-head-simple"><div><div class="section-label">这次成绩</div><h2>这次考试的六科成绩</h2></div></div><div class="subject-rows">${renderSubjectRows(exam)}</div></section>${canEdit() ? `<section class="overview-actions" aria-label="下一步"><button class="btn btn-primary btn-block" data-action="${primaryAction}" data-id="${esc(exam.id)}" data-primary-action="record-next">${primaryLabel}</button><button class="btn btn-outline" data-action="open-trajectory" aria-controls="deep-trajectory">查看全部记录</button></section>` : ""}${renderTrajectoryReading(state.exams)}${renderDeepTrajectory()}`;
+  const comparisonSummary = formatComparisonSummary({
+    hasHistory: state.exams.length > 1,
+    comparable: Boolean(previous),
+    reason: comparison.reason,
+    previousDate: previous ? fmtDate(previous.date) : "",
+    historyCount: Math.max(0, state.exams.length - 1)
+  });
+  const comparisonTitle = previous ? directionText(overallMetric) : comparisonSummary.title;
+  const comparisonDetail = comparisonSummary.detail;
+  return `<section class="coordinate-hero"><div class="hero-head"><div><h1>${esc(state.student.displayName)}</h1><p>${identityMeta(state.student) || "孩子资料可以稍后补充"}</p></div>${canEdit() ? `<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="${esc(exam.id)}">编辑这次考试</button>` : ""}</div><div class="exam-context"><strong>${esc(exam.name)}</strong><span>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</span></div>${coordinateRow(exam)}${completionText ? `<p class="completion-note">${esc(completionText)}</p>` : ""}${schoolPct != null || school?.participants ? `<div class="coordinate-note">${schoolPct != null ? `校内前 ${fmtNumber(schoolPct)}%` : ""}${schoolPct != null && school?.participants ? " · " : ""}${school?.participants ? `本次共 ${school.participants} 人` : ""}</div>` : ""}</section><section class="reading-section change-section"><div class="section-label">和以前相比</div><div class="change-main"><strong>${esc(comparisonTitle)}</strong>${comparisonDetail ? `<span>${esc(comparisonDetail)}</span>` : ""}</div></section><section class="reading-section subjects-section"><div class="section-head-simple"><div><div class="section-label">这次成绩</div><h2>这次成绩</h2></div></div><div class="subject-rows">${renderSubjectRows(exam)}</div></section>${canEdit() ? `<section class="overview-actions" aria-label="下一步"><button class="btn btn-primary btn-block" data-action="${primaryAction}" data-id="${esc(exam.id)}" data-primary-action="record-next">${primaryLabel}</button><button class="btn btn-outline" data-action="open-trajectory" aria-controls="deep-trajectory">查看历次考试</button></section>` : ""}${renderDeepTrajectory()}`;
 }
 
 function renderExamList() {
@@ -1318,29 +1326,34 @@ function publicViewNavV080(active = "total", subject = null) {
   return `<nav class="public-view-nav" aria-label="分享视图">${items.map(([key, label, itemSuffix]) => `<a class="public-view-tab ${active === key ? "active" : ""}" href="?view=${key}${itemSuffix}" aria-current="${active === key ? "page" : "false"}">${label}</a>`).join("")}</nav>`;
 }
 
-// Backward contract: function publicBaselineV081(view, exams)
-function publicBaselineV081(view, exams, share = {}) {
+// Backward contract: function publicBaselineV081(view, exams, share = {}) {
   if (!Array.isArray(exams) || exams.length !== 1) return "";
-  const copy = {
-    total: "目前只有一次考试记录。先看这一场的总成绩和位置；有下一次可以直接比较的考试后再比较。",
-    subject: "目前只有一次考试记录。这里先看这一次的成绩和位置。",
-    timeline: "时间轴从这一次开始。打开节点可以查看本场全部已分享信息。"
-  };
-  const future = share.includesFutureExams ? "以后新增的考试也会显示在这里；当前页面只显示你选择分享的内容。" : "这是创建分享时固定的内容；以后新增考试不会加入。";
-  return `<aside class="public-baseline-note" aria-label="记录状态"><span class="public-baseline-mark" aria-hidden="true"></span><div><strong>目前的记录</strong><p>${copy[view] || copy.total}</p><p>${future}</p></div></aside>`;
+  const future = share.includesFutureExams
+    ? "以后新增的考试也会显示在这里。"
+    : "这是创建分享时固定的内容，之后不会变化。";
+  return `<aside class="public-baseline-note" aria-label="记录状态"><span class="public-baseline-mark" aria-hidden="true"></span><div><strong>目前的记录</strong><p>现在只记录到这一场考试。${future}</p></div></aside>`;
 }
 
-function publicTrajectoryReading(exams, key = null, share = {}) {
+function publicComparisonNote(exams, key = null, share = {}) {
   if (share.fields?.history !== true || exams.length < 2) return "";
-  const analysis = trajectoryAnalysis(exams, key);
-  if (!analysis.current || !analysis.previous) return "";
-  const comparisonBoundary = share.fields?.comparisonContext === true
-    ? "只按已分享的考试比较"
-    : "没有分享比较范围，只按考试类别参考";
-  const firstToCurrent = analysis.baseline
-    ? `${analysis.baseline.display} → ${analysis.current.display}`
-    : analysis.current.display;
-  return `<aside class="public-analysis-note"><div class="section-label">${key ? "这门课怎么看" : "多次考试怎么看"}</div><div class="public-analysis-grid"><div><small>这次记录</small><strong>${esc(analysis.current.display)}</strong><span>上一场可以直接比较的记录：${esc(analysis.previous.display)}</span></div><div><small>最近几次</small><strong>${esc(analysis.stability.detail)}</strong><span>只看已经记录、可以直接比较的考试。</span></div><div><small>从最早一次到现在</small><strong>${esc(firstToCurrent)}</strong><span>${esc(comparisonBoundary)}</span></div></div>${analysis.skipped.length ? `<small>有 ${analysis.skipped.length} 场记录未纳入，因为考试条件或可用数据不同。</small>` : ""}</aside>`;
+  const ordered = sortExamsChronologically(exams);
+  const current = ordered[0] || null;
+  const comparison = key
+    ? coreFindComparableExamForSubject(subjectObservationExams(ordered, key), current, key, "auto")
+    : coreFindComparableExam(ordered, current);
+  const previous = comparison.status === "comparable" ? comparison.reference : null;
+  const summary = formatComparisonSummary({
+    hasHistory: true,
+    comparable: Boolean(previous),
+    reason: comparison.reason,
+    previousDate: previous ? fmtDate(previous.date) : "",
+    historyCount: Math.max(0, exams.length - 1)
+  });
+  if (!previous) {
+    return `<aside class="public-comparison-note"><div class="section-label">和以前相比</div><strong>${esc(summary.title)}</strong>${summary.detail ? `<p>${esc(summary.detail)}</p>` : ""}</aside>`;
+  }
+  const metric = key ? comparison.metric : metricBetween(current, previous);
+  return `<aside class="public-comparison-note"><div class="section-label">和以前相比</div><strong>${esc(directionText(metric))}</strong><p>${esc(summary.detail)}</p></aside>`;
 }
 
 function publicSubjectComparisonV080(exams, key, share = {}) {
@@ -1372,7 +1385,7 @@ function publicSubjectComparisonV080(exams, key, share = {}) {
 
   const changeBlock = current ? `<div class="subject-focus-fact"><strong>${esc(currentValue)}</strong></div><div class="comparison-state" role="status"><strong>${esc(change ? directionText(change) : compareText)}</strong><span>${esc(change ? change.detail + " · " + compareText : compareText)}</span></div>` : `<div class="empty compact">还没有可分享的${esc(label)}成绩。</div>`;
 
-  return `<section class="public-reading-section public-subject-comparison"><div class="section-label">单科</div><h2>${label}的历次记录</h2>${publicBaselineV081("subject", subjectExams, share)}${publicTrajectoryReading(subjectExams, key, share)}${picker}${changeBlock}${rows ? `<div class="subject-compare-list">${rows}</div>` : `<p class="muted">还没有可分享的${label}记录。</p>`}<p class="muted subject-history-scope">这里只列出实际记录过${label}成绩的考试；没有记录这门课的考试不会出现在这里。</p></section>`;
+  return `<section class="public-reading-section public-subject-comparison"><div class="section-label">单科</div><h2>${label}的历次记录</h2>${publicBaselineV081("subject", subjectExams, share)}${publicComparisonNote(subjectExams, key, share)}${picker}${changeBlock}${rows ? `<div class="subject-compare-list">${rows}</div>` : `<p class="muted">还没有可分享的${label}记录。</p>`}<p class="muted subject-history-scope">这里只列出实际记录过${label}成绩的考试；没有记录这门课的考试不会出现在这里。</p></section>`;
 }
 
 function publicExamDetailV080(exam, share = {}) {
@@ -1423,7 +1436,7 @@ function renderPublicV080(result) {
   const coordinate = latest ? [result.share.fields?.overallRank !== true ? null : school?.rank != null ? `校内第 ${school.rank} 名` : null, result.share.fields?.overallRank !== true ? null : clazz?.rank != null ? `班级第 ${clazz.rank} 名` : null, result.share.fields?.overallScore !== true ? null : totalText].filter(Boolean) : [];
   const coordinateText = coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>成绩与排名未分享</span>`;
   const meta = [data.student?.graduationYear ? `${data.student.graduationYear}届` : null, data.student?.schoolLabel, data.student?.className].filter(Boolean).map(esc).join(" · ");
-  const total = `<section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "固定当前内容" : result.share.scope === "trajectory" ? "历次成绩 · 以后新增的考试也会显示" : "以后新增的考试也会显示"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinateText}</div>${publicBaselineV081("total", exams, result.share)}${publicTrajectoryReading(exams, null, result.share)}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share)}</div>` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
+  const total = `<section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "固定当前内容" : result.share.scope === "trajectory" ? "历次成绩 · 以后新增的考试也会显示" : "以后新增的考试也会显示"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinateText}</div>${publicBaselineV081("total", exams, result.share)}${publicComparisonNote(exams, null, result.share)}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share)}</div>` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
   const body = view === "subject" ? publicSubjectComparisonV080(exams, subject, result.share) : view === "timeline" ? publicTimelineV080(exams, selectedExamId, result.share) : total;
   app.innerHTML = `<main class="public-shell ink-share" data-share-view="${view}" data-exam-count="${exams.length}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span><i class="ink-share-flourish" aria-hidden="true"></i></div><div class="privacy-note">这是家庭主动分享的内容，请不要随意转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">需要时可以随时撤销分享</footer>`;
 }
