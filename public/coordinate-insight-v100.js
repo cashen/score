@@ -123,7 +123,7 @@ function positionText(position) {
   const parts = [];
   if (position.school?.percentile != null) parts.push(`校内前 ${fmt(position.school.percentile)}%`);
   else if (position.school?.rank != null) parts.push(`校内第 ${position.school.rank} 名`);
-  if (position.class?.rank != null) parts.push(`班第 ${position.class.rank} 名`);
+  if (position.class?.rank != null) parts.push(`班级第 ${position.class.rank} 名`);
   if (position.score?.value != null) parts.push(`${fmt(position.score.value)} 分`);
   return parts.join(" · ") || "本场尚无总分或排名记录";
 }
@@ -191,7 +191,7 @@ function renderInsight(result) {
   }
   existing?.remove();
   const drivers = result.drivers.length ? `<div class="coordinate-insight-drivers">${result.drivers.map((driver) => `<div class="coordinate-insight-driver"><b>${driver.label}</b><div><strong>${driverText(driver)}</strong><span>与上一次可以直接比较的考试相比</span></div></div>`).join("")}</div>` : `<p class="coordinate-insight-boundary">目前没有足够的数据判断哪一科变化更明显。</p>`;
-  const attention = result.attention ? `<div class="coordinate-insight-attention"><small>下一次值得继续观察</small><strong>${result.attention.label}</strong><span>最近几次直接比较中，这门课多次比上一场下降。</span></div>` : "";
+  const attention = result.attention ? `<div class="coordinate-insight-attention"><small>下一次值得继续观察</small><strong>${result.attention.label}</strong><span>最近几次直接比较中，这门课有多次分数更低或排名更靠后。</span></div>` : "";
   const action = result.attention ? `<div class="coordinate-insight-action"><a href="?view=subject&subject=${encodeURIComponent(result.attention.key)}">打开${result.attention.label}历次记录</a></div>` : "";
   const section = document.createElement("section");
   section.className = "reading-section coordinate-insight";
