@@ -1,3 +1,13 @@
+## 0.12.28
+
+- 安全修复：阻断持久化考试名称进入 DOM HTML sink 的 Stored XSS 路径。
+- 安全修复：邀请、恢复码、恢复链接使用 SQLite-backed Durable Object 串行化一次性凭证消费，降低并发重放风险。
+- 安全修复：Secret Share 新链接改用 URL fragment 携带原始 token，并通过同源 POST redeem；继续兼容旧格式。
+- 安全修复：普通退出现在服务端撤销当前 session；Bootstrap 建户入口默认关闭，并且启用后只允许一次成功建户。
+- 安全修复：分享创建、撤销、兑换增加限流；429 正确返回 Retry-After。
+- 安全修复：关闭 Workers invocation logs，减少敏感分享凭证进入默认请求日志的机会。
+- 本轮不改变成绩数据 Schema 1；Durable Object 只承担一次性凭证协调。
+
 ## 0.12.27.1
 
 - 修复 Cloudflare Web Crypto 不支持超过 100000 次 PBKDF2 iterations 导致登录失败的问题。
