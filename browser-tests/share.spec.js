@@ -184,3 +184,20 @@ test("subject deep-links preserve user intent and keep all subject choices avail
   await page.goto("/p/fixture?view=subject&subject=english");
   await expect(page.getByRole("heading", { name: "英语的历次记录" })).toBeVisible();
 });
+
+
+test("share pages keep the comparison layer factual and compact", async ({ page }) => {
+  const errors = await fixture(page, 2);
+  await page.goto("/p/fixture?view=timeline");
+  await expect(page.locator(".public-comparison-note")).toHaveCount(0);
+  await page.getByRole("link", { name: "总成绩", exact: true }).click();
+  await expect(page.locator(".public-comparison-note")).toHaveCount(1);
+  const totalText = await page.locator(".public-shell").innerText();
+  expect(totalText).not.toMatch(/口径|可比记录|变化来源|整体位置|具体坐标|多次考试怎么看/);
+  await page.getByRole("link", { name: "单科", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "六科概览" })).toBeVisible();
+  await page.getByRole("link", { name: "英语", exact: true }).click();
+  await expect(page.locator(".comparison-state")).toHaveCount(1);
+  expect(await page.locator(".public-shell").innerText()).not.toMatch(/比较对象：|多次考试怎么看/);
+  expect(errors).toEqual([]);
+});
