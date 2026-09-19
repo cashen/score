@@ -136,7 +136,7 @@ test("whitelist omissions and snapshot semantics are respected", async ({ page }
   await fixture(page, 1, { displayName: true }, "snapshot");
   await page.goto("/share/fixture");
   await expect(page.getByText("固定当前内容", { exact: true })).toBeVisible();
-  await expect(page.locator(".coordinate-row")).toHaveText("位置未分享");
+  await expect(page.locator(".coordinate-row")).toHaveText("成绩与排名未分享");
   await page.getByRole("link", { name: "时间轴", exact: true }).click();
   await page.locator(".history-row").click();
   await expect(page.locator(".exam-detail-overall")).toContainText("总分未分享");
