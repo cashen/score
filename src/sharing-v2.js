@@ -141,31 +141,37 @@ async function handleCreate(request, env, session, studentId) {
   return json({ share: item, token: rawToken }, 201);
 }
 
+async function normalizeGrant(grant) {
+  if (!grant) return null;
+  const scope = grant.scope === "trajectory" ? "trajectory" : "single";
+  return { ...grant, scope, examId: grant.examId || null, examName: grant.examName || null };
+}
+
 async function handleExternal(env, kind, rawLocator) {
   const locator = kind === "secret" ? await sha256(rawLocator) : rawLocator;
   const grant = await getJson(env, `share:${kind}:${locator}`);
-  if (!grant || !grant.scope) return null;
-  if (isExpired(grant)) return errorJson("分享链接不存在或已失效", 404, "share_not_found");
-  const student = await getJson(env, `student:${grant.studentId}`);
+  if (!grant || isExpired(grant)) return errorJson("分享链接不存在或已失效", 404, "share_not_found");
+  const normalized = await normalizeGrant(grant);
+  const student = await getJson(env, `student:${normalized.studentId}`);
   if (!student || student.deletedAt) return errorJson("分享链接不存在或已失效", 404, "share_not_found");
 
-  let data = grant.mode === "snapshot" && grant.snapshot ? grant.snapshot : null;
+  let data = normalized.mode === "snapshot" && normalized.snapshot ? normalized.snapshot : null;
   if (!data) {
-    const exams = await selectExams(env, student.id, grant.scope, grant.examId || null);
-    if (grant.scope === "single" && !exams.length) return errorJson("这次考试已不存在，分享链接无法继续展示", 404, "shared_exam_not_found");
-    data = publicProjection(student, exams, grant.fields);
+    const exams = await selectExams(env, student.id, normalized.scope, normalized.examId);
+    if (normalized.scope === "single" && !exams.length) return errorJson("这次考试已不存在，分享链接无法继续展示", 404, "shared_exam_not_found");
+    data = publicProjection(student, exams, normalized.fields);
   }
   return json({
     share: {
       kind,
-      mode: grant.mode,
-      scope: grant.scope,
-      examId: grant.examId || null,
-      examName: grant.examName || null,
-      expiresAt: grant.expiresAt,
-      fields: grant.fields,
+      mode: normalized.mode,
+      scope: normalized.scope,
+      examId: normalized.examId,
+      examName: normalized.examName,
+      expiresAt: normalized.expiresAt,
+      fields: normalized.fields,
       examCount: data.exams?.length || 0,
-      includesFutureExams: grant.scope === "trajectory" && grant.mode === "live"
+      includesFutureExams: normalized.scope === "trajectory" && normalized.mode === "live"
     },
     data
   });
@@ -177,25 +183,27 @@ async function handlePreview(request, env, session, studentId, kind, locator) {
   const item = (index.items || []).find((entry) => entry.kind === kind && entry.locator === locator);
   if (!item) return errorJson("分享链接不存在或已撤销", 404, "share_not_found");
   const grant = await getJson(env, `share:${kind}:${locator}`);
-  if (!grant || isExpired(grant) || grant.studentId !== student.id) return errorJson("分享链接不存在或已失效", 404, "share_not_found");
-  let data = grant.mode === "snapshot" && grant.snapshot ? grant.snapshot : null;
+  if (!grant || isExpired(grant)) return errorJson("分享链接不存在或已失效", 404, "share_not_found");
+  const normalized = await normalizeGrant(grant);
+  if (normalized.studentId !== student.id) return errorJson("分享链接不存在或已失效", 404, "share_not_found");
+  let data = normalized.mode === "snapshot" && normalized.snapshot ? normalized.snapshot : null;
   if (!data) {
-    const exams = await selectExams(env, student.id, grant.scope, grant.examId || null);
-    if (grant.scope === "single" && !exams.length) return errorJson("这次考试已不存在，分享链接无法继续展示", 404, "shared_exam_not_found");
-    data = publicProjection(student, exams, grant.fields);
+    const exams = await selectExams(env, student.id, normalized.scope, normalized.examId);
+    if (normalized.scope === "single" && !exams.length) return errorJson("这次考试已不存在，分享链接无法继续展示", 404, "shared_exam_not_found");
+    data = publicProjection(student, exams, normalized.fields);
   }
   return json({
     share: {
       kind,
-      mode: grant.mode,
-      scope: grant.scope,
-      examId: grant.examId || null,
-      examName: grant.examName || null,
-      expiresAt: grant.expiresAt,
-      fields: grant.fields,
+      mode: normalized.mode,
+      scope: normalized.scope,
+      examId: normalized.examId,
+      examName: normalized.examName,
+      expiresAt: normalized.expiresAt,
+      fields: normalized.fields,
       locator,
       examCount: data.exams?.length || 0,
-      includesFutureExams: grant.scope === "trajectory" && grant.mode === "live"
+      includesFutureExams: normalized.scope === "trajectory" && normalized.mode === "live"
     },
     data
   });
