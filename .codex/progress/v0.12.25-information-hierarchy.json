@@ -1,0 +1,23 @@
+{
+  "version": "0.12.25",
+  "generation": "v01225-information-hierarchy-refinement",
+  "project": "cashen/score",
+  "branch": "refactor/v01225-information-hierarchy",
+  "baseSha": "e73f3ad099c5a52d145726bd0ecd4f947b547bed",
+  "phase": "post-v01225-information-hierarchy-refinement",
+  "status": "ready_for_ci",
+  "completed": [
+    "verified main already contains merged v0.12.25 baseline from PR #46",
+    "removed redundant private trajectory reader helper",
+    "removed unused standalone ui-v100.css after folding the rules into the runtime bundle",
+    "added compact share comparison browser regression",
+    "bumped package, lockfile and Worker APP_VERSION to 0.12.25"
+  ],
+  "next": [
+    "run complete CI and Chromium/WebKit matrix",
+    "review PR diff against current main",
+    "merge only after green checks",
+    "verify main SHA, deploy workflow and Worker production attestation"
+  ],
+  "handoffRule": "On reconnection, verify current main SHA, branch SHA, open PR state, Actions, version and deployment before changing anything. Never assume prior state."
+}
