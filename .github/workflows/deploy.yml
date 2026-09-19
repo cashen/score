@@ -21,7 +21,6 @@ jobs:
         with:
           node-version: 22
           package-manager-cache: false
-          cache: npm
       - run: npm ci
       - name: Deploy exact tested commit with required Worker secrets
         env:
@@ -70,7 +69,7 @@ jobs:
           NODE
           trap 'rm -f .runtime-secrets.json' EXIT
 
-          npx --yes wrangler@4 deploy --keep-vars --secrets-file .runtime-secrets.json --var BUILD_SHA:${TESTED_SHA}
+          npx --yes wrangler@4.135.0 deploy --keep-vars --secrets-file .runtime-secrets.json --var BUILD_SHA:${TESTED_SHA}
 
           node <<'NODE'
           const expected = process.env.EXPECTED_VERSION;
