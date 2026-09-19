@@ -7,11 +7,10 @@ const index = await readFile(new URL("../public/index.html", import.meta.url), "
 const css = await readFile(new URL("../public/ui-v081-share-ink.css", import.meta.url), "utf8");
 
 test("single-exam public views explain the current baseline without inventing a trend", () => {
-  assert.match(app, /function publicBaselineV081\(view, exams\)/);
+  assert.match(app, /function publicBaselineV081\(view, exams, share = \{\}\)\s*\{/);
   assert.match(app, /exams\.length !== 1/);
   assert.match(app, /目前的记录/);
-  assert.match(app, /先看这一场的总成绩和位置/);
-  assert.match(app, /有下一次可以直接比较的考试后再比较/);
+  assert.match(app, /现在只记录到这一场考试/);
   assert.doesNotMatch(app, /目前的记录[^]*?(预测|能力判断|必然进步)/);
 });
 

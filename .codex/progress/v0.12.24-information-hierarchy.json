@@ -1,0 +1,25 @@
+{
+  "version": "0.12.24",
+  "generation": "v01224-information-hierarchy",
+  "project": "cashen/score",
+  "branch": "refactor/v01224-information-hierarchy",
+  "baseSha": "5f5f94b980fe34b973559535ead5c08bb7d78964",
+  "phase": "whole-site-information-hierarchy-and-responsive-reading",
+  "scope": [
+    "narrow the desktop comparison reading block",
+    "remove duplicate trajectory analysis from the overview",
+    "show subject-change content only when meaningful",
+    "keep current score and history visually primary",
+    "simplify family share comparison surface",
+    "preserve PC, Pad, Android and touch usability"
+  ],
+  "validationPlan": [
+    "npm verify",
+    "Chromium 360/390/768/1280",
+    "WebKit 390",
+    "share whitelist and navigation regression",
+    "version/main/deploy attestation"
+  ],
+  "status": "ready_for_pr_ci",
+  "handoffRule": "On reconnection, verify main SHA, open PR state, Actions, version and deployment before changing anything. Never assume prior CI or production state."
+}

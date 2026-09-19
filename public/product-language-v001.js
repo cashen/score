@@ -39,6 +39,16 @@ export function formatExamScore(summary = {}) {
   return '';
 }
 
+export function formatComparisonSummary({ hasHistory = false, comparable = false, reason = "insufficient_common_data", previousDate = "", historyCount = 1 } = {}) {
+  if (!hasHistory) return { title: "这是第一次记录。", detail: "" };
+  if (comparable) return { title: "和以前相比", detail: previousDate ? `和 ${previousDate} 相比` : "和以前相比" };
+  const detail = reason === "different_exam_type"
+    ? (historyCount ? `之前有 ${historyCount} 场考试，但考试类型不同。` : "之前还没有可以直接对照的考试。")
+    : reason === "insufficient_common_data"
+      ? "之前的成绩记录还不够完整。"
+      : "两场考试没有可以直接对照的数据。";
+  return { title: "暂时没有可以直接比较的考试", detail };
+}
 export function formatComparisonState({ hasHistory = false, comparable = false, reason = 'insufficient_common_data', previousDate = '', historyCount = 1 } = {}) {
   if (!hasHistory) return COMPARISON_REASONS.no_history;
   if (comparable && previousDate) return `和 ${previousDate} 相比`;
