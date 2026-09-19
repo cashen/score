@@ -1,3 +1,4 @@
+export { OneTimeCredentialGate } from "./one-time-gate.js";
 import baseWorker from "./index.js";
 import { verifySessionToken } from "./lib/crypto.js";
 import { errorJson, parseCookies, withSecurity } from "./lib/http.js";
