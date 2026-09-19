@@ -1326,7 +1326,7 @@ function publicViewNavV080(active = "total", subject = null) {
   return `<nav class="public-view-nav" aria-label="分享视图">${items.map(([key, label, itemSuffix]) => `<a class="public-view-tab ${active === key ? "active" : ""}" href="?view=${key}${itemSuffix}" aria-current="${active === key ? "page" : "false"}">${label}</a>`).join("")}</nav>`;
 }
 
-// Backward contract: function publicBaselineV081(view, exams, share = {}) {
+function publicBaselineV081(view, exams, share = {}) {
   if (!Array.isArray(exams) || exams.length !== 1) return "";
   const future = share.includesFutureExams
     ? "以后新增的考试也会显示在这里。"
