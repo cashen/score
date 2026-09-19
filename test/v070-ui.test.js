@@ -57,6 +57,7 @@ test("sharing and trajectory explain their boundaries before details", () => {
   assert.match(app, /将分享/);
   assert.match(app, /不会分享/);
   assert.match(app, /默认只分享一场/);
-  assert.doesNotMatch(app, /只有可以直接对照的考试会拿来比较/);\n  assert.match(css, /\.trajectory-boundary-note\s*\{/);
+  assert.doesNotMatch(app, /只有可以直接对照的考试会拿来比较/);
+  assert.match(css, /\.trajectory-boundary-note\s*\{/);
   assert.match(css, /\.share-summary\s*\{/);
 });
