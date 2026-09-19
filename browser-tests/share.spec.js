@@ -60,7 +60,7 @@ test("single record: total, six subjects, timeline and complete detail", async (
   await page.goto("/share/fixture");
   await expect(page.getByRole("heading", { name: "示例同学" })).toBeVisible();
   await expect(page.locator(".coordinate-row")).toContainText("585 分");
-  await expect(page.getByText("当前基线", { exact: true })).toBeVisible();
+  await expect(page.getByText("目前的记录", { exact: true })).toBeVisible();
   await expect(page.locator(".subject-row")).toHaveCount(6);
   await layout(page);
   await info.attach("total", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
@@ -124,7 +124,7 @@ test("empty share remains navigable without a fabricated baseline", async ({ pag
 test("whitelist omissions and snapshot semantics are respected", async ({ page }) => {
   await fixture(page, 1, { displayName: true }, "snapshot");
   await page.goto("/share/fixture");
-  await expect(page.getByText("只分享当前内容", { exact: true })).toBeVisible();
+  await expect(page.getByText("固定当前内容", { exact: true })).toBeVisible();
   await expect(page.locator(".coordinate-row")).toHaveText("位置未分享");
   await page.getByRole("link", { name: "时间轴", exact: true }).click();
   await page.locator(".history-row").click();
