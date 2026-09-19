@@ -147,7 +147,7 @@ export function metricBetween(latest, previous, key = null, metric = "auto") {
         delta: classPrevious.rank - classCurrent.rank,
         currentValue: classCurrent.rank,
         previousValue: classPrevious.rank,
-        detail: `班第 ${classPrevious.rank} → 班第 ${classCurrent.rank}`
+        detail: `班级第 ${classPrevious.rank} → 班级第 ${classCurrent.rank}`
       };
     }
     if (metric === "classRank") return null;
