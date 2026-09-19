@@ -16,7 +16,8 @@ function mock({ badSha = false, staleAsset = false } = {}) {
 test("production proof follows both static and dynamic module imports", async () => {
   assert.deepEqual(references('import "./draft.js"; import { a } from "./core.js"; await import("./app.js")', "/router.js"), ["/draft.js", "/core.js", "/app.js"]);
   const result = await verifyProduction({ ...options, fetchFn: mock() });
-  assert(result.assets.some(asset => asset.path === "/trajectory-core-v060.js"));
+  assert(result.assets.some(asset => asset.path === "/record-semantics-v120.js"));
+  assert(result.assets.some(asset => asset.path === "/coordinate-insight-v100.js"));
   assert(result.assets.some(asset => asset.path === "/css/app-v094.css"));
   assert.equal(result.entries, 3);
 });
