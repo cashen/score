@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+const semantics = await readFile(new URL("../public/record-semantics-v120.js", import.meta.url), "utf8");
 
 test("trajectory has parallel total, subject and timeline views", () => {
   assert.match(app, /data-trajectory-view=/);
@@ -14,8 +15,8 @@ test("trajectory has parallel total, subject and timeline views", () => {
 });
 
 test("one exam is treated as a baseline without a trend claim", () => {
-  assert.match(app, /status: "baseline"/);
-  assert.match(app, /还没有第二次可比考试/);
+  assert.match(semantics, /status: "baseline"/);
+  assert.match(semantics, /还没有第二次可比考试/);
   assert.match(app, /还没有考试记录/);
 });
 
@@ -30,5 +31,6 @@ test("subject view keeps score and ranks as separate metrics", () => {
   assert.match(app, /data-subject-metric="score"/);
   assert.match(app, /data-subject-metric="schoolRank"/);
   assert.match(app, /data-subject-metric="classRank"/);
-  assert.match(app, /把分数、学校排名和班级排名分开看/);
+  assert.match(app, /data-subject-metric="auto"/);
+  assert.match(app, /把分数、学校排名和班级排名分开看|先看这一次的事实/);
 });

@@ -17,7 +17,7 @@ async function fixture(page, count = 1, allowed = fields, mode = "live") {
   const exams = count === 2 ? [exam, { ...exam, id: "fixture-0", name: "八月校考", date: "2026-08-01", overall: { officialScore: 570, rankings } }] : count ? [exam] : [];
   const data = publicProjection({ displayName: "示例同学", graduationYear: 2027, schoolLabel: "示例学校", className: "高三一班", notes: "PRIVATE_STUDENT_NOTE" }, exams, allowed);
   await page.route("**/api/**", route => {
-    if (/\/api\/share\/(secret|public)\/fixture$/.test(route.request().url())) return route.fulfill({ json: { share: { mode }, data } });
+    if (/\/api\/share\/(secret|public)\/fixture$/.test(route.request().url())) return route.fulfill({ json: { share: { mode, fields: allowed }, data } });
     return route.abort();
   });
   return errors;
@@ -128,8 +128,8 @@ test("whitelist omissions and snapshot semantics are respected", async ({ page }
   await expect(page.locator(".coordinate-row")).toHaveText("位置未分享");
   await page.getByRole("link", { name: "时间轴", exact: true }).click();
   await page.locator(".history-row").click();
-  await expect(page.locator(".exam-detail-overall")).toContainText("总分待补");
-  await expect(page.locator(".exam-detail-subject").first()).toContainText("分数待补");
+  await expect(page.locator(".exam-detail-overall")).toContainText("总分未分享");
+  await expect(page.locator(".exam-detail-subject").first()).toContainText("未分享");
   const text = await page.locator("body").innerText();
   expect(text).not.toMatch(/PRIVATE_|585|校第 123|高三一班|示例学校/);
   await layout(page);
