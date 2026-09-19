@@ -115,8 +115,8 @@ test("public multi-record deep links preserve each examination", async ({ page }
   const subjectText = await page.locator(".public-shell").innerText();
   expect(subjectText).not.toContain("同口径");
   expect(subjectText).not.toContain("最新记录");
-  await expect(page.locator(".public-analysis-note")).toContainText("从最早一次到现在");
-  await expect(page.locator(".public-analysis-note")).toContainText("这次记录");
+  await expect(page.locator(".comparison-state")).toBeVisible();
+  await expect(page.locator(".comparison-state")).toContainText("和");
   await expect(page.locator(".public-baseline-note")).toHaveCount(0);
   expect(errors).toEqual([]);
 });
