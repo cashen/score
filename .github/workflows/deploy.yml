@@ -12,7 +12,7 @@ jobs:
   deploy:
     if: >-
       ${{ github.event.workflow_run.conclusion == 'success' &&
-          github.event.workflow_run.head_branch == 'main' }}
+          github.event.workflow_run.head_repository.full_name == github.repository }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,6 +38,16 @@ jobs:
               exit 1
             fi
           done
+
+          MAIN_SHA="$(git ls-remote origin refs/heads/main | cut -f1)"
+          if [ -z "$MAIN_SHA" ]; then
+            echo "::error::Could not resolve current main SHA"
+            exit 1
+          fi
+          if [ "$MAIN_SHA" != "$TESTED_SHA" ]; then
+            echo "CI run is no longer the current main commit ($MAIN_SHA); skipping deployment for stale SHA $TESTED_SHA"
+            exit 0
+          fi
 
           CHECKED_OUT_SHA="$(git rev-parse HEAD)"
           if [ "$CHECKED_OUT_SHA" != "$TESTED_SHA" ]; then
