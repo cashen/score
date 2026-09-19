@@ -7,7 +7,7 @@ const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "u
 const index = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
 
 test("core senior-year tasks remain available in v0.5", () => {
-  assert.match(app, /data-tab="overview">轨迹/);
+  assert.match(app, /data-tab="overview">成绩/);
   assert.match(app, /data-tab="exams">考试/);
   assert.match(app, /data-tab="sharing">分享/);
   assert.match(app, /data-tab="family">家庭/);
