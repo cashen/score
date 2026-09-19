@@ -1,5 +1,5 @@
 {
-  "version": "0.12.28",
+  "version": "0.12.28.1",
   "stage": "implementation",
   "baseSha": "9dd4dbd49c5c2ce9c005c12afc24a86f8f593449",
   "branch": "security/v01228-hardening",
