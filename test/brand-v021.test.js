@@ -22,6 +22,6 @@ test("高三坐标 brand mark is rendered directly instead of patched at runtime
 
 test("成绩 is the main reading tab while the product name stays 高三坐标", () => {
   assert.match(app, />成绩<\/button>/);
-  assert.match(app, /查看全部记录/);
+  assert.match(app, /查看历次考试/);
   assert.doesNotMatch(app, /PRODUCT_NAME\s*=\s*"高三轨迹"/);
 });
