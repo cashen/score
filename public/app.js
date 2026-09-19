@@ -1431,8 +1431,8 @@ async function renderExternal(kind, locator) {
     if (kind === "secret" && !locator) {
       const token = decodeURIComponent(String(location.hash || "").replace(/^#/, ""));
       if (!token) throw new Error("分享链接无效");
-      history.replaceState(null, "", location.pathname + location.search);
       result = await api("/api/share/secret/redeem", { method: "POST", body: JSON.stringify({ token }) });
+      history.replaceState(null, "", location.pathname + location.search);
     } else {
       result = await api(`/api/share/${kind}/${encodeURIComponent(locator)}`);
     }
