@@ -30,5 +30,5 @@ test("shared report has total, subject, timeline and deep exam detail paths", ()
   assert.match(app, /function publicTimelineV080\(/);
   assert.match(app, /function publicExamDetailV080\(/);
   assert.match(app, /view=timeline&exam=/);
-  assert.match(app, /页面只展示分享白名单中的字段/);
+  assert.match(app, /页面只显示你选择分享的内容/);
 });
