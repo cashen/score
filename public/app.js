@@ -774,6 +774,8 @@ async function deleteExam() {
     await api(`/api/students/${state.student.id}/exams/${state.editingExam.id}`, { method: "DELETE", body: JSON.stringify({ expectedRevision: state.editingExam.revision }) });
     closeDialog();
     await loadStudentData();
+    if (state.selectedExamId === state.editingExam?.id || state.selectedExamId === state.editingExam?.id) state.selectedExamId = null;
+    writePrivateNavigation({ replace: true });
     state.notice = "考试已删除";
     state.noticeTone = "success";
     renderDashboard();
