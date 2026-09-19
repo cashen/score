@@ -98,7 +98,11 @@ async function loadExamIndex(env, studentId) {
   try {
     const listed = await env.SCORE_KV.list({ prefix: `exam-summary:${studentId}:`, limit: MAX_EXAMS });
     const summaries = await Promise.all((listed?.keys || []).map((key) => getJson(env, key.name)));
-    const items = summaries.filter(Boolean);
+    const items = await Promise.all(summaries.filter(Boolean).map(async (summary) => {
+      if (summary.createdAt) return summary;
+      const exam = await getJson(env, `exam:${studentId}:${summary.id}`);
+      return exam?.createdAt ? { ...summary, createdAt: exam.createdAt } : summary;
+    }));
     if (items.length) {
       items.sort(compareExamsChronologically);
       return { studentId, items: items.slice(0, MAX_EXAMS), updatedAt: now() };
@@ -118,9 +122,9 @@ async function saveExamIndex(env, studentId, items) {
 
 async function loadExams(env, studentId, { latestOnly = false } = {}) {
   const index = await loadExamIndex(env, studentId);
-  const items = latestOnly ? index.items.slice(0, 1) : index.items.slice(0, MAX_EXAMS);
-  const exams = await Promise.all(items.map((item) => getJson(env, `exam:${studentId}:${item.id}`)));
-  return exams.filter((exam) => exam && !exam.deletedAt);
+  const exams = await Promise.all((index.items || []).map((item) => getJson(env, `exam:${studentId}:${item.id}`)));
+  const ordered = sortExamsChronologically(exams.filter((exam) => exam && !exam.deletedAt));
+  return latestOnly ? ordered.slice(0, 1) : ordered.slice(0, MAX_EXAMS);
 }
 
 function examSummary(exam) {
