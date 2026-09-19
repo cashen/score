@@ -10,7 +10,7 @@ test("exam entry is rendered directly without legacy humanizer assets", () => {
   assert.doesNotMatch(html, /exam-humanize\.(?:css|js)/);
   assert.match(app, /function examDialog\(/);
   assert.match(app, /这次是什么考试/);
-  assert.match(app, /总分与整体位置/);
+  assert.match(app, /总分与排名/);
   assert.match(app, /六科成绩与排名/);
 });
 
