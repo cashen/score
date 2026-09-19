@@ -236,7 +236,7 @@ async function handleLogin(request, env) {
     await verifyPassword(password, env.AUTH_PEPPER, DUMMY_PASSWORD_RECORD);
     return errorJson("账号或密码错误", 401, "invalid_credentials");
   }
-  const member = await getJson(env, `member:${mapping.memberId}`);
+  let member = await getJson(env, `member:${mapping.memberId}`);
   if (!member || member.disabledAt || !(await verifyPassword(password, env.AUTH_PEPPER, member.password))) {
     return errorJson("账号或密码错误", 401, "invalid_credentials");
   }
