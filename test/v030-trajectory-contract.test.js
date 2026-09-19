@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
 const semantics = await readFile(new URL("../public/record-semantics-v120.js", import.meta.url), "utf8");
+const semantics = await readFile(new URL("../public/record-semantics-v120.js", import.meta.url), "utf8");
 const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "utf8");
 
 test("deep trajectory is secondary to the current coordinate", () => {
