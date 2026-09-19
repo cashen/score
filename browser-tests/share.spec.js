@@ -17,7 +17,7 @@ async function fixture(page, count = 1, allowed = fields, mode = "live") {
   const exams = count === 2 ? [exam, { ...exam, id: "fixture-0", name: "八月校考", date: "2026-08-01", overall: { officialScore: 570, rankings } }] : count ? [exam] : [];
   const data = publicProjection({ displayName: "示例同学", graduationYear: 2027, schoolLabel: "示例学校", className: "高三一班", notes: "PRIVATE_STUDENT_NOTE" }, exams, allowed);
   await page.route("**/api/**", route => {
-    if (/\/api\/share\/(secret|public)\/fixture$/.test(route.request().url())) return route.fulfill({ json: { share: { mode }, data } });
+    if (/\/api\/share\/(secret|public)\/fixture$/.test(route.request().url())) return route.fulfill({ json: { share: { mode, fields: allowed }, data } });
     return route.abort();
   });
   return errors;
