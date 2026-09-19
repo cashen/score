@@ -1343,7 +1343,7 @@ function publicSubjectComparisonV080(exams, key, share = {}) {
   const currentValue = current ? subjectMetricValue(current, key, "auto") : "";
   const compareText = change
     ? `比较对象：${comparison.reference.name} · ${fmtDate(comparison.reference.date)} · ${comparison.reason}`
-    : comparison.reason || `还没有可比较的${label}成绩`;
+    : comparison.reason || `还没有可以直接比较的${label}成绩`;
 
   const rows = subjectExams.map((exam, index) => {
     const subject = exam.subjects?.[key] || {};
