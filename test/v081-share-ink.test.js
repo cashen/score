@@ -10,7 +10,7 @@ test("single-exam public views explain the current baseline without inventing a 
   assert.match(app, /function publicBaselineV081\(view, exams\)/);
   assert.match(app, /exams\.length !== 1/);
   assert.match(app, /目前的记录/);
-  assert.match(app, /这里先看这一场的成绩和位置/);
+  assert.match(app, /先看这一场的总成绩和位置/);
   assert.match(app, /有下一次可以直接比较的考试后再比较/);
   assert.doesNotMatch(app, /目前的记录[^]*?(预测|能力判断|必然进步)/);
 });
