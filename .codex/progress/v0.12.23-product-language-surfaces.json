@@ -3,9 +3,9 @@
   "generation": "v01223-r1",
   "project": "cashen/score",
   "branch": "refactor/product-language-surfaces-v023-r1",
-  "baseSha": "8ef62f69c083c767334e0bd764845e5a0a0c7e7",
+  "baseSha": "8ef62f69c083c767334e0bd76484520071f697a0",
   "phase": "2-whole-site-user-facing-surface-migration",
-  "status": "rebuilt_from_current_main_waiting_ci",
+  "status": "ready_for_clean_ci",
   "completed": [
     "recreated the previously validated v0.12.23 code on top of the actual current main SHA",
     "restored shared browser/runtime product-language module",
