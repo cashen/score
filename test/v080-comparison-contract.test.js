@@ -28,7 +28,7 @@ test("comparable set never falls back to a mismatched series or level", () => {
   const differentSeries = exam("different-series", { date: "2026-09-16", createdAt: "2026-09-16T08:00:00.000Z", comparison: { series: "2026-B", level: "school" } });
   const differentLevel = exam("different-level", { date: "2026-09-15", createdAt: "2026-09-15T08:00:00.000Z", comparison: { series: "2026-A", level: "city" } });
   assert.deepEqual(comparableSet([latest, differentSeries, differentLevel, same]).map((item) => item.id), ["latest", "same"]);
-  assert.equal(comparisonReason(latest, same), "按school口径比较");
+  assert.equal(comparisonReason(latest, same), "按school范围比较");
 });
 
 test("missing metadata remains visible but is marked conditional", () => {
@@ -37,5 +37,5 @@ test("missing metadata remains visible but is marked conditional", () => {
     exam("b", { comparison: null })
   );
   assert.equal(result.status, "comparable");
-  assert.match(result.reason, /部分比较口径未标注/);
+  assert.match(result.reason, /考试类别相同，但比较范围信息不完整/);
 });
