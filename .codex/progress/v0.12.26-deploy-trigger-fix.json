@@ -1,0 +1,25 @@
+{
+  "version": "0.12.26",
+  "generation": "v01226-deploy-trigger-fix",
+  "project": "cashen/score",
+  "branch": "fix/v01226-deploy-trigger",
+  "baseSha": "ee1fa72358a16c1a44af44d7c7669ed17409f9c2",
+  "phase": "production-deployment-trigger-hardening",
+  "status": "ready_for_ci",
+  "completed": [
+    "verified main ee1fa723 and green main CI before deployment-chain repair",
+    "confirmed main deployment could be cancelled by PR CI workflow_run events sharing score-deploy-main concurrency",
+    "confirmed workflow_run branches filtering is the appropriate trigger boundary",
+    "restricted deploy trigger to CI completions on main",
+    "kept exact tested SHA checkout and post-deploy appVersion/buildSha attestation",
+    "bumped package, lockfile and Worker APP_VERSION to 0.12.26",
+    "added deploy trigger regression tests"
+  ],
+  "next": [
+    "run full PR CI",
+    "merge only after green checks",
+    "verify the resulting main CI completion triggers a non-skipped deploy",
+    "verify Worker production appVersion 0.12.26 and buildSha attestation"
+  ],
+  "handoffRule": "On reconnection, verify current main SHA, open PR state, Actions, version and deployment before changing anything. Never assume prior state."
+}
