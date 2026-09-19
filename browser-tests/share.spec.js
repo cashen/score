@@ -128,8 +128,8 @@ test("whitelist omissions and snapshot semantics are respected", async ({ page }
   await expect(page.locator(".coordinate-row")).toHaveText("位置未分享");
   await page.getByRole("link", { name: "时间轴", exact: true }).click();
   await page.locator(".history-row").click();
-  await expect(page.locator(".exam-detail-overall")).toContainText("总分待补");
-  await expect(page.locator(".exam-detail-subject").first()).toContainText("分数待补");
+  await expect(page.locator(".exam-detail-overall")).toContainText("总分未分享");
+  await expect(page.locator(".exam-detail-subject").first()).toContainText("未分享");
   const text = await page.locator("body").innerText();
   expect(text).not.toMatch(/PRIVATE_|585|校第 123|高三一班|示例学校/);
   await layout(page);
