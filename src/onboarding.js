@@ -325,9 +325,12 @@ async function handleRecoveryLinkCreate(request, env, session) {
 
 async function findRecoveryLink(env, rawToken) {
   if (!rawToken || rawToken.length < 20) return null;
-  const locator = await secretHash(rawToken, env);
-  const record = await getJson(env, `recovery-link:${locator}`);
-  return record ? { record, locator } : null;
+  const candidates = [await secretHash(rawToken, env), await legacySecretHash(rawToken, env)];
+  for (const locator of [...new Set(candidates)]) {
+    const record = await getJson(env, `recovery-link:${locator}`);
+    if (record) return { record, locator };
+  }
+  return null;
 }
 
 async function handleRecoveryLinkInspect(env, rawToken) {
