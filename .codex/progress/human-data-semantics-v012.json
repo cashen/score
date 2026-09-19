@@ -3,7 +3,7 @@
   "repository": "cashen/score",
   "baseSha": "fff7fd60bd3ff025452879813cdeec5dcd937ada",
   "baseVersion": "0.11.0",
-  "targetVersion": "0.12.4",
+  "targetVersion": "0.12.5",
   "status": "implementation-in-progress",
   "branch": "feat/human-data-semantics-v012",
   "phases": {
@@ -26,5 +26,5 @@
     "public share uses same latest/subject/comparison semantics",
     "family tab jump persists URL state"
   ],
-  "revisionNote": "v0.12.4 fixes the stale Worker APP_VERSION and remaining version-contract test expectation."
+  "revisionNote": "v0.12.5 aligns browser share assertions with explicit unshared-field semantics."
 }
