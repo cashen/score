@@ -502,7 +502,7 @@ function renderShareList() {
   if (!state.shares.length) return `<div class="empty compact">当前没有外部分享。</div>`;
   return state.shares.map((item) => {
     const url = item.kind === "public" ? shareUrlFor(location.origin, item) : "";
-    return `<div class="share-item"><div><div><strong>${item.kind === "secret" ? "分享链接" : "公开链接"}</strong><span class="badge">${item.mode === "snapshot" ? "只分享当前内容" : "持续更新"}</span>${item.scope === "single" ? `<span class="badge">单次${item.examName ? ` · ${esc(item.examName)}` : ""}</span>` : `<span class="badge">高三轨迹</span>`}</div>${url ? `<div class="share-url" title="完整分享地址">${esc(url)}</div>` : ""}<small>创建于 ${esc(item.createdAt?.slice(0, 10) || "")}${item.expiresAt ? ` · ${esc(item.expiresAt.slice(0, 10))} 自动失效` : ""}${item.kind === "secret" ? " · 出于安全考虑，这个地址不会再次显示；创建时复制的链接仍可继续使用。" : ""}</small><div class="share-item-actions">${url ? `<button class="btn btn-outline btn-small" data-action="copy-share" data-url="${esc(url)}">复制地址</button><a class="btn btn-outline btn-small" href="${esc(url)}" target="_blank" rel="noopener noreferrer">打开分享页</a>` : ""}<button class="btn btn-outline btn-small" data-action="share-image" data-kind="${item.kind}" data-locator="${esc(item.locator)}" data-scope="${esc(item.scope)}">生成分享图</button></div></div><button class="btn btn-danger btn-small" data-action="revoke-share" data-kind="${item.kind}" data-locator="${esc(item.locator)}">撤销</button></div>`;
+    return `<div class="share-item"><div><div><strong>${item.kind === "secret" ? "分享链接" : "公开链接"}</strong><span class="badge">${item.mode === "snapshot" ? "只分享当前内容" : "持续更新"}</span>${item.scope !== "trajectory" ? `<span class="badge">单次${item.examName ? ` · ${esc(item.examName)}` : ""}</span>` : `<span class="badge">高三轨迹</span>`}</div>${url ? `<div class="share-url" title="完整分享地址">${esc(url)}</div>` : ""}<small>创建于 ${esc(item.createdAt?.slice(0, 10) || "")}${item.expiresAt ? ` · ${esc(item.expiresAt.slice(0, 10))} 自动失效` : ""}${item.kind === "secret" ? " · 出于安全考虑，这个地址不会再次显示；创建时复制的链接仍可继续使用。" : ""}</small><div class="share-item-actions">${url ? `<button class="btn btn-outline btn-small" data-action="copy-share" data-url="${esc(url)}">复制地址</button><a class="btn btn-outline btn-small" href="${esc(url)}" target="_blank" rel="noopener noreferrer">打开分享页</a>` : ""}<button class="btn btn-outline btn-small" data-action="share-image" data-kind="${item.kind}" data-locator="${esc(item.locator)}" data-scope="${esc(item.scope)}">生成分享图</button></div></div><button class="btn btn-danger btn-small" data-action="revoke-share" data-kind="${item.kind}" data-locator="${esc(item.locator)}">撤销</button></div>`;
   }).join("");
 }
 
@@ -1098,11 +1098,6 @@ function bindDashboard() {
   }));
   document.querySelectorAll("[data-tab]").forEach((button) => button.addEventListener("click", async () => {
     state.tab = button.dataset.tab;
-    if (state.tab !== "overview") {
-      state.selectedExamId = null;
-      state.subjectKey = null;
-      state.subjectMetric = "score";
-    }
     clearNotice();
     if (state.tab === "sharing") await loadShares();
     if (state.tab === "family") await loadFamilyData();
