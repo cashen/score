@@ -16,5 +16,5 @@ test("mobile removes separator punctuation so wrapping never begins with a dot",
 });
 
 test("separator contract is carried forward by v0.5", () => {
-  assert.equal(pkg.version, "0.12.7");
+  assert.equal(pkg.version, "0.12.8");
 });
