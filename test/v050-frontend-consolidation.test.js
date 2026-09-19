@@ -53,7 +53,7 @@ test("brand and primary navigation are direct source content", () => {
   expectAll(app, [
     'const PRODUCT_NAME = "高三坐标"',
     "看见这次成绩，也看见前后的变化",
-    'data-tab="overview">轨迹',
+    'data-tab="overview">成绩',
     'data-tab="exams">考试',
     'data-tab="sharing">分享',
     'data-tab="family">家庭'
@@ -63,8 +63,8 @@ test("brand and primary navigation are direct source content", () => {
 
 test("home follows identity, coordinate, change, subjects, history", () => {
   const overview = app.slice(app.indexOf("function renderOverview"), app.indexOf("function renderExamList"));
-  expectAll(overview, ["coordinate-hero", "和上一次可比考试相比", "变化较明显的科目", "六科", "renderDeepTrajectory()"]);
-  assert.ok(app.includes("查看完整轨迹"));
+  expectAll(overview, ["coordinate-hero", "和上一场可以直接比较的考试相比", "哪些科目的变化比较明显", "六科", "renderDeepTrajectory()"]);
+  assert.ok(app.includes("查看全部记录"));
   assert.ok(!overview.includes("变化来自哪里"));
   assert.ok(!overview.includes("现在在哪"));
 });
