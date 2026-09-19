@@ -8,9 +8,9 @@ const index = await readFile(new URL("../public/index.html", import.meta.url), "
 const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
 
-test("v0.12.25 is a versioned visual hierarchy patch", () => {
-  assert.equal(pkg.version, "0.12.25");
-  assert.match(wrangler, /APP_VERSION = "0.12.25"/);
+test("v0.12.26 deploy trigger fix retains visual hierarchy baseline", () => {
+  assert.equal(pkg.version, "0.12.26");
+  assert.match(wrangler, /APP_VERSION = "0.12.26"/);
 });
 
 test("overview keeps current exam before comparison, score list and history", () => {
