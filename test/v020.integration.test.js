@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import worker from "../src/v020.js";
+import worker from "../src/index.js";
 
 class MockKV {
   constructor() { this.map = new Map(); }
@@ -19,6 +19,7 @@ function makeEnv() {
     SESSION_SECRET: "session-secret-for-v020-tests",
     AUTH_PEPPER: "pepper-for-v020-tests",
     ADMIN_BOOTSTRAP_SECRET: "admin-secret",
+    BOOTSTRAP_ENABLED: "true",
     PASSWORD_ITERATIONS: "10000",
     APP_VERSION: "0.2.0",
     SCHEMA_VERSION: "1",
