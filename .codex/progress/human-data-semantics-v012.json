@@ -3,8 +3,8 @@
   "repository": "cashen/score",
   "baseSha": "fff7fd60bd3ff025452879813cdeec5dcd937ada",
   "baseVersion": "0.11.0",
-  "targetVersion": "0.12.10",
-  "status": "implementation-in-progress",
+  "targetVersion": "0.12.11",
+  "status": "runtime-fix",
   "branch": "feat/human-data-semantics-v012",
   "phases": {
     "recordSemantics": "completed",
@@ -16,7 +16,7 @@
     "tests": "in-progress",
     "release": "pending"
   },
-  "currentGate": "Run verify + browser/worker regression; then exact PR-head checks.",
+  "currentGate": "Verify version consistency, then merge and attest exact production SHA.",
   "checkpoints": [
     "shared record semantics added",
     "trajectory core delegates to shared semantics",
@@ -26,5 +26,5 @@
     "public share uses same latest/subject/comparison semantics",
     "family tab jump persists URL state"
   ],
-  "revisionNote": "v0.12.10 corrects public detail subject share flags for minimal share projections."
+  "revisionNote": "v0.12.11 fixes runtime APP_VERSION drift discovered during production attestation."
 }
