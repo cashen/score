@@ -1,0 +1,28 @@
+{
+  "task": "human-flow-v110",
+  "repository": "cashen/score",
+  "branch": "feat/human-flow-v110",
+  "baseSha": "3ae9cd3fd56e7a5c9feda1fade86753b918eda75",
+  "version": "0.11.0",
+  "completed": [
+    "share-v2-runtime-routing",
+    "legacy-share-compatibility",
+    "subject-focus-model",
+    "url-navigation-state",
+    "edit-context-continuity",
+    "historical-comparison-context",
+    "metric-copy-alignment",
+    "status-preservation",
+    "model-input-hardening"
+  ],
+  "pending": [
+    "browser-regression",
+    "worker-integration-regression",
+    "pr-ci",
+    "merge",
+    "main-ci",
+    "production-attestation"
+  ],
+  "rollback": "Revert the v0.11.0 PR. No KV migration.",
+  "rule": "Only passing submitted code counts as complete; merge only the exact final PR head."
+}

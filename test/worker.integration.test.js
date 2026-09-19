@@ -144,7 +144,7 @@ test("three-character public share carries multiple exams and rank-only data", a
   let response = await call(e, `/api/students/${provision.studentId}/shares`, {
     method: "POST",
     headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
-    body: JSON.stringify({ kind: "public", slug: "ABC", mode: "live", fields: { history: true, overallRank: true, overallScore: true, subjectScores: true } })
+    body: JSON.stringify({ kind: "public", slug: "ABC", mode: "live", scope: "trajectory", fields: { history: true, overallRank: true, overallScore: true, subjectScores: true } })
   });
   assert.equal(response.status, 201);
   const createdShare = await response.json();
@@ -173,4 +173,186 @@ test("mutations reject missing CSRF", async () => {
   const me = await response.json();
   response = await call(e, `/api/students/${me.students[0].id}/profile`, { method: "PATCH", headers: { cookie, origin: "https://score.example" }, body: JSON.stringify({ displayName: "不应成功" }) });
   assert.equal(response.status, 403);
+});
+
+test("v0.11.0 runtime share contract honors selected exam, preview, trajectory, snapshot and revoke", async () => {
+  const e = env();
+  const { provision, cookie, csrf } = await provisionAndLogin(e, "family004");
+
+  async function createExam(name, date, score) {
+    const response = await call(e, `/api/students/${provision.studentId}/exams`, {
+      method: "POST",
+      headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+      body: JSON.stringify({
+        name,
+        date,
+        type: "monthly",
+        overall: { officialScore: score, rankings: [{ scope: "school", label: "学校", rank: 100 }] },
+        subjects: { math: { fullScore: 150, rawScore: score - 450, finalScore: score - 450, scoreMode: "raw" } }
+      })
+    });
+    assert.equal(response.status, 201);
+    return (await response.json()).exam;
+  }
+
+  const examA = await createExam("9月月考", "2026-09-01", 570);
+  await createExam("9月第二次月考", "2026-09-10", 580);
+
+  let response = await call(e, `/api/students/${provision.studentId}/shares`, {
+    method: "POST",
+    headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+    body: JSON.stringify({
+      kind: "secret",
+      mode: "live",
+      scope: "single",
+      examId: examA.id,
+      fields: { overallScore: true, overallRank: true }
+    })
+  });
+  assert.equal(response.status, 201);
+  const single = await response.json();
+  assert.equal(single.share.scope, "single");
+  assert.equal(single.share.examId, examA.id);
+
+  response = await call(e, `/api/share/secret/${encodeURIComponent(single.token)}`);
+  assert.equal(response.status, 200);
+  let external = await response.json();
+  assert.equal(external.data.exams.length, 1);
+  assert.equal(external.data.exams[0].id, examA.id);
+
+  response = await call(e, `/api/students/${provision.studentId}/shares/secret/${encodeURIComponent(single.share.locator)}/preview`, { headers: { cookie } });
+  assert.equal(response.status, 200);
+  const preview = await response.json();
+  assert.equal(preview.share.scope, "single");
+  assert.equal(preview.data.exams[0].id, examA.id);
+
+  response = await call(e, `/api/students/${provision.studentId}/shares`, {
+    method: "POST",
+    headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+    body: JSON.stringify({
+      kind: "public",
+      slug: "v110-live",
+      mode: "live",
+      scope: "trajectory",
+      fields: { overallScore: true, overallRank: true, subjectScores: true }
+    })
+  });
+  assert.equal(response.status, 201);
+  const live = await response.json();
+
+  const examC = await createExam("9月第三次月考", "2026-09-20", 590);
+  response = await call(e, "/api/share/public/v110-live");
+  assert.equal(response.status, 200);
+  external = await response.json();
+  assert.equal(external.data.exams[0].id, examC.id);
+  assert.equal(external.data.exams.length, 3);
+
+  response = await call(e, `/api/students/${provision.studentId}/shares`, {
+    method: "POST",
+    headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+    body: JSON.stringify({
+      kind: "public",
+      slug: "v110-snapshot",
+      mode: "snapshot",
+      scope: "trajectory",
+      fields: { overallScore: true }
+    })
+  });
+  assert.equal(response.status, 201);
+  const snapshot = await response.json();
+  await createExam("9月第四次月考", "2026-09-25", 600);
+
+  response = await call(e, "/api/share/public/v110-snapshot");
+  assert.equal(response.status, 200);
+  external = await response.json();
+  assert.equal(external.data.exams.length, 3);
+  assert.equal(external.data.exams[0].id, examC.id);
+
+  response = await call(e, `/api/students/${provision.studentId}/shares/revoke`, {
+    method: "POST",
+    headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+    body: JSON.stringify({ kind: "public", locator: live.share.locator })
+  });
+  assert.equal(response.status, 200);
+
+  response = await call(e, "/api/share/public/v110-live");
+  assert.equal(response.status, 404);
+  assert.ok(snapshot.share.locator);
+});
+
+test("v0.11.0 legacy share grants without scope remain readable", async () => {
+  const e = env();
+  const { provision } = await provisionAndLogin(e, "family005");
+  const exam = {
+    id: "legacy-exam",
+    name: "历史月考",
+    date: "2026-08-01",
+    type: "monthly",
+    status: "normal",
+    overall: { officialScore: 550, rankings: [] },
+    subjects: { chinese: { fullScore: 150, rawScore: 120, finalScore: null, scoreMode: "raw", rankings: [] } }
+  };
+  await e.SCORE_KV.put(`student:${provision.studentId}`, JSON.stringify({
+    ...(await e.SCORE_KV.get(`student:${provision.studentId}`, "json")),
+    archivedAt: null
+  }));
+  await e.SCORE_KV.put(`exam:${provision.studentId}:${exam.id}`, JSON.stringify(exam));
+  await e.SCORE_KV.put(`exam-summary:${provision.studentId}:${exam.id}`, JSON.stringify({ id: exam.id, name: exam.name, date: exam.date, type: exam.type, revision: 1, updatedAt: "2026-08-01T00:00:00.000Z" }));
+  await e.SCORE_KV.put(`exam-index:${provision.studentId}`, JSON.stringify({
+    studentId: provision.studentId,
+    items: [{ id: exam.id, name: exam.name, date: exam.date, type: exam.type, revision: 1, updatedAt: "2026-08-01T00:00:00.000Z" }]
+  }));
+  const locator = "legacy-v1";
+  await e.SCORE_KV.put(`share:public:${locator}`, JSON.stringify({
+    schemaVersion: 1,
+    studentId: provision.studentId,
+    kind: "public",
+    mode: "live",
+    fields: { displayName: true, overallScore: true, history: false },
+    expiresAt: null,
+    createdAt: "2026-08-01T00:00:00.000Z",
+    locator
+  }));
+  await e.SCORE_KV.put(`share-index:${provision.studentId}`, JSON.stringify({
+    studentId: provision.studentId,
+    items: [{ kind: "public", mode: "live", fields: { displayName: true, overallScore: true, history: false }, expiresAt: null, createdAt: "2026-08-01T00:00:00.000Z", locator }]
+  }));
+
+  const response = await call(e, "/api/share/public/legacy-v1");
+  assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.equal(payload.share.scope, "single");
+  assert.equal(payload.data.exams.length, 1);
+  assert.equal(payload.data.exams[0].id, exam.id);
+});
+
+test("v0.11.0 trajectory live creation with one exam still requires acknowledgement", async () => {
+  const e = env();
+  const { provision, cookie, csrf } = await provisionAndLogin(e, "family006");
+
+  await call(e, `/api/students/${provision.studentId}/exams`, {
+    method: "POST",
+    headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+    body: JSON.stringify({
+      name: "单次月考",
+      date: "2026-09-11",
+      type: "monthly",
+      overall: { officialScore: 560 },
+      subjects: { math: { fullScore: 150, rawScore: 110, finalScore: 110, scoreMode: "raw" } }
+    })
+  });
+
+  const rejected = await call(e, `/api/students/${provision.studentId}/shares`, {
+    method: "POST",
+    headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+    body: JSON.stringify({
+      kind: "public",
+      slug: "v110-ack",
+      mode: "live",
+      scope: "trajectory",
+      fields: { overallScore: true }
+    })
+  });
+  assert.equal(rejected.status, 400);
+  assert.equal((await rejected.json()).error, "future_exams_acknowledgement_required");
 });
