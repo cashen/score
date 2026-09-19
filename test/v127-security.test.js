@@ -40,6 +40,7 @@ test("password records support v1 compatibility and v2 metadata", async () => {
   assert.equal(await verifyPassword("wrong-password-123", "pepper", legacy), false);
 
   const current = await hashPassword("test-password-123", "pepper", 10000, "current-salt");
+  await assert.rejects(() => hashPassword("test-password-123", "pepper", 100001, "too-high-salt"), /between 10000 and 100000/);
   assert.equal(current.version, 2);
   assert.equal(current.algorithm, "PBKDF2-SHA256");
   assert.equal(timingSafeEqualText(current.hash, current.hash), true);
@@ -126,7 +127,8 @@ test("security configuration and source contracts stay explicit", async () => {
     readFile(new URL("../src/onboarding.js", import.meta.url), "utf8"),
     readFile(new URL("../src/sharing-v2.js", import.meta.url), "utf8")
   ]);
-  assert.match(wrangler, /PASSWORD_ITERATIONS\s*=\s*"600000"/);
+  assert.match(wrangler, /PASSWORD_ITERATIONS\s*=\s*"100000"/);
+  assert.equal((await readFile(new URL("../package.json", import.meta.url), "utf8")).includes('"version": "0.12.27.1"'), true);
   assert.match(index, /DUMMY_PASSWORD_RECORD/);
   assert.match(index, /passwordHashUpgradedAt/);
   assert.match(index, /scope: "login"/);
