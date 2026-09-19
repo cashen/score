@@ -24,3 +24,16 @@ test("deployment still preserves required Worker secret hardening", () => {
   assert.match(workflow, /SCORE_ADMIN_BOOTSTRAP_SECRET/);
   assert.match(workflow, /--keep-vars --secrets-file \.runtime-secrets\.json/);
 });
+
+test("release version is synchronized across package and Worker contracts", async () => {
+  const { readFileSync } = await import("node:fs");
+  const packageJson = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+  const lockJson = JSON.parse(readFileSync(new URL("../package-lock.json", import.meta.url), "utf8"));
+  const wrangler = readFileSync(new URL("../wrangler.toml", import.meta.url), "utf8");
+  const changelog = readFileSync(new URL("../CHANGELOG.md", import.meta.url), "utf8");
+
+  assert.equal(lockJson.version, packageJson.version);
+  assert.equal(lockJson.packages[""].version, packageJson.version);
+  assert.match(wrangler, new RegExp(`^APP_VERSION\\s*=\\s*"${packageJson.version.replace(/\\./g, "\\\\.")}"`, "m"));
+  assert.match(changelog, new RegExp(`^## ${packageJson.version.replace(/\\./g, "\\\\.")}$`, "m"));
+});
