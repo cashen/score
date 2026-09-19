@@ -3,7 +3,7 @@
   "repository": "cashen/score",
   "baseSha": "fff7fd60bd3ff025452879813cdeec5dcd937ada",
   "baseVersion": "0.11.0",
-  "targetVersion": "0.12.2",
+  "targetVersion": "0.12.3",
   "status": "implementation-in-progress",
   "branch": "feat/human-data-semantics-v012",
   "phases": {
@@ -26,5 +26,5 @@
     "public share uses same latest/subject/comparison semantics",
     "family tab jump persists URL state"
   ],
-  "revisionNote": "v0.12.2 fixes browser-observed share display contract regressions."
+  "revisionNote": "v0.12.3 fixes the remaining version-contract regex after browser-observed share display corrections."
 }
