@@ -1872,3 +1872,118 @@ summary:focus-visible,
 @media (max-width: 700px) {
   .trajectory-reading-grid, .public-analysis-grid { grid-template-columns:1fr; }
 }
+
+
+/* ---- v0.12.24 information hierarchy + responsive reading ---- */
+:root {
+  --v100-reading-width: 720px;
+  --v100-page-gutter: 18px;
+}
+
+.change-section {
+  width: min(100%, var(--v100-reading-width));
+  padding: 16px 18px;
+  border: 0;
+  border-top: 1px solid var(--v50-line);
+  border-radius: 0;
+  background: transparent;
+}
+
+.change-section .change-main { margin-top: 8px; }
+.change-section .change-main strong {
+  font-size: 18px;
+  line-height: 1.45;
+}
+.change-section .change-main span {
+  display: block;
+  margin-top: 2px;
+  color: var(--v50-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.change-sources-section { max-width: 800px; }
+.change-sources-section .section-head-simple h2 { font-size: 18px; }
+.change-sources-section .change-source-list { margin-top: 10px; }
+.change-sources-section .change-source-row {
+  grid-template-columns: 72px minmax(0, 1fr);
+  min-height: 48px;
+}
+.change-sources-section .change-source-row small { display: none; }
+
+.subjects-section { max-width: 960px; }
+
+.overview-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  max-width: 960px;
+  margin-top: 14px;
+}
+.overview-actions .btn-primary { min-height: 48px; }
+.deep-trajectory { max-width: 960px; }
+
+.public-comparison-note {
+  width: min(100%, var(--v100-reading-width));
+  margin: 12px 0 0;
+  padding: 13px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.public-comparison-note .section-label { margin-bottom: 4px; }
+.public-comparison-note strong {
+  display: block;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.public-comparison-note p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.public-reading-section,
+.public-reading-section.public-subject-comparison,
+.public-reading-section.public-timeline {
+  max-width: 780px;
+}
+
+@media (max-width: 760px) {
+  :root { --v100-reading-width: 100%; --v100-page-gutter: 12px; }
+
+  .change-section {
+    width: 100%;
+    padding: 14px 0;
+  }
+
+  .change-sources-section,
+  .subjects-section,
+  .deep-trajectory,
+  .overview-actions {
+    max-width: none;
+  }
+
+  .change-sources-section { padding-inline: 14px; }
+  .overview-actions { grid-template-columns: 1fr; }
+  .public-comparison-note { width: 100%; }
+
+  .public-reading-section,
+  .public-reading-section.public-subject-comparison,
+  .public-reading-section.public-timeline {
+    max-width: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .change-sources-section { padding: 14px; }
+  .change-sources-section .change-source-row {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+  .change-section .change-main strong { font-size: 17px; }
+}
+
+@media (max-width: 380px) {
+  .change-section { padding-block: 12px; }
+}
