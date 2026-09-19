@@ -100,7 +100,7 @@ test("public multi-record deep links preserve each examination", async ({ page }
   await expect(page.locator(".public-exam-detail h2")).toHaveText("八月校考");
   await expect(page.locator(".exam-detail-overall")).toContainText("570 分");
   await layout(page);
-  await expect(page.getByText("最近一次考试", { exact: true })).toBeVisible();
+  await expect(page.locator(".history-row").first()).toContainText("最近一次考试");
   const totalText = await page.locator(".public-shell").innerText();
   expect(totalText).not.toContain("同口径");
   expect(totalText).not.toContain("可比考试");
@@ -111,7 +111,7 @@ test("public multi-record deep links preserve each examination", async ({ page }
   await page.getByRole("link", { name: "英语", exact: true }).click();
   await expect(page.getByRole("heading", { name: "英语的历次记录" })).toBeVisible();
   await expect(page.locator(".subject-compare-row")).toHaveCount(2);
-  await expect(page.getByText("最近一次有记录的成绩", { exact: true })).toBeVisible();
+  await expect(page.locator(".subject-compare-row").first()).toContainText("最近一次有记录的成绩");
   const subjectText = await page.locator(".public-shell").innerText();
   expect(subjectText).not.toContain("同口径");
   expect(subjectText).not.toContain("最新记录");
