@@ -65,6 +65,8 @@ test("single record: total, six subjects, timeline and complete detail", async (
   await layout(page);
   await info.attach("total", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
   await page.getByRole("link", { name: "单科", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "六科概览" })).toBeVisible();
+  await expect(page.locator(".subject-row")).toHaveCount(6);
   for (const label of labels) {
     await page.getByRole("link", { name: label, exact: true }).click();
     await expect(page.getByRole("heading", { name: `${label}的历次记录` })).toBeVisible();
@@ -152,4 +154,16 @@ test("reduced motion and high contrast keep content and controls usable", async 
   expect(await page.locator(".share-ink-root").evaluate(node => getComputedStyle(node).backgroundImage)).toBe("none");
   expect(await page.locator(".public-view-tab").first().evaluate(node => getComputedStyle(node).transitionDuration)).toBe("0s");
   await layout(page);
+});
+
+
+test("subject deep-links preserve user intent and keep all subject choices available", async ({ page }) => {
+  await fixture(page, 1);
+  await page.goto("/p/fixture?view=subject");
+  await expect(page.getByRole("heading", { name: "六科概览" })).toBeVisible();
+  await page.getByRole("link", { name: "英语", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "英语的历次记录" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "语文", exact: true })).toBeVisible();
+  await page.goto("/p/fixture?view=subject&subject=english");
+  await expect(page.getByRole("heading", { name: "英语的历次记录" })).toBeVisible();
 });
