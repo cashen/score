@@ -33,6 +33,6 @@ test("v0.11.0 version sources remain consistent", () => {
   assert.equal(pkg.version, "0.11.0");
   assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[""].version, pkg.version);
-  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.10\.0"/);
+  assert.match(wrangler, /APP_VERSION\\s*=\\s*"0\\.11\\.0"/);
   assert.match(pkg.scripts.check, /brand-logo-b\.js/);
 });
