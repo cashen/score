@@ -1112,7 +1112,9 @@ function bindDashboard() {
   document.querySelector("#student-select")?.addEventListener("change", async (event) => {
     state.student = state.me.students.find((student) => student.id === event.target.value) || state.me.students[0];
     await loadStudentData();
+    if (state.selectedExamId && !state.exams.some((item) => item.id === state.selectedExamId)) state.selectedExamId = null;
     if (state.tab === "sharing") await loadShares();
+    writePrivateNavigation({ replace: true });
     renderDashboard();
   });
   document.querySelectorAll("[data-action='new-exam']").forEach((button) => button.addEventListener("click", () => examDialog()));
