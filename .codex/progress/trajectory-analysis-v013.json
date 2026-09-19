@@ -3,8 +3,8 @@
   "workstream": "trajectory-analysis-v013",
   "branch": "feat/trajectory-analysis-v013",
   "baseMain": "7ae75cb3d0c53dca267da3a773a9550cfabe8e55",
-  "targetVersion": "0.12.14",
-  "status": "ready-for-pr",
+  "targetVersion": "0.12.15",
+  "status": "ci-fix-applied",
   "completed": [
     "added public/trajectory-analysis-v010.js as the single trajectory analysis semantic layer",
     "added regression tests for multi-exam, baseline, non-comparable, metric coverage and change drivers",
@@ -13,13 +13,13 @@
     "added compact responsive CSS"
   ],
   "remaining": [
-    "open PR and wait for CI",
-    "fix all CI failures",
+    "wait for replacement PR CI",
+    "fix any remaining CI failures",
     "second-round checks on final PR head",
     "merge to main",
     "verify main SHA/version and production deployment attestation"
   ],
   "resumeRule": "On interruption, read this file first, then inspect live main, this branch, PR checks, Actions and production attestation. Do not reset or overwrite user changes. Continue from the latest branch SHA.",
-  "updatedAt": "2026-09-19T00:30:00Z",
-  "latestBranchHead": "eec40826e918527e2c5ed94531f3278ce98a1318"
+  "updatedAt": "2026-09-19T00:45:00Z",
+  "latestBranchHead": "2bfbb20d39163062e1644c9d3a612421728de705"
 }
