@@ -303,7 +303,8 @@ function renderTrajectoryReading(exams = state.exams) {
       }).join("")
     : "";
   const driverSection = driverText ? `<div class="trajectory-driver"><div class="section-label">哪些科目有明显变化</div>${driverText}</div>` : "";
-  const comparisonLine = analysis.previous ? `和 ${analysis.previous.display} 相比` : "暂时没有可以直接比较的考试";\n  return `<section class="reading-section trajectory-reading"><div class="section-head-simple"><div><div class="section-label">和以前相比</div><h2>先看这次，再看前几次</h2></div></div><div class="trajectory-reading-grid"><div><small>这次考试</small><strong>${esc(analysis.current.display)}</strong><span>${esc(comparisonLine)}</span></div><div><small>最近几次</small><strong>${esc(recentText)}</strong><span>${esc(analysis.stability.detail)}</span></div><div><small>从最早一次到现在</small><strong>${esc(longText)}</strong></div></div>${driverSection}</section>`;
+  const comparisonLine = analysis.previous ? `和 ${analysis.previous.display} 相比` : "暂时没有可以直接比较的考试";
+  return `<section class="reading-section trajectory-reading"><div class="section-head-simple"><div><div class="section-label">和以前相比</div><h2>先看这次，再看前几次</h2></div></div><div class="trajectory-reading-grid"><div><small>这次考试</small><strong>${esc(analysis.current.display)}</strong><span>${esc(comparisonLine)}</span></div><div><small>最近几次</small><strong>${esc(recentText)}</strong><span>${esc(analysis.stability.detail)}</span></div><div><small>从最早一次到现在</small><strong>${esc(longText)}</strong></div></div>${driverSection}</section>`;
 }
 
 function coordinateItems(exam) {
