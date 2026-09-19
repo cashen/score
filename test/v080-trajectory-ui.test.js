@@ -32,5 +32,5 @@ test("subject view keeps score and ranks as separate metrics", () => {
   assert.match(app, /data-subject-metric="schoolRank"/);
   assert.match(app, /data-subject-metric="classRank"/);
   assert.match(app, /data-subject-metric="auto"/);
-  assert.match(app, /把分数、学校排名和班级排名分开看|先看这一次的事实/);
+  assert.match(app, /先看这次成绩，再看以前的记录/);
 });
