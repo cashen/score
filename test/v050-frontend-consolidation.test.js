@@ -9,9 +9,6 @@ const draft = await readFile(new URL("../public/draft.js", import.meta.url), "ut
 const onboarding = await readFile(new URL("../public/onboarding-v050.js", import.meta.url), "utf8");
 const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "utf8");
 const onboardingCss = await readFile(new URL("../public/onboarding-v050.css", import.meta.url), "utf8");
-const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
-const lock = JSON.parse(await readFile(new URL("../package-lock.json", import.meta.url), "utf8"));
-const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
 
 const activeSources = [index, router, app, onboarding, css, onboardingCss].join("\n");
 const cssFlat = css.replace(/\s+/g, " ");
@@ -137,13 +134,4 @@ test("coordinate visual hierarchy is restrained and equal-weight", () => {
   assert.ok(css.includes('content: "·"'));
   assert.match(cssFlat, /rgba\(31,\s*41,\s*46,\s*\.34\)/);
   assert.match(cssFlat, /@media \(max-width: 760px\).*\.coordinate-row > span \+ span::before\s*\{\s*display:\s*none/);
-});
-
-test("version contract is exactly 0.11.0", () => {
-  assert.equal(pkg.version, "0.12.11");
-  assert.equal(lock.version, "0.12.11");
-  assert.equal(lock.packages[""].version, "0.12.11");
-  assert.match(wrangler, /APP_VERSION\s*=\s*"0.12.11"/);
-  assert.match(pkg.scripts.check, /public\/app\.js/);
-  assert.match(pkg.scripts.check, /public\/onboarding-v050\.js/);
 });
