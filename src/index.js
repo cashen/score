@@ -3,10 +3,7 @@ import {
   assertPassword,
   assertUsername,
   normalizeExam,
-  normalizePublicSlug,
-  normalizeShareFields,
   normalizeUsername,
-  publicProjection,
   safeText
 } from "./lib/model.js";
 import {
@@ -19,6 +16,7 @@ import {
   withSecurity
 } from "./lib/http.js";
 import { handleFamilyMemberPatch, handleFamilyMembers, handleFamilyStudentCreate } from "./family.js";
+import { routePrivateSharingV2, routePublicSharingV2 } from "./sharing-v2.js";
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_EXAMS = 80;
@@ -145,23 +143,6 @@ function shareIndexKey(studentId) {
 
 async function getShareIndex(env, studentId) {
   return (await getJson(env, shareIndexKey(studentId))) || { studentId, items: [] };
-}
-
-function validExpiry(value) {
-  if (!value) return null;
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime()) || date.getTime() <= Date.now()) throw new Error("分享有效期无效");
-  return date.toISOString();
-}
-
-function isExpired(grant) {
-  return Boolean(grant.expiresAt && Date.now() >= new Date(grant.expiresAt).getTime());
-}
-
-async function buildProjection(env, student, grant) {
-  if (grant.mode === "snapshot" && grant.snapshot) return grant.snapshot;
-  const exams = await loadExams(env, student.id, { latestOnly: !grant.fields.history });
-  return publicProjection(student, exams, grant.fields);
 }
 
 async function handleAdminProvision(request, env) {
@@ -426,42 +407,6 @@ async function handleShareList(env, member, studentId) {
   return json({ shares: index.items || [] });
 }
 
-async function handleShareCreate(request, env, session, studentId) {
-  requireCsrf(request, session);
-  const student = await requireStudent(env, session.member, studentId, true);
-  const body = await readJson(request);
-  const kind = body.kind === "public" ? "public" : "secret";
-  const mode = body.mode === "snapshot" ? "snapshot" : "live";
-  const fields = normalizeShareFields(body.fields);
-  const expiresAt = validExpiry(body.expiresAt);
-  const createdAt = now();
-  const base = { schemaVersion: 1, studentId, kind, mode, fields, expiresAt, createdAt };
-  let lookupKey;
-  let locator;
-  let rawToken = null;
-
-  if (kind === "secret") {
-    rawToken = randomToken(32);
-    locator = await sha256(rawToken);
-    lookupKey = `share:secret:${locator}`;
-  } else {
-    locator = normalizePublicSlug(body.slug);
-    lookupKey = `share:public:${locator}`;
-    if (await env.SCORE_KV.get(lookupKey)) return errorJson("这个公开地址已被占用", 409, "slug_exists");
-  }
-
-  const grant = { ...base, locator };
-  if (mode === "snapshot") {
-    const exams = await loadExams(env, studentId, { latestOnly: !fields.history });
-    grant.snapshot = publicProjection(student, exams, fields);
-  }
-  await putJson(env, lookupKey, grant);
-  const index = await getShareIndex(env, studentId);
-  const item = { kind, mode, fields, expiresAt, createdAt, locator };
-  await putJson(env, shareIndexKey(studentId), { studentId, items: [item, ...(index.items || []).filter((x) => !(x.kind === kind && x.locator === locator))] });
-  return json({ share: item, token: rawToken }, 201);
-}
-
 async function handleShareRevoke(request, env, session, studentId) {
   requireCsrf(request, session);
   await requireStudent(env, session.member, studentId, true);
@@ -473,16 +418,6 @@ async function handleShareRevoke(request, env, session, studentId) {
   const index = await getShareIndex(env, studentId);
   await putJson(env, shareIndexKey(studentId), { studentId, items: (index.items || []).filter((x) => !(x.kind === kind && x.locator === locator)) });
   return json({ ok: true });
-}
-
-async function handleExternalShare(env, kind, locator) {
-  const resolved = kind === "secret" ? await sha256(locator) : locator;
-  const grant = await getJson(env, `share:${kind}:${resolved}`);
-  if (!grant || isExpired(grant)) return errorJson("分享链接不存在或已失效", 404, "share_not_found");
-  const student = await getJson(env, `student:${grant.studentId}`);
-  if (!student || student.deletedAt) return errorJson("分享链接不存在或已失效", 404, "share_not_found");
-  const data = await buildProjection(env, student, grant);
-  return json({ share: { kind, mode: grant.mode, expiresAt: grant.expiresAt }, data });
 }
 
 async function routeApi(request, env) {
@@ -508,6 +443,9 @@ async function routeApi(request, env) {
   if (request.method === "POST" && path === "/api/me/password") return handleChangePassword(request, env, session);
   if (request.method === "POST" && path === "/api/me/logout-all") return handleLogoutAll(request, env, session);
   if (request.method === "GET" && path === "/api/family/export") return handleFamilyExport(env, session.member);
+
+  const privateSharing = await routePrivateSharingV2(request, env, session);
+  if (privateSharing) return privateSharing;
 
   if ((request.method === "GET" || request.method === "POST") && path === "/api/family/members") {
     const response = await handleFamilyMembers(request, env, session);
@@ -539,7 +477,6 @@ async function routeApi(request, env) {
 
   const sharesMatch = path.match(/^\/api\/students\/([^/]+)\/shares$/);
   if (sharesMatch && request.method === "GET") return handleShareList(env, session.member, sharesMatch[1]);
-  if (sharesMatch && request.method === "POST") return handleShareCreate(request, env, session, sharesMatch[1]);
 
   const revokeMatch = path.match(/^\/api\/students\/([^/]+)\/shares\/revoke$/);
   if (request.method === "POST" && revokeMatch) return handleShareRevoke(request, env, session, revokeMatch[1]);

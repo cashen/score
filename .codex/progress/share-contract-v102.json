@@ -1,0 +1,21 @@
+{
+  "task": "share-contract-v102",
+  "repository": "cashen/score",
+  "branch": "arch/share-contract-v102",
+  "baseSha": "3ae9cd3fd56e7a5c9feda1fade86753b918eda75",
+  "version": "0.10.2",
+  "completed": [
+    "runtime-share-v2-routing",
+    "selected-exam-contract",
+    "preview-contract",
+    "worker-integration-coverage",
+    "version-sync"
+  ],
+  "pending": ["CI", "merge", "production-attestation"],
+  "rollback": "Revert the v0.10.2 PR. No KV migration.",
+  "recoveryRule": [
+    "Read live main, PR head, CI and production before continuation.",
+    "Only submitted code with passing tests counts as complete.",
+    "Merge only the exact final PR head."
+  ]
+}

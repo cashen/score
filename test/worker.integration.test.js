@@ -144,7 +144,7 @@ test("three-character public share carries multiple exams and rank-only data", a
   let response = await call(e, `/api/students/${provision.studentId}/shares`, {
     method: "POST",
     headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
-    body: JSON.stringify({ kind: "public", slug: "ABC", mode: "live", fields: { history: true, overallRank: true, overallScore: true, subjectScores: true } })
+    body: JSON.stringify({ kind: "public", slug: "ABC", mode: "live", scope: "trajectory", fields: { overallRank: true, overallScore: true, subjectScores: true } })
   });
   assert.equal(response.status, 201);
   const createdShare = await response.json();
@@ -173,4 +173,147 @@ test("mutations reject missing CSRF", async () => {
   const me = await response.json();
   response = await call(e, `/api/students/${me.students[0].id}/profile`, { method: "PATCH", headers: { cookie, origin: "https://score.example" }, body: JSON.stringify({ displayName: "不应成功" }) });
   assert.equal(response.status, 403);
+});
+
+test("v0.10.2 share contract keeps selected exam, preview and trajectory semantics aligned", async () => {
+  const e = env();
+  const { provision, cookie, csrf } = await provisionAndLogin(e, "family004");
+
+  async function createExam(name, date, score) {
+    const response = await call(e, `/api/students/${provision.studentId}/exams`, {
+      method: "POST",
+      headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+      body: JSON.stringify({
+        name,
+        date,
+        type: "monthly",
+        overall: { officialScore: score, rankings: [{ scope: "school", label: "学校", rank: 100 }] },
+        subjects: { math: { fullScore: 150, rawScore: score - 450, finalScore: score - 450, scoreMode: "raw" } }
+      })
+    });
+    assert.equal(response.status, 201);
+    return (await response.json()).exam;
+  }
+
+  const examA = await createExam("9月月考", "2026-09-01", 570);
+  const examB = await createExam("9月第二次月考", "2026-09-10", 580);
+
+  let response = await call(e, `/api/students/${provision.studentId}/shares`, {
+    method: "POST",
+    headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+    body: JSON.stringify({
+      kind: "secret",
+      mode: "live",
+      scope: "single",
+      examId: examA.id,
+      fields: { overallScore: true, overallRank: true }
+    })
+  });
+  assert.equal(response.status, 201);
+  const single = await response.json();
+  assert.equal(single.share.scope, "single");
+  assert.equal(single.share.examId, examA.id);
+  assert.ok(single.token);
+
+  response = await call(e, `/api/share/secret/${encodeURIComponent(single.token)}`);
+  assert.equal(response.status, 200);
+  let external = await response.json();
+  assert.equal(external.data.exams.length, 1);
+  assert.equal(external.data.exams[0].id, examA.id);
+
+  response = await call(e, `/api/students/${provision.studentId}/shares/secret/${encodeURIComponent(single.share.locator)}/preview`, {
+    headers: { cookie }
+  });
+  assert.equal(response.status, 200);
+  const preview = await response.json();
+  assert.equal(preview.share.examId, examA.id);
+  assert.equal(preview.data.exams.length, 1);
+  assert.equal(preview.data.exams[0].id, examA.id);
+
+  response = await call(e, `/api/students/${provision.studentId}/shares`, {
+    method: "POST",
+    headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+    body: JSON.stringify({
+      kind: "public",
+      slug: "trajectory-live-v102",
+      mode: "live",
+      scope: "trajectory",
+      fields: { overallScore: true, overallRank: true, subjectScores: true }
+    })
+  });
+  assert.equal(response.status, 201);
+  const live = await response.json();
+  assert.equal(live.share.scope, "trajectory");
+  assert.equal(live.share.mode, "live");
+
+  const examC = await createExam("9月第三次月考", "2026-09-20", 590);
+  response = await call(e, "/api/share/public/trajectory-live-v102");
+  assert.equal(response.status, 200);
+  external = await response.json();
+  assert.equal(external.data.exams.length, 3);
+  assert.equal(external.data.exams[0].id, examC.id);
+
+  response = await call(e, `/api/students/${provision.studentId}/shares`, {
+    method: "POST",
+    headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+    body: JSON.stringify({
+      kind: "public",
+      slug: "trajectory-snapshot-v102",
+      mode: "snapshot",
+      scope: "trajectory",
+      fields: { overallScore: true, overallRank: true, subjectScores: true }
+    })
+  });
+  assert.equal(response.status, 201);
+
+  const examD = await createExam("9月第四次月考", "2026-09-25", 600);
+  response = await call(e, "/api/share/public/trajectory-snapshot-v102");
+  assert.equal(response.status, 200);
+  external = await response.json();
+  assert.equal(external.data.exams.length, 3);
+  assert.equal(external.data.exams[0].id, examC.id);
+  assert.notEqual(external.data.exams[0].id, examD.id);
+
+  response = await call(e, `/api/students/${provision.studentId}/shares/revoke`, {
+    method: "POST",
+    headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+    body: JSON.stringify({ kind: "public", locator: live.share.locator })
+  });
+  assert.equal(response.status, 200);
+
+  response = await call(e, "/api/share/public/trajectory-live-v102");
+  assert.equal(response.status, 404);
+});
+
+test("v0.10.2 trajectory creation with one exam requires explicit future-exam acknowledgement", async () => {
+  const e = env();
+  const { provision, cookie, csrf } = await provisionAndLogin(e, "family005");
+
+  const response = await call(e, `/api/students/${provision.studentId}/exams`, {
+    method: "POST",
+    headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+    body: JSON.stringify({
+      name: "单次月考",
+      date: "2026-09-11",
+      type: "monthly",
+      overall: { officialScore: 560 },
+      subjects: { math: { fullScore: 150, rawScore: 110, finalScore: 110, scoreMode: "raw" } }
+    })
+  });
+  assert.equal(response.status, 201);
+
+  const rejected = await call(e, `/api/students/${provision.studentId}/shares`, {
+    method: "POST",
+    headers: { cookie, "x-score-csrf": csrf, origin: "https://score.example" },
+    body: JSON.stringify({
+      kind: "public",
+      slug: "trajectory-ack-v102",
+      mode: "live",
+      scope: "trajectory",
+      fields: { overallScore: true }
+    })
+  });
+  assert.equal(rejected.status, 400);
+  const payload = await rejected.json();
+  assert.equal(payload.error, "future_exams_acknowledgement_required");
 });
