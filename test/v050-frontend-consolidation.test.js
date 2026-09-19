@@ -87,7 +87,7 @@ test("share composer uses human language and explicit privacy scope", () => {
     "将分享",
     "不会分享",
     "分享链接",
-    "持续更新",
+    "以后新增的考试也会显示",
     "固定当前内容",
     "自动失效（可选）",
     "公开链接（高级）",
