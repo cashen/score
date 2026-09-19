@@ -1,25 +1,23 @@
 {
-  "version": "0.12.24",
-  "generation": "v01224-information-hierarchy",
+  "version": "0.12.25",
+  "generation": "v01225-information-hierarchy-refinement",
   "project": "cashen/score",
   "branch": "refactor/v01224-information-hierarchy",
-  "baseSha": "5f5f94b980fe34b973559535ead5c08bb7d78964",
-  "phase": "whole-site-information-hierarchy-and-responsive-reading",
-  "scope": [
-    "narrow the desktop comparison reading block",
-    "remove duplicate trajectory analysis from the overview",
-    "show subject-change content only when meaningful",
-    "keep current score and history visually primary",
-    "simplify family share comparison surface",
-    "preserve PC, Pad, Android and touch usability"
+  "baseSha": "e73f3ad099c5a52d145726bd0ecd4f947b547bed",
+  "phase": "post-v01224-information-hierarchy-refinement",
+  "status": "ready_for_ci",
+  "completed": [
+    "verified main already contains merged v0.12.24 baseline from PR #46",
+    "removed redundant private trajectory reader helper",
+    "removed unused standalone ui-v100.css after folding the rules into the runtime bundle",
+    "added compact share comparison browser regression",
+    "bumped package, lockfile and Worker APP_VERSION to 0.12.25"
   ],
-  "validationPlan": [
-    "npm verify",
-    "Chromium 360/390/768/1280",
-    "WebKit 390",
-    "share whitelist and navigation regression",
-    "version/main/deploy attestation"
+  "next": [
+    "run complete CI and Chromium/WebKit matrix",
+    "review PR diff against current main",
+    "merge only after green checks",
+    "verify main SHA, deploy workflow and Worker production attestation"
   ],
-  "status": "ready_for_pr_ci",
-  "handoffRule": "On reconnection, verify main SHA, open PR state, Actions, version and deployment before changing anything. Never assume prior CI or production state."
+  "handoffRule": "On reconnection, verify current main SHA, branch SHA, open PR state, Actions, version and deployment before changing anything. Never assume prior state."
 }
