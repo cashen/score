@@ -23,8 +23,8 @@ import { enforceRateLimit, rateLimitHeaders } from "./lib/rate-limit.js";
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_EXAMS = 80;
-const PASSWORD_MIN_ITERATIONS = 600000;
-const PASSWORD_MAX_ITERATIONS = 800000;
+const PASSWORD_MIN_ITERATIONS = 100000;
+const PASSWORD_MAX_ITERATIONS = 100000;
 const DUMMY_PASSWORD_RECORD = Object.freeze({
   algorithm: "PBKDF2-SHA256",
   version: 2,
