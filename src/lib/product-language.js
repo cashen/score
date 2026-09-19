@@ -14,11 +14,11 @@ const COMPARISON_REASONS = Object.freeze({
   no_common_metric: '暂时没有可以直接比较的考试。两场考试没有可以直接对照的数据。'
 });
 
-export function formatScoreState({ officialScore = null, subjectCount = 0 } = {}) {
+export function formatScoreState({ officialScore = null, subjectCount = 0, subjectTotal = null } = {}) {
   if (officialScore !== null && officialScore !== undefined) return { key: 'official_total', label: SCORE_LABELS.official_total, value: officialScore };
-  if (subjectCount === 6) return { key: 'six_subject_sum', label: SCORE_LABELS.six_subject_sum };
-  if (subjectCount > 0) return { key: 'partial_subtotal', label: SCORE_LABELS.partial_subtotal(subjectCount) };
-  return { key: 'no_score', label: SCORE_LABELS.no_score };
+  if (subjectCount === 6) return { key: 'six_subject_sum', label: SCORE_LABELS.six_subject_sum, value: subjectTotal };
+  if (subjectCount > 0) return { key: 'partial_subtotal', label: SCORE_LABELS.partial_subtotal(subjectCount), value: subjectTotal };
+  return { key: 'no_score', label: SCORE_LABELS.no_score, value: null };
 }
 
 export function formatRanking({ scope, rank } = {}) {
@@ -29,6 +29,14 @@ export function formatRanking({ scope, rank } = {}) {
 export function formatMissingSubjects({ subjects = [], recorded = [] } = {}) {
   const missing = subjects.filter((subject) => !recorded.includes(subject));
   return missing.length ? `还缺：${missing.join('、')}` : '';
+}
+
+export function formatExamScore(summary = {}) {
+  if (summary.kind === 'official') return `${summary.value} 分`;
+  if (summary.kind === 'calculated_complete') return `六科合计 ${summary.value} 分`;
+  if (summary.kind === 'calculated_partial') return `${summary.recordedSubjects}/6 科小计 ${summary.subtotal} 分`;
+  if (summary.kind === 'absent') return '缺考';
+  return '';
 }
 
 export function formatComparisonState({ hasHistory = false, comparable = false, reason = 'insufficient_common_data', previousDate = '', historyCount = 1 } = {}) {
