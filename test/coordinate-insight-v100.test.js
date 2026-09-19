@@ -113,7 +113,7 @@ test("same-date ordering follows creation time, not later edits", () => {
 
   const result = analyzeCoordinate([earlierCreated, laterCreated]);
   assert.equal(result.latest.id, "same-new");
-  assert.equal(result.previous, null);
+  assert.equal(result.previous.id, "same-old");
   assert.equal(result.position.school.rank, 200);
 });
 
