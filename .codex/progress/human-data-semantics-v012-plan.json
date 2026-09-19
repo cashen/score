@@ -1,0 +1,27 @@
+{
+  "task": "human-data-semantics-v012-plan",
+  "repository": "cashen/score",
+  "baseSha": "d1d27877e187e2c9a4583c6125625fe13975e49b",
+  "baseVersion": "0.11.0",
+  "targetVersion": "0.12.0",
+  "status": "plan-revised",
+  "scope": [
+    "edit-fact-entry-and-readback",
+    "latest-exam-semantics",
+    "subject-missing-semantics",
+    "ranking-parity",
+    "subject-comparison",
+    "timeline-overall-consistency",
+    "url-state-continuity",
+    "public-private-fact-parity",
+    "test-matrix"
+  ],
+  "nonGoals": [
+    "large-ui-redesign",
+    "framework-migration",
+    "d1-migration",
+    "schema-2-migration"
+  ],
+  "nextGate": "Implementation must start from a fresh branch on the then-current main SHA and bump version to 0.12.0.",
+  "notes": "Revision 2: edit page is explicitly the source-of-truth boundary; school/class rank, participants, subject facts, and edit-return continuity are first-class acceptance criteria."
+}
