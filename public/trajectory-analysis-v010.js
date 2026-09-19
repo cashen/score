@@ -37,7 +37,7 @@ function candidateMetric(exam, key, metric) {
   if (metric === "classRank") {
     const item = rankItem(exam, key, "class");
     return item?.rank != null
-      ? { metric, kind: "class-rank", value: item.rank, directionValue: -item.rank, display: `班第 ${item.rank} 名`, item }
+      ? { metric, kind: "class-rank", value: item.rank, directionValue: -item.rank, display: `班级第 ${item.rank} 名`, item }
       : null;
   }
   if (metric === "score") {
