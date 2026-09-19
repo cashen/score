@@ -1306,6 +1306,17 @@ function publicBaselineV081(view, exams, share = {}) {
   return `<aside class="public-baseline-note" aria-label="记录状态"><span class="public-baseline-mark" aria-hidden="true"></span><div><strong>当前基线</strong><p>${copy[view] || copy.total}</p><p>${future}</p></div></aside>`;
 }
 
+function publicTrajectoryReading(exams, key = null, share = {}) {
+  if (share.fields?.history !== true || exams.length < 2) return "";
+  const analysis = trajectoryAnalysis(exams, key);
+  if (!analysis.current || !analysis.previous) return "";
+  const metricLabel = trajectoryMetricLabel(analysis.metric);
+  const comparisonBoundary = share.fields?.comparisonContext === true
+    ? "按已分享的考试口径比较"
+    : "考试范围没有分享，只按考试类别作参考";
+  return `<aside class="public-analysis-note"><div class="section-label">${key ? "这门课怎么看" : "多次考试怎么看"}</div><div class="public-analysis-grid"><div><small>现在</small><strong>${esc(analysis.current.display)}</strong><span>${esc(trajectoryDirectionLabel(analysis.direction))} · ${esc(metricLabel)}</span></div><div><small>最近几次</small><strong>${esc(analysis.stability.label)}</strong><span>${esc(analysis.stability.detail)}</span></div><div><small>长期</small><strong>${esc(analysis.longDirection === "forward" ? "相对第一次向前" : analysis.longDirection === "backward" ? "相对第一次向后" : "与第一次接近")}</strong><span>${esc(comparisonBoundary)}</span></div></div>${analysis.skipped.length ? `<small>有 ${analysis.skipped.length} 场记录未纳入，原因是比较口径或数据不足。</small>` : ""}</aside>`;
+}
+
 function publicSubjectComparisonV080(exams, key, share = {}) {
   const ordered = sortExamsChronologically(exams);
   const picker = `<div class="subject-picker public-subject-picker"><a class="subject-chip ${key == null ? "active" : ""}" href="?view=subject" aria-current="${key == null ? "page" : "false"}">全部六科</a>${SUBJECTS.map(([subject, label]) => `<a class="subject-chip ${subject === key ? "active" : ""}" href="?view=subject&subject=${encodeURIComponent(subject)}" aria-current="${subject === key ? "page" : "false"}">${label}</a>`).join("")}</div>`;
@@ -1328,7 +1339,7 @@ function publicSubjectComparisonV080(exams, key, share = {}) {
     return `<div class="subject-compare-row"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div><b>${esc(values)}</b></div>`;
   }).join("");
   const changeBlock = current ? `<div class="subject-focus-fact"><strong>${esc(currentValue)}</strong></div><div class="comparison-state" role="status"><strong>${esc(change ? directionText(change) : compareText)}</strong><span>${esc(change ? change.detail + " · " + compareText : compareText)}</span></div>` : "";
-  return `<section class="public-reading-section public-subject-comparison"><div class="section-label">单科</div><h2>${label}的历次记录</h2>${publicBaselineV081("subject", ordered, share)}${picker}${changeBlock}${rows ? `<div class="subject-compare-list">${rows}</div>` : `<p class="muted">还没有可分享的${label}记录。</p>`}</section>`;
+  return `<section class="public-reading-section public-subject-comparison"><div class="section-label">单科</div><h2>${label}的历次记录</h2>${publicBaselineV081("subject", ordered, share)}${publicTrajectoryReading(ordered, key, share)}${picker}${changeBlock}${rows ? `<div class="subject-compare-list">${rows}</div>` : `<p class="muted">还没有可分享的${label}记录。</p>`}</section>`;
 }
 
 function publicExamDetailV080(exam, share = {}) {
@@ -1379,7 +1390,7 @@ function renderPublicV080(result) {
   const coordinate = latest ? [result.share.fields?.overallRank !== true ? null : school?.rank != null ? `校第 ${school.rank} 名` : null, result.share.fields?.overallRank !== true ? null : clazz?.rank != null ? `班第 ${clazz.rank} 名` : null, result.share.fields?.overallScore !== true ? null : totalText].filter(Boolean) : [];
   const coordinateText = coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>位置未分享</span>`;
   const meta = [data.student?.graduationYear ? `${data.student.graduationYear}届` : null, data.student?.schoolLabel, data.student?.className].filter(Boolean).map(esc).join(" · ");
-  const total = `<section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "只分享当前内容" : result.share.scope === "trajectory" ? "成长轨迹 · 持续更新" : "持续更新"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinateText}</div>${publicBaselineV081("total", exams, result.share)}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share)}</div>` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
+  const total = `<section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "只分享当前内容" : result.share.scope === "trajectory" ? "成长轨迹 · 持续更新" : "持续更新"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinateText}</div>${publicBaselineV081("total", exams, result.share)}${publicTrajectoryReading(exams, null, result.share)}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share)}</div>` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
   const body = view === "subject" ? publicSubjectComparisonV080(exams, subject, result.share) : view === "timeline" ? publicTimelineV080(exams, selectedExamId, result.share) : total;
   app.innerHTML = `<main class="public-shell ink-share" data-share-view="${view}" data-exam-count="${exams.length}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span><i class="ink-share-flourish" aria-hidden="true"></i></div><div class="privacy-note">此页面由家庭主动分享 · 请勿未经允许转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">分享地址可由家庭随时撤销</footer>`;
 }
