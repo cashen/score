@@ -140,10 +140,10 @@ test("coordinate visual hierarchy is restrained and equal-weight", () => {
 });
 
 test("version contract is exactly 0.11.0", () => {
-  assert.equal(pkg.version, "0.12.10");
-  assert.equal(lock.version, "0.12.10");
-  assert.equal(lock.packages[""].version, "0.12.10");
-  assert.match(wrangler, /APP_VERSION\s*=\s*"0.12.10"/);
+  assert.equal(pkg.version, "0.12.11");
+  assert.equal(lock.version, "0.12.11");
+  assert.equal(lock.packages[""].version, "0.12.11");
+  assert.match(wrangler, /APP_VERSION\s*=\s*"0.12.11"/);
   assert.match(pkg.scripts.check, /public\/app\.js/);
   assert.match(pkg.scripts.check, /public\/onboarding-v050\.js/);
 });
