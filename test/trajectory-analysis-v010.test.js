@@ -24,8 +24,8 @@ test("multi-exam trajectory keeps baseline, recent window and stability separate
   const result = trajectoryAnalysis(exams, "math");
   assert.equal(result.metric, "schoolRank");
   assert.equal(result.comparableCount, 5);
-  assert.equal(result.baseline.display, "校前 18%");
-  assert.equal(result.current.display, "校前 13%");
+  assert.equal(result.baseline.display, "校内前 18%");
+  assert.equal(result.current.display, "校内前 13%");
   assert.equal(result.longDirection, "forward");
   assert.equal(result.stability.label, "比较稳定");
 });
