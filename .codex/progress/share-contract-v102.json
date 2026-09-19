@@ -9,9 +9,14 @@
     "selected-exam-contract",
     "preview-contract",
     "worker-integration-coverage",
-    "version-sync"
+    "version-sync",
+    "release-file-sync"
   ],
-  "pending": ["CI", "merge", "production-attestation"],
+  "pending": [
+    "CI",
+    "merge",
+    "production-attestation"
+  ],
   "rollback": "Revert the v0.10.2 PR. No KV migration.",
   "recoveryRule": [
     "Read live main, PR head, CI and production before continuation.",
