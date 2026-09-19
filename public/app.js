@@ -2,7 +2,7 @@ import "./draft.js";
 import { brandMark } from "./brand-logo-b.js";
 import { comparisonCategory as coreComparisonCategory, comparisonReason as coreComparisonReason, comparisonEligibility as coreComparisonEligibility, comparableSet as coreComparableSet, comparableRanking as coreComparableRanking, findComparableExam as coreFindComparableExam, findComparableExamForSubject as coreFindComparableExamForSubject, metricBetween as coreMetricBetween, latestExam as coreLatestExam, sortExamsChronologically, subjectRecordState, percentile as corePercentile } from "./record-semantics-v120.js";
 import { examScoreSummary, examCompleteness, scoreSummaryText, subjectScore } from "./score-core-v090.js";
-import { trajectoryAnalysis, changeDrivers } from "./trajectory-analysis-v010.js";
+import { trajectoryAnalysis, changeDrivers, subjectObservationExams } from "./trajectory-analysis-v010.js";
 import { shareUrlFor, shareFileName } from "./share-delivery-v092.js";
 import { deliverShareImage } from "./share-image-v092.js";
 
@@ -1324,22 +1324,29 @@ function publicSubjectComparisonV080(exams, key, share = {}) {
     const latest = ordered[0] || null;
     return `<section class="public-reading-section"><div class="section-label">单科</div><h2>六科概览</h2>${publicBaselineV081("subject", ordered, share)}${picker}${latest ? `<div class="subject-rows public-subjects">${publicSubjectRows(latest, share)}</div>` : `<p class="muted">还没有可分享的考试数据。</p>`}</section>`;
   }
+
   const label = SUBJECTS.find(([subject]) => subject === key)?.[1] || "单科";
-  const current = ordered[0] || null;
-  const comparison = coreFindComparableExamForSubject(ordered, current, key, "auto");
+  const subjectExams = subjectObservationExams(ordered, key);
+  const current = subjectExams[0] || null;
+  const comparison = coreFindComparableExamForSubject(subjectExams, current, key, "auto");
   const change = comparison.status === "comparable" ? comparison.metric : null;
-  const currentValue = current && subjectRecordState(current, key).hasAny ? subjectMetricValue(current, key, "auto") : "";
-  const compareText = change ? `比较对象：${comparison.reference.name} · ${fmtDate(comparison.reference.date)} · ${comparison.reason}` : comparison.reason;
-  const rows = ordered.map((exam) => {
+  const currentValue = current ? subjectMetricValue(current, key, "auto") : "";
+  const compareText = change
+    ? `比较对象：${comparison.reference.name} · ${fmtDate(comparison.reference.date)} · ${comparison.reason}`
+    : comparison.reason || `还没有可比较的${label}成绩`;
+
+  const rows = subjectExams.map((exam, index) => {
     const subject = exam.subjects?.[key] || {};
     const score = share.fields?.subjectScores !== true ? null : scoreOf(subject);
     const school = share.fields?.subjectRanks !== true ? null : rankByScope(subject.rankings, "school");
     const clazz = share.fields?.subjectRanks !== true ? null : rankByScope(subject.rankings, "class");
     const values = [score == null ? null : `${fmtNumber(score)} 分`, school?.rank != null ? `校第 ${school.rank}` : null, clazz?.rank != null ? `班第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
-    return `<div class="subject-compare-row"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div><b>${esc(values)}</b></div>`;
+    return `<div class="subject-compare-row ${index === 0 ? "is-latest" : ""}"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最新记录" : ""}</small></div><b>${esc(values || "未分享")}</b></div>`;
   }).join("");
-  const changeBlock = current ? `<div class="subject-focus-fact"><strong>${esc(currentValue)}</strong></div><div class="comparison-state" role="status"><strong>${esc(change ? directionText(change) : compareText)}</strong><span>${esc(change ? change.detail + " · " + compareText : compareText)}</span></div>` : "";
-  return `<section class="public-reading-section public-subject-comparison"><div class="section-label">单科</div><h2>${label}的历次记录</h2>${publicBaselineV081("subject", ordered, share)}${publicTrajectoryReading(ordered, key, share)}${picker}${changeBlock}${rows ? `<div class="subject-compare-list">${rows}</div>` : `<p class="muted">还没有可分享的${label}记录。</p>`}</section>`;
+
+  const changeBlock = current ? `<div class="subject-focus-fact"><strong>${esc(currentValue)}</strong></div><div class="comparison-state" role="status"><strong>${esc(change ? directionText(change) : compareText)}</strong><span>${esc(change ? change.detail + " · " + compareText : compareText)}</span></div>` : `<div class="empty compact">还没有可分享的${esc(label)}成绩。</div>`;
+
+  return `<section class="public-reading-section public-subject-comparison"><div class="section-label">单科</div><h2>${label}的历次记录</h2>${publicBaselineV081("subject", subjectExams, share)}${publicTrajectoryReading(subjectExams, key, share)}${picker}${changeBlock}${rows ? `<div class="subject-compare-list">${rows}</div>` : `<p class="muted">还没有可分享的${label}记录。</p>`}<p class="muted subject-history-scope">这里只列出实际记录过${label}成绩的考试；没有该科成绩的考试不会进入这条单科轨迹。</p></section>`;
 }
 
 function publicExamDetailV080(exam, share = {}) {
