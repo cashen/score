@@ -9,7 +9,7 @@ const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "u
 test("deep trajectory is secondary to the current coordinate", () => {
   assert.match(app, /<details class="deep-trajectory"/);
   assert.match(app, /查看历次考试/);
-  assert.match(app, /历次考试与六科历史/);
+  assert.match(app, /历次考试、各科历史/);
   assert.match(css, /\.deep-trajectory/);
 });
 
