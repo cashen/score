@@ -1,0 +1,32 @@
+{
+  "version": "0.12.27",
+  "workstream": "security-hardening",
+  "baseSha": "21d4a3ef99fdceaefc823c70198eaaaa052db845",
+  "branch": "security/v01227-hardening",
+  "pr": 51,
+  "status": "ci_pending",
+  "completed": [
+    "password KDF v2 with 600000 production baseline and legacy compatibility",
+    "lazy password rehash after successful legacy login",
+    "dummy PBKDF2 verification for unknown usernames",
+    "token domain separation with legacy locator compatibility",
+    "soft rate limiting for login, provisioning, invitations and recovery",
+    "security source/history scan",
+    "immutable GitHub Action pins",
+    "fixed Wrangler 4.135.0",
+    "security regression coverage",
+    "legacy recovery-link compatibility fix"
+  ],
+  "pending": [
+    "latest PR CI run must pass",
+    "review final diff and exact tested head",
+    "squash merge PR #51 only after green checks",
+    "verify main CI",
+    "verify Cloudflare production appVersion 0.12.27 and exact buildSha"
+  ],
+  "deferred": [
+    "Share E2EE v3 with URL Fragment client key",
+    "Durable Object strict one-time token consumption"
+  ],
+  "handoffRule": "On reconnect, verify live main SHA, PR #51 head/state, latest Actions run, version and production before changing anything. Do not create another PR or rerun healthy jobs unnecessarily."
+}
