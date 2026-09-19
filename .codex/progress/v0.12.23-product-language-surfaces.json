@@ -1,26 +1,25 @@
 {
   "version": "0.12.23",
-  "generation": "v01223",
+  "generation": "v01223-r1",
   "project": "cashen/score",
-  "branch": "refactor/product-language-surfaces-v023",
-  "baseSha": "fb7ee9845b4178d3f36d066de458557cca1f7a56",
-  "status": "in_progress",
+  "branch": "refactor/product-language-surfaces-v023-r1",
+  "baseSha": "8ef62f69c083c767334e0bd76484520071f697a0",
   "phase": "2-whole-site-user-facing-surface-migration",
+  "status": "ready_for_clean_ci",
   "completed": [
-    "reconnected from v0.12.22 merged main",
-    "created v0.12.23 branch from verified main",
-    "extended shared score formatting boundary",
-    "migrated private overview/subject/exam/timeline language to the shared contract",
-    "removed banned product-language terms from public/app.js",
-    "bumped package, lockfile and Worker APP_VERSION to 0.12.23",
-    "recorded CHANGELOG v0.12.23"
+    "recreated the previously validated v0.12.23 code on top of the actual current main SHA",
+    "restored shared browser/runtime product-language module",
+    "migrated overview, subject, exam detail and timeline wording",
+    "updated legacy UI regression contracts",
+    "updated package, lockfile and Worker APP_VERSION to 0.12.23",
+    "restored v0.12.23 changelog"
   ],
+  "knownBlocker": "Previous PR #44 could not merge because main advanced independently; this r1 branch is cleanly based on the current main SHA.",
   "next": [
-    "run CI verification and fix every regression until green",
-    "audit remaining share/export language and derived-field leakage",
-    "add or update browser assertions for canonical wording",
-    "update this progress file after each bounded phase",
-    "only merge after all required CI/browser checks are green"
+    "complete CI verify and Chromium/WebKit browser checks on the clean r1 head",
+    "review final PR diff",
+    "merge only after final green",
+    "verify main SHA and deployment chain after merge"
   ],
-  "handoffRule": "On reconnection, read this file first. Then verify main SHA, branch SHA, PR state, workflow runs, current version and current file contents before changing anything. Never assume local or deployment state."
+  "handoffRule": "On reconnection, read this file first, then verify current main SHA, branch SHA, PR state, workflow state and version. Never assume prior run state."
 }

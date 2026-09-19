@@ -63,7 +63,7 @@ test("brand and primary navigation are direct source content", () => {
 
 test("home follows identity, coordinate, change, subjects, history", () => {
   const overview = app.slice(app.indexOf("function renderOverview"), app.indexOf("function renderExamList"));
-  expectAll(overview, ["coordinate-hero", "和上一场可以直接比较的考试相比", "哪些科目的变化比较明显", "六科", "renderDeepTrajectory()"]);
+  expectAll(overview, ["coordinate-hero", "和以前相比", "哪些科目有明显变化", "六科", "renderDeepTrajectory()"]);
   assert.ok(app.includes("查看全部记录"));
   assert.ok(!overview.includes("变化来自哪里"));
   assert.ok(!overview.includes("现在在哪"));
