@@ -36,7 +36,33 @@ export async function hmacHex(secret, value) {
   return [...new Uint8Array(signature)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export async function hashPassword(password, pepper, iterations = 20000, salt = randomToken(18)) {
+export async function deriveDomainSecret(masterSecret, domain) {
+  if (!masterSecret) throw new Error("域密钥尚未配置");
+  return hmacHex(masterSecret, `score-domain-v1:${domain}`);
+}
+
+export async function tokenHash(raw, env, domain = "token") {
+  const secret = env.TOKEN_PEPPER || await deriveDomainSecret(env.AUTH_PEPPER, domain);
+  return hmacHex(secret, String(raw || ""));
+}
+
+export function timingSafeEqualText(a, b) {
+  const left = String(a ?? "");
+  const right = String(b ?? "");
+  if (left.length !== right.length) return false;
+  let diff = 0;
+  for (let i = 0; i < left.length; i += 1) diff |= left.charCodeAt(i) ^ right.charCodeAt(i);
+  return diff === 0;
+}
+
+export function timingSafeEqualBytes(a, b) {
+  if (!(a instanceof Uint8Array) || !(b instanceof Uint8Array) || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) diff |= a[i] ^ b[i];
+  return diff === 0;
+}
+
+export async function hashPassword(password, pepper, iterations = 600000, salt = randomToken(18)) {
   const material = await crypto.subtle.importKey(
     "raw",
     encoder.encode(`${password}\u0000${pepper}`),
@@ -51,7 +77,7 @@ export async function hashPassword(password, pepper, iterations = 20000, salt = 
   );
   return {
     algorithm: "PBKDF2-SHA256",
-    version: 1,
+    version: 2,
     iterations,
     salt,
     hash: toBase64Url(new Uint8Array(bits))
@@ -59,14 +85,11 @@ export async function hashPassword(password, pepper, iterations = 20000, salt = 
 }
 
 export async function verifyPassword(password, pepper, record) {
-  if (!record || record.algorithm !== "PBKDF2-SHA256" || record.version !== 1) return false;
+  if (!record || record.algorithm !== "PBKDF2-SHA256" || ![1, 2].includes(record.version)) return false;
   const candidate = await hashPassword(password, pepper, record.iterations, record.salt);
   const a = fromBase64Url(candidate.hash);
   const b = fromBase64Url(record.hash);
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i += 1) diff |= a[i] ^ b[i];
-  return diff === 0;
+  return timingSafeEqualBytes(a, b);
 }
 
 export async function signSession(payload, secret) {
@@ -79,10 +102,7 @@ export async function verifySessionToken(token, secret) {
   if (!token || !token.includes(".")) return null;
   const [body, sig] = token.split(".");
   const expected = await hmacHex(secret, body);
-  if (sig.length !== expected.length) return null;
-  let diff = 0;
-  for (let i = 0; i < sig.length; i += 1) diff |= sig.charCodeAt(i) ^ expected.charCodeAt(i);
-  if (diff !== 0) return null;
+  if (!timingSafeEqualText(sig, expected)) return null;
   try {
     const payload = JSON.parse(decoder.decode(fromBase64Url(body)));
     if (!payload.exp || Date.now() >= payload.exp) return null;
