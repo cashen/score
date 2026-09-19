@@ -46,12 +46,14 @@ test("password records support v1 compatibility and v2 metadata", async () => {
   assert.equal(timingSafeEqualText(current.hash, legacy.hash), false);
 });
 
-test("domain-separated token hashes differ while using the legacy master secret as fallback", async () => {
+test("domain-separated token hashes require both runtime secrets", async () => {
   const runtime = env();
   const share = await tokenHash("same-token", runtime, "share");
   const recovery = await tokenHash("same-token", runtime, "onboarding");
   assert.notEqual(share, recovery);
   assert.notEqual(share, await sha256("same-token"));
+  const changedSession = { ...runtime, SESSION_SECRET: "different-session-secret-v127-test" };
+  assert.notEqual(share, await tokenHash("same-token", changedSession, "share"));
 });
 
 test("legacy Secret Share links remain readable after token-locator migration", async () => {
