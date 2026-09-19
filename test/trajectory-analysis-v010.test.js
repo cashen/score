@@ -15,7 +15,7 @@ function withMath(e, rank, participants = 100, score = null) {
 
 test("multi-exam trajectory keeps baseline, recent window and stability separate", () => {
   const exams = [
-    withMath(exam("e1", "2026-03-01"), 27, 100, 105),
+    withMath(exam("e1", "2026-03-01"), 18, 100, 105),
     withMath(exam("e2", "2026-04-01"), 19, 100, 112),
     withMath(exam("e3", "2026-05-01"), 16, 100, 118),
     withMath(exam("e4", "2026-06-01"), 15, 100, 120),
@@ -24,7 +24,7 @@ test("multi-exam trajectory keeps baseline, recent window and stability separate
   const result = trajectoryAnalysis(exams, "math");
   assert.equal(result.metric, "schoolRank");
   assert.equal(result.comparableCount, 5);
-  assert.equal(result.baseline.display, "校前 27%");
+  assert.equal(result.baseline.display, "校前 18%");
   assert.equal(result.current.display, "校前 13%");
   assert.equal(result.longDirection, "forward");
   assert.equal(result.stability.label, "比较稳定");
