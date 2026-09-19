@@ -5,7 +5,7 @@ import { examScoreSummary, examCompleteness, scoreSummaryText, subjectScore } fr
 import { trajectoryAnalysis, changeDrivers, subjectObservationExams } from "./trajectory-analysis-v010.js";
 import { shareUrlFor, shareFileName } from "./share-delivery-v092.js";
 import { deliverShareImage } from "./share-image-v092.js";
-import { formatComparisonState, formatExamScore, formatMissingSubjects, formatRanking } from "../src/lib/product-language.js";
+import { formatComparisonState, formatExamScore, formatMissingSubjects, formatRanking } from "./product-language-v001.js";
 
 const PRODUCT_NAME = "高三坐标";
 const PRODUCT_TAGLINE = "看见这次成绩，也看见前后的变化";
