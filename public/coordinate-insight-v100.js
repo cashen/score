@@ -95,7 +95,7 @@ export function analyzeCoordinate(exams) {
   const { list, latest, previous, eligibility } = latestComparablePair(exams);
   if (!latest) return {
     status: "empty", latest: null, previous: null, position: null, overall: null,
-    drivers: [], attention: null, boundary: "先记录第一场考试，建立当前坐标。"
+    drivers: [], attention: null, boundary: "先记录第一场考试，之后再看前后的变化。"
   };
   const overall = previous ? metricBetween(latest, previous) : null;
   const drivers = subjectDrivers(latest, previous);
