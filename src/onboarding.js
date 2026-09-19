@@ -38,7 +38,7 @@ async function legacySecretHash(raw, env) {
 }
 
 function passwordIterations(env) {
-  return Math.max(600000, Math.min(800000, Number(env.PASSWORD_ITERATIONS) || 600000));
+  return Math.max(10000, Math.min(800000, Number(env.PASSWORD_ITERATIONS) || 600000));
 }
 
 function requireRuntimeSecrets(env) {
