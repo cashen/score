@@ -1,0 +1,28 @@
+{
+  "version": "0.12.22",
+  "generation": "v01222",
+  "project": "cashen/score",
+  "branch": "refactor/product-language-governance-v022",
+  "status": "in_progress",
+  "baseSha": "48f2ce37cf95d8ba14172b47a8e74a8c5e308020",
+  "phase": "1-product-language-contract",
+  "completed": [
+    "baseline main SHA verified",
+    "open PR list verified empty",
+    "product language contract created",
+    "product semantic vocabulary created",
+    "whole-site language inventory created",
+    "shared semantic formatter boundary created",
+    "regression tests created"
+  ],
+  "next": [
+    "run full verification",
+    "migrate user-facing surfaces in bounded phases",
+    "audit share projection and derived fields",
+    "add browser regression coverage",
+    "manual desktop/mobile audit",
+    "update status after each bounded phase",
+    "merge only after all planned checks are green"
+  ],
+  "handoffRule": "On reconnection, read this file first, then verify branch SHA, main SHA, open PRs, workflow state, and current version before changing anything. Never assume local or deployment state."
+}
