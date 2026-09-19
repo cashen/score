@@ -22,7 +22,7 @@ test("shared report keeps identity above equal-weight coordinates", () => {
 });
 
 test("history states stay factual rather than gamified", () => {
-  assert.match(app, /历次轨迹/);
+  assert.match(app, /历次成绩/);
   assert.match(app, /不同考试难度可能不同，优先看相对位置；分数只作辅助/);
   assert.doesNotMatch(app, /排行榜/);
 });

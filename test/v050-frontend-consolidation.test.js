@@ -52,7 +52,7 @@ test("router has one normal app path and one onboarding path", () => {
 test("brand and primary navigation are direct source content", () => {
   expectAll(app, [
     'const PRODUCT_NAME = "高三坐标"',
-    "看见现在的位置，也看见一路的变化",
+    "看见这次成绩，也看见前后的变化",
     'data-tab="overview">轨迹',
     'data-tab="exams">考试',
     'data-tab="sharing">分享',
@@ -88,7 +88,7 @@ test("share composer uses human language and explicit privacy scope", () => {
     "不会分享",
     "分享链接",
     "持续更新",
-    "只分享当前内容",
+    "固定当前内容",
     "自动失效（可选）",
     "公开链接（高级）",
     "生成并复制链接",
