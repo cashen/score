@@ -135,3 +135,42 @@ test("comparable ranking requires same scope, label and basis", () => {
   assert.equal(comparableRanking({scope:"school",label:"A",basis:"final_score"},{scope:"school",label:"A",basis:"final_score"}),true);
   assert.equal(comparableRanking({scope:"school",label:"A",basis:"final_score"},{scope:"class",label:"A",basis:"final_score"}),false);
 });
+
+test("editing an existing exam preserves its creation timestamp", () => {
+  const existing = exam("e", "2026-09-18", "2026-09-18T08:00:00.000Z", {
+    revision: 2,
+    updatedAt: "2026-09-19T08:00:00.000Z"
+  });
+  const updated = normalizeExam({
+    id: "e",
+    name: "编辑后",
+    date: "2026-09-18",
+    type: "monthly",
+    overall: { officialScore: 600, rankings: [] },
+    subjects: {}
+  }, existing);
+  assert.equal(updated.createdAt, existing.createdAt);
+  assert.notEqual(updated.updatedAt, existing.updatedAt);
+});
+
+test("public projection preserves independent subject and overall ranking boundaries", async () => {
+  const source = exam("e", "2026-09-18", "2026-09-18T08:00:00.000Z", {
+    overall: {
+      officialScore: 600,
+      calculatedScore: 600,
+      rankings: [{ scope: "school", rank: 12, participants: 500, label: "学校", basis: "final_score" }]
+    },
+    subjects: {
+      ...blankSubjects(),
+      english: { rawScore: 120, finalScore: null, rankings: [{ scope: "school", rank: 48, participants: 500, label: "学校", basis: "final_score" }] }
+    }
+  });
+  const { publicProjection } = await import("../src/lib/model.js");
+  const projected = publicProjection(
+    { displayName: "孩子", graduationYear: 2027 },
+    [source],
+    { displayName: true, graduationYear: true, school: false, className: false, overallScore: true, overallRank: true, subjectScores: true, subjectRanks: true, history: true }
+  );
+  assert.equal(projected.exams[0].overallRankings[0].rank, 12);
+  assert.equal(projected.exams[0].subjects.english.rankings[0].rank, 48);
+});
