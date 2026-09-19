@@ -86,6 +86,7 @@ export function normalizeSubject(value = {}) {
   const rawScore = numberOrNull(value.rawScore, 0, 1000);
   const finalScore = numberOrNull(value.finalScore, 0, 1000);
   if (fullScore != null && rawScore != null && rawScore > fullScore) throw Object.assign(new Error("原始分不能高于满分"), { code: "score_exceeds_full", field: "rawScore" });
+  if (fullScore != null && finalScore != null && finalScore > fullScore) throw Object.assign(new Error("赋分后不能高于满分"), { code: "score_exceeds_full", field: "finalScore" });
   return { scoreMode, fullScore, rawScore, finalScore, rankings: normalizeRankings(value.rankings) };
 }
 
@@ -158,7 +159,9 @@ export const DEFAULT_SHARE_FIELDS = Object.freeze({
 
 export function normalizeShareFields(input = {}) {
   const result = {};
-  for (const key of Object.keys(DEFAULT_SHARE_FIELDS)) result[key] = input[key] ?? DEFAULT_SHARE_FIELDS[key];
+  for (const key of Object.keys(DEFAULT_SHARE_FIELDS)) {
+    result[key] = typeof input[key] === "boolean" ? input[key] : DEFAULT_SHARE_FIELDS[key];
+  }
   return result;
 }
 
