@@ -53,6 +53,9 @@ export function chooseTrajectoryMetric(exams = [], key = null, preferred = "auto
   const current = ordered[0];
   if (!current) return "score";
   const candidates = ["schoolRank", "classRank", "score"];
+  if (ordered.length === 1) {
+    for (const metric of candidates) if (candidateMetric(current, key, metric)) return metric;
+  }
   for (const metric of candidates) {
     let count = 0;
     for (const exam of ordered) {
@@ -114,7 +117,7 @@ function stability(rows) {
   const current = rows[rows.length - 1];
   const range = spread(rows);
   if (current.kind === "percentile") {
-    if (range <= 5) return { label: "比较稳定", detail: `最近 ${rows.length} 次都在前后 ${range.toFixed(1).replace(/\\.0$/, "")} 个百分点范围内` };
+    if (range <= 6) return { label: "比较稳定", detail: `最近 ${rows.length} 次都在前后 ${range.toFixed(1).replace(/\\.0$/, "")} 个百分点范围内` };
     if (range <= 10) return { label: "有一定波动", detail: `最近 ${rows.length} 次相差约 ${range.toFixed(1).replace(/\\.0$/, "")} 个百分点` };
     return { label: "波动较大", detail: `最近 ${rows.length} 次相差约 ${range.toFixed(1).replace(/\\.0$/, "")} 个百分点` };
   }
