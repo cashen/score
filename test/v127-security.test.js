@@ -22,8 +22,8 @@ function env() {
     SCORE_KV: new MockKV(),
     SESSION_SECRET: "session-secret-v127-test",
     AUTH_PEPPER: "auth-pepper-v127-test",
-    PASSWORD_ITERATIONS: "600000",
-    APP_VERSION: "0.12.27",
+    PASSWORD_ITERATIONS: "100000",
+    APP_VERSION: "0.12.28",
     SCHEMA_VERSION: "1",
     ASSETS: { fetch: async () => new Response("<!doctype html><title>Score</title>", { headers: { "content-type": "text/html" } }) }
   };
@@ -128,7 +128,7 @@ test("security configuration and source contracts stay explicit", async () => {
     readFile(new URL("../src/sharing-v2.js", import.meta.url), "utf8")
   ]);
   assert.match(wrangler, /PASSWORD_ITERATIONS\s*=\s*"100000"/);
-  assert.equal((await readFile(new URL("../package.json", import.meta.url), "utf8")).includes('"version": "0.12.27.1"'), true);
+  assert.equal((await readFile(new URL("../package.json", import.meta.url), "utf8")).includes('"version": "0.12.28.1"'), true);
   assert.match(index, /DUMMY_PASSWORD_RECORD/);
   assert.match(index, /passwordHashUpgradedAt/);
   assert.match(index, /scope: "login"/);
