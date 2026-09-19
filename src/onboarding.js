@@ -1,6 +1,7 @@
-import { hashPassword, randomToken, sha256, signSession } from "./lib/crypto.js";
+import { hashPassword, randomToken, sha256, signSession, timingSafeEqualText, tokenHash } from "./lib/crypto.js";
 import { assertPassword, assertUsername, normalizeUsername, safeText } from "./lib/model.js";
 import { errorJson, json, readJson, sessionCookie } from "./lib/http.js";
+import { enforceRateLimit } from "./lib/rate-limit.js";
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const DEFAULT_INVITE_HOURS = 72;
@@ -29,11 +30,15 @@ async function usernameKey(username) {
 }
 
 async function secretHash(raw, env) {
+  return tokenHash(raw, env, "onboarding");
+}
+
+async function legacySecretHash(raw, env) {
   return sha256(`${String(raw || "")}.${env.AUTH_PEPPER || ""}`);
 }
 
 function passwordIterations(env) {
-  return Math.max(10000, Math.min(500000, Number(env.PASSWORD_ITERATIONS) || 20000));
+  return Math.max(600000, Math.min(800000, Number(env.PASSWORD_ITERATIONS) || 600000));
 }
 
 function requireRuntimeSecrets(env) {
@@ -120,6 +125,7 @@ async function handleInviteList(env, session) {
 
 async function handleInviteCreate(request, env, session) {
   requireCsrf(request, session);
+  await enforceRateLimit(env, request, { scope: "invite-create", identity: session.member.id, identityMax: 20, ipMax: 30, windowSeconds: 600 });
   const family = await inviterFamily(env, session);
   const body = await readJson(request);
   const rawToken = randomToken(32);
@@ -146,9 +152,12 @@ async function handleInviteCreate(request, env, session) {
 
 async function findInvite(env, rawToken) {
   if (!rawToken || rawToken.length < 20) return null;
-  const locator = await secretHash(rawToken, env);
-  const invite = await getJson(env, `invite:${locator}`);
-  return invite ? { invite, locator } : null;
+  const candidates = [await secretHash(rawToken, env), await legacySecretHash(rawToken, env)];
+  for (const locator of [...new Set(candidates)]) {
+    const invite = await getJson(env, `invite:${locator}`);
+    if (invite) return { invite, locator };
+  }
+  return null;
 }
 
 async function handleInviteInspect(env, rawToken) {
@@ -164,6 +173,7 @@ async function handleInviteAccept(request, env, rawToken) {
 
   const body = await readJson(request);
   const username = assertUsername(body.username);
+  await enforceRateLimit(env, request, { scope: "invite-accept", ipMax: 20, windowSeconds: 600 });
   const password = assertPassword(body.password);
   const uKey = await usernameKey(username);
   if (await env.SCORE_KV.get(uKey)) return errorJson("该账号已存在", 409, "username_exists");
@@ -243,6 +253,7 @@ async function handleInviteAccept(request, env, rawToken) {
 
 async function handleMyRecoveryCode(request, env, session) {
   requireCsrf(request, session);
+  await enforceRateLimit(env, request, { scope: "recovery-code-rotate", identity: session.member.id, identityMax: 5, ipMax: 10, windowSeconds: 600 });
   requireRuntimeSecrets(env);
   const result = await rotateRecoveryCode(session.member, env);
   return json({ recoveryCode: result.raw, notice: "新的恢复码只显示这一次；旧恢复码已经失效。" });
@@ -252,13 +263,16 @@ async function handleRecoveryCodeReset(request, env) {
   requireRuntimeSecrets(env);
   const body = await readJson(request);
   const username = assertUsername(body.username);
+  await enforceRateLimit(env, request, { scope: "recovery-code", identity: username, identityMax: 5, ipMax: 20, windowSeconds: 900 });
   const newPassword = assertPassword(body.newPassword);
   const mapping = await getJson(env, await usernameKey(username));
   if (!mapping) return errorJson("账号或恢复码无效", 403, "invalid_recovery");
   const member = await getJson(env, `member:${mapping.memberId}`);
   if (!member?.recoveryCodeHash || member.disabledAt) return errorJson("账号或恢复码无效", 403, "invalid_recovery");
   const suppliedHash = await secretHash(body.recoveryCode, env);
-  if (suppliedHash !== member.recoveryCodeHash) return errorJson("账号或恢复码无效", 403, "invalid_recovery");
+  const legacyHash = await legacySecretHash(body.recoveryCode, env);
+  const validRecovery = timingSafeEqualText(suppliedHash, member.recoveryCodeHash) || timingSafeEqualText(legacyHash, member.recoveryCodeHash);
+  if (!validRecovery) return errorJson("账号或恢复码无效", 403, "invalid_recovery");
 
   const rotatedRaw = randomToken(24);
   const updated = {
@@ -276,6 +290,7 @@ async function handleRecoveryCodeReset(request, env) {
 
 async function handleRecoveryLinkCreate(request, env, session) {
   requireCsrf(request, session);
+  await enforceRateLimit(env, request, { scope: "recovery-link-create", identity: session.member.id, identityMax: 20, ipMax: 30, windowSeconds: 600 });
   await inviterFamily(env, session);
   const body = await readJson(request);
   const username = assertUsername(body.username);
@@ -329,6 +344,7 @@ async function updateRecoveryIndex(env, issuerMemberId, recoveryId, patch) {
 
 async function handleRecoveryLinkReset(request, env, rawToken) {
   requireRuntimeSecrets(env);
+  await enforceRateLimit(env, request, { scope: "recovery-link-reset", ipMax: 10, windowSeconds: 900 });
   const found = await findRecoveryLink(env, rawToken);
   if (!found || found.record.usedAt || expired(found.record)) return errorJson("重置链接不存在或已失效", 404, "recovery_link_not_found");
   const body = await readJson(request);
