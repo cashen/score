@@ -1291,9 +1291,9 @@ function publicSubjectComparisonV080(exams, key, share = {}) {
   const compareText = change ? `比较对象：${comparison.reference.name} · ${fmtDate(comparison.reference.date)} · ${comparison.reason}` : comparison.reason;
   const rows = ordered.map((exam) => {
     const subject = exam.subjects?.[key] || {};
-    const score = share.fields?.subjectScores === false ? null : scoreOf(subject);
-    const school = share.fields?.subjectRanks === false ? null : rankByScope(subject.rankings, "school");
-    const clazz = share.fields?.subjectRanks === false ? null : rankByScope(subject.rankings, "class");
+    const score = share.fields?.subjectScores !== true ? null : scoreOf(subject);
+    const school = share.fields?.subjectRanks !== true ? null : rankByScope(subject.rankings, "school");
+    const clazz = share.fields?.subjectRanks !== true ? null : rankByScope(subject.rankings, "class");
     const values = [score == null ? null : `${fmtNumber(score)} 分`, school?.rank != null ? `校第 ${school.rank}` : null, clazz?.rank != null ? `班第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
     return `<div class="subject-compare-row"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div><b>${esc(values)}</b></div>`;
   }).join("");
@@ -1315,8 +1315,8 @@ function publicExamDetailV080(exam, share = {}) {
     return `<div class="exam-detail-subject"><strong>${label}</strong><span>${esc(display)}</span></div>`;
   }).join("");
   const summary = examScoreSummary(exam);
-  const scoreText = share.fields?.overallScore === false ? "总分未分享" : (summary.kind === "missing" ? "" : scoreSummaryText(summary));
-  const rankText = share.fields?.overallRank === false ? "" : rankingDetails(exam.overallRankings || []);
+  const scoreText = share.fields?.overallScore !== true ? "总分未分享" : (summary.kind === "missing" ? "" : scoreSummaryText(summary));
+  const rankText = share.fields?.overallRank !== true ? "" : rankingDetails(exam.overallRankings || []);
   const overall = [scoreText, rankText].filter(Boolean).join(" · ");
   return `<section class="public-reading-section public-exam-detail"><div class="section-label">考试详情</div><h2>${esc(exam.name)}</h2><p>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</p><div class="exam-detail-overall"><strong>${esc(overall)}</strong></div><div class="exam-detail-subjects">${rows}</div></section>`;
 }
@@ -1326,8 +1326,8 @@ function publicTimelineV080(exams, selectedExamId = null, share = {}) {
   const selected = ordered.find((exam) => exam.id === selectedExamId) || null;
   const rows = ordered.map((exam, index) => {
     const projected = { ...exam, overall: { rankings: exam.overallRankings || [] }, overallScore: exam.overallScore };
-    const school = share.fields?.overallRank === false ? null : overallRank(projected, "school");
-    const clazz = share.fields?.overallRank === false ? null : overallRank(projected, "class");
+    const school = share.fields?.overallRank !== true ? null : overallRank(projected, "school");
+    const clazz = share.fields?.overallRank !== true ? null : overallRank(projected, "class");
     return `<a class="history-row ${index === 0 ? "is-latest" : ""}" href="?view=timeline&exam=${encodeURIComponent(exam.id)}"><span><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最新" : ""}</small></span><div class="history-coordinate"><span>${school?.rank != null ? `校第 ${school.rank} 名` : ""}</span><span>${clazz?.rank != null ? `班第 ${clazz.rank} 名` : ""}</span><span>${overallScore(projected) != null ? `${fmtNumber(overallScore(projected))} 分` : ""}</span></div><span class="row-chevron" aria-hidden="true">›</span></a>`;
   }).join("");
   return `<section class="public-reading-section public-timeline"><div class="section-label">时间轴</div><h2>每一次考试都可以打开</h2>${publicBaselineV081("timeline", ordered, share)}${selected ? publicExamDetailV080(selected, share) : ""}<div class="history-list">${rows || `<div class="empty compact">暂未分享考试数据。</div>`}</div><p class="muted">页面只展示分享白名单中的字段。</p></section>`;
@@ -1346,7 +1346,7 @@ function renderPublicV080(result) {
   const clazz = rankByScope(latest?.overallRankings, "class");
   const latestSummary = examScoreSummary(latest);
   const totalText = latestSummary.kind === "official" ? `${fmtNumber(latestSummary.value)} 分` : latestSummary.kind === "calculated_complete" ? `六科合计 ${fmtNumber(latestSummary.value)}` : latestSummary.kind === "calculated_partial" ? `${latestSummary.recordedSubjects}/6 科小计 ${fmtNumber(latestSummary.subtotal)}` : latestSummary.kind === "absent" ? "缺考" : "";
-  const coordinate = latest ? [result.share.fields?.overallRank === false ? null : school?.rank != null ? `校第 ${school.rank} 名` : null, result.share.fields?.overallRank === false ? null : clazz?.rank != null ? `班第 ${clazz.rank} 名` : null, result.share.fields?.overallScore === false ? null : totalText].filter(Boolean) : [];
+  const coordinate = latest ? [result.share.fields?.overallRank !== true ? null : school?.rank != null ? `校第 ${school.rank} 名` : null, result.share.fields?.overallRank !== true ? null : clazz?.rank != null ? `班第 ${clazz.rank} 名` : null, result.share.fields?.overallScore !== true ? null : totalText].filter(Boolean) : [];
   const coordinateText = coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>位置未分享</span>`;
   const meta = [data.student?.graduationYear ? `${data.student.graduationYear}届` : null, data.student?.schoolLabel, data.student?.className].filter(Boolean).map(esc).join(" · ");
   const total = `<section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "只分享当前内容" : result.share.scope === "trajectory" ? "成长轨迹 · 持续更新" : "持续更新"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinateText}</div>${publicBaselineV081("total", exams, result.share)}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share)}</div>` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
