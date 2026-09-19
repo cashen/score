@@ -35,14 +35,11 @@ const forbiddenUiPhrases = [
 
 const preferredPhrases = [
   "目前的记录",
-  "按当前记录显示",
   "页面只显示你选择分享的内容",
-  "历次成绩 · 以后新增的考试也会显示",
-  "比之前靠前",
-  "比之前靠后",
-  "只按已分享的考试比较",
   "最近一次考试",
-  "校内前 "
+  "校内前 ",
+  "和以前相比",
+  "查看历次考试",
 ];
 
 test("v0.12.21 user-facing language removes known internal/AI-style phrases", () => {
