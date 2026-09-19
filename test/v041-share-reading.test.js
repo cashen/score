@@ -8,7 +8,7 @@ const index = await readFile(new URL("../public/index.html", import.meta.url), "
 test("normal sharing asks what to share instead of who the viewer is", () => {
   assert.match(app, /想分享什么？/);
   assert.match(app, /这一次考试/);
-  assert.match(app, /高三轨迹/);
+  assert.match(app, /历次成绩/);
   assert.doesNotMatch(app, /准备给谁看|家人查看|老师查看|自定义/);
 });
 
