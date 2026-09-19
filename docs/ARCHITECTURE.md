@@ -17,6 +17,9 @@ Cloudflare Worker + Static Assets
        └─ share projection API
                ↓
           Workers KV
+               ↘
+      OneTimeCredentialGate
+      (SQLite Durable Object)
 ```
 
 不依赖 R2、不依赖 D1、不要求传统数据库。
