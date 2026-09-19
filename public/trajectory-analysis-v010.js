@@ -29,15 +29,15 @@ function candidateMetric(exam, key, metric) {
     if (!item) return null;
     const pct = percentile(item.rank, item.participants);
     return pct != null
-      ? { metric, kind: "percentile", value: pct, directionValue: 100 - pct, display: `校前 ${pct}%`, item }
+      ? { metric, kind: "percentile", value: pct, directionValue: 100 - pct, display: `校内前 ${pct}%`, item }
       : item.rank != null
-        ? { metric, kind: "school-rank", value: item.rank, directionValue: -item.rank, display: `校第 ${item.rank} 名`, item }
+        ? { metric, kind: "school-rank", value: item.rank, directionValue: -item.rank, display: `校内第 ${item.rank} 名`, item }
         : null;
   }
   if (metric === "classRank") {
     const item = rankItem(exam, key, "class");
     return item?.rank != null
-      ? { metric, kind: "class-rank", value: item.rank, directionValue: -item.rank, display: `班第 ${item.rank} 名`, item }
+      ? { metric, kind: "class-rank", value: item.rank, directionValue: -item.rank, display: `班级第 ${item.rank} 名`, item }
       : null;
   }
   if (metric === "score") {
@@ -90,7 +90,7 @@ export function trajectorySeries(exams = [], key = null, preferred = "auto") {
     }
     const value = candidateMetric(exam, key, metric);
     if (!value) {
-      skipped.push({ id: exam.id, reason: "该场考试没有足够的同口径数据" });
+      skipped.push({ id: exam.id, reason: "该场考试的数据不足，暂时不比较" });
       continue;
     }
     rows.push({ exam, ...value });
@@ -119,7 +119,7 @@ function spread(rows) {
 }
 
 function stability(rows) {
-  if (rows.length < 3) return { label: "记录还少", detail: `目前只有 ${rows.length} 次可比记录` };
+  if (rows.length < 3) return { label: "记录还少", detail: `目前只有 ${rows.length} 次可以直接比较的考试` };
   const current = rows[rows.length - 1];
   const range = spread(rows);
   if (current.kind === "percentile") {

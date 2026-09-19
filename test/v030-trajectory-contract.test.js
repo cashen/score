@@ -8,8 +8,8 @@ const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "u
 
 test("deep trajectory is secondary to the current coordinate", () => {
   assert.match(app, /<details class="deep-trajectory"/);
-  assert.match(app, /查看完整轨迹/);
-  assert.match(app, /历次整体位置与六科历史/);
+  assert.match(app, /查看全部记录/);
+  assert.match(app, /历次考试与六科历史/);
   assert.match(css, /\.deep-trajectory/);
 });
 

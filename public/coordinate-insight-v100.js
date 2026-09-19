@@ -42,7 +42,7 @@ function latestComparablePair(exams) {
     const eligibility = comparisonEligibility(latest, candidate);
     if (eligibility.status === "comparable") return { list, latest, previous: candidate, eligibility };
   }
-  return { list, latest, previous: null, eligibility: { status: "baseline", reason: list.length > 1 ? "之前有考试，但没有找到口径足够一致的比较对象" : "还没有第二次可比考试" } };
+  return { list, latest, previous: null, eligibility: { status: "baseline", reason: list.length > 1 ? "之前有考试，但没有找到可以直接比较的考试" : "还没有第二次可以直接比较的考试" } };
 }
 
 function subjectDrivers(current, previous) {
@@ -95,7 +95,7 @@ export function analyzeCoordinate(exams) {
   const { list, latest, previous, eligibility } = latestComparablePair(exams);
   if (!latest) return {
     status: "empty", latest: null, previous: null, position: null, overall: null,
-    drivers: [], attention: null, boundary: "先记录第一场考试，建立当前坐标。"
+    drivers: [], attention: null, boundary: "先记录第一场考试，之后再看前后的变化。"
   };
   const overall = previous ? metricBetween(latest, previous) : null;
   const drivers = subjectDrivers(latest, previous);
@@ -122,36 +122,44 @@ function positionText(position) {
   if (!position) return "本场尚无总分或排名记录";
   const parts = [];
   if (position.school?.percentile != null) parts.push(`校内前 ${fmt(position.school.percentile)}%`);
-  else if (position.school?.rank != null) parts.push(`校第 ${position.school.rank} 名`);
-  if (position.class?.rank != null) parts.push(`班第 ${position.class.rank} 名`);
+  else if (position.school?.rank != null) parts.push(`校内第 ${position.school.rank} 名`);
+  if (position.class?.rank != null) parts.push(`班级第 ${position.class.rank} 名`);
   if (position.score?.value != null) parts.push(`${fmt(position.score.value)} 分`);
   return parts.join(" · ") || "本场尚无总分或排名记录";
 }
 
 function changeText(overall) {
-  if (!overall) return "暂时没有足够的同口径数据";
+  if (!overall) return "暂时没有足够的数据进行比较";
   const direction = overall.direction;
   if (overall.kind === "percentile") {
-    if (direction === "forward") return `校内位置向前 ${fmt(Math.abs(overall.value))} 个百分点`;
-    if (direction === "backward") return `校内位置向后 ${fmt(Math.abs(overall.value))} 个百分点`;
-    return "整体位置和上一次基本接近";
+    if (direction === "forward" || direction === "backward") return `这次校内前 ${fmt(overall.current)}%，上一次校内前 ${fmt(overall.previous)}%。`;
+    return `这次校内前 ${fmt(overall.current)}%，和上一次接近。`;
   }
   if (overall.kind === "rank") {
-    if (direction === "forward") return `位置向前 ${Math.abs(overall.value)} 名`;
-    if (direction === "backward") return `位置向后 ${Math.abs(overall.value)} 名`;
-    return "整体位置和上一次基本接近";
+    if (overall.scope === "school") {
+      if (direction === "forward" || direction === "backward") return `这次校内第 ${overall.current} 名，上一次第 ${overall.previous} 名。`;
+      return `这次校内第 ${overall.current} 名，和上一次接近。`;
+    }
+    if (direction === "forward" || direction === "backward") return `这次班级第 ${overall.current} 名，上一次第 ${overall.previous} 名。`;
+    return `这次班级第 ${overall.current} 名，和上一次接近。`;
   }
-  if (direction === "forward") return `分数高 ${fmt(Math.abs(overall.value))} 分`;
-  if (direction === "backward") return `分数低 ${fmt(Math.abs(overall.value))} 分`;
-  return "分数和上一次基本接近";
+  if (direction === "forward") return `这次分数比上一次高 ${fmt(Math.abs(overall.value))} 分。`;
+  if (direction === "backward") return `这次分数比上一次低 ${fmt(Math.abs(overall.value))} 分。`;
+  return "这次分数和上一次基本接近。";
 }
 
 function driverText(driver) {
   const metric = driver.metric;
   const direction = driver.direction;
-  if (metric.kind === "percentile") return `${direction === "forward" ? "位置向前" : direction === "backward" ? "位置向后" : "基本接近"} ${fmt(Math.abs(metric.value))} 个百分点`;
-  if (metric.kind === "rank") return `${direction === "forward" ? "位置向前" : direction === "backward" ? "位置向后" : "基本接近"} ${Math.abs(metric.value)} 名`;
-  return `${direction === "forward" ? "高" : direction === "backward" ? "低" : "接近"} ${fmt(Math.abs(metric.value))} 分`;
+  if (metric.kind === "percentile") return `这次校内前 ${fmt(metric.current)}%，上一次校内前 ${fmt(metric.previous)}%。`;
+  if (metric.kind === "rank") return metric.scope === "school"
+    ? `这次校内第 ${metric.current} 名，上一次第 ${metric.previous} 名。`
+    : `这次班级第 ${metric.current} 名，上一次第 ${metric.previous} 名。`;
+  return direction === "forward"
+    ? `这次分数比上一次高 ${fmt(Math.abs(metric.value))} 分。`
+    : direction === "backward"
+      ? `这次分数比上一次低 ${fmt(Math.abs(metric.value))} 分。`
+      : "这次分数和上一次基本接近。";
 }
 
 function addStyles() {
@@ -182,13 +190,13 @@ function renderInsight(result) {
     return;
   }
   existing?.remove();
-  const drivers = result.drivers.length ? `<div class="coordinate-insight-drivers">${result.drivers.map((driver) => `<div class="coordinate-insight-driver"><b>${driver.label}</b><div><strong>${driverText(driver)}</strong><span>与上一次可比考试相比</span></div></div>`).join("")}</div>` : `<p class="coordinate-insight-boundary">目前没有足够的同口径数据判断哪一科变化更明显。</p>`;
-  const attention = result.attention ? `<div class="coordinate-insight-attention"><small>下一次值得继续观察</small><strong>${result.attention.label}</strong><span>最近几次同口径比较中，这门课多次向后。</span></div>` : "";
+  const drivers = result.drivers.length ? `<div class="coordinate-insight-drivers">${result.drivers.map((driver) => `<div class="coordinate-insight-driver"><b>${driver.label}</b><div><strong>${driverText(driver)}</strong><span>与上一次可以直接比较的考试相比</span></div></div>`).join("")}</div>` : `<p class="coordinate-insight-boundary">目前没有足够的数据判断哪一科变化更明显。</p>`;
+  const attention = result.attention ? `<div class="coordinate-insight-attention"><small>下一次值得继续观察</small><strong>${result.attention.label}</strong><span>最近几次直接比较中，这门课有多次分数更低或排名更靠后。</span></div>` : "";
   const action = result.attention ? `<div class="coordinate-insight-action"><a href="?view=subject&subject=${encodeURIComponent(result.attention.key)}">打开${result.attention.label}历次记录</a></div>` : "";
   const section = document.createElement("section");
   section.className = "reading-section coordinate-insight";
   section.dataset.coordinateInsight = "v100";
-  section.innerHTML = `<div class="section-head-simple"><div><div class="section-label">坐标判断</div><h2>${result.status === "empty" ? "先建立第一条坐标" : "把这次变化看懂"}</h2></div></div><div class="coordinate-insight-grid"><div class="coordinate-insight-box"><small>现在在哪</small><strong>${positionText(result.position)}</strong>${result.latest ? `<span>${result.latest.name} · ${String(result.latest.date || "").replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$2月$3日")}</span>` : ""}</div><div class="coordinate-insight-box"><small>最近怎么变</small><strong>${changeText(result.overall)}</strong><span>${result.previous ? `比较：${result.previous.name}` : result.boundary}</span></div></div>${drivers}${attention}${action}<p class="coordinate-insight-boundary">这里描述的是考试记录中的相对位置变化，不代表能力提高或下降。</p>`;
+  section.innerHTML = `<div class="section-head-simple"><div><div class="section-label">成绩变化</div><h2>${result.status === "empty" ? "先记录第一场考试" : "把这次变化看懂"}</h2></div></div><div class="coordinate-insight-grid"><div class="coordinate-insight-box"><small>这次的成绩与排名</small><strong>${positionText(result.position)}</strong>${result.latest ? `<span>${result.latest.name} · ${String(result.latest.date || "").replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$2月$3日")}</span>` : ""}</div><div class="coordinate-insight-box"><small>和上一次比</small><strong>${changeText(result.overall)}</strong><span>${result.previous ? `比较：${result.previous.name}` : result.boundary}</span></div></div>${drivers}${attention}${action}<p class="coordinate-insight-boundary">这里描述的是考试记录中的成绩、排名和前后变化，不代表能力提高或下降。</p>`;
   anchor.insertAdjacentElement("afterend", section);
 }
 

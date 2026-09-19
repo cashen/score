@@ -16,7 +16,7 @@ test("trajectory has parallel total, subject and timeline views", () => {
 
 test("one exam is treated as a baseline without a trend claim", () => {
   assert.match(semantics, /status: "baseline"/);
-  assert.match(semantics, /还没有第二次可比考试/);
+  assert.match(semantics, /还没有第二次可以直接比较的考试/);
   assert.match(app, /还没有考试记录/);
 });
 

@@ -97,7 +97,7 @@ async function handleCreate(request, env, session, studentId) {
     return errorJson(body.examId ? "指定的考试不存在" : "还没有可分享的考试记录", 400, body.examId ? "exam_not_found" : "no_exam_to_share");
   }
   if (scope === "trajectory" && mode === "live" && exams.length === 1 && body.futureExamsAcknowledged !== true) {
-    return errorJson("请先确认以后新增的考试会自动进入这个分享链接", 400, "future_exams_acknowledgement_required");
+    return errorJson("请先确认以后新增的考试也会显示在这里", 400, "future_exams_acknowledgement_required");
   }
 
   const selectedExam = scope === "single" ? exams[0] : null;
