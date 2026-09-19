@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { PRODUCT_LANGUAGE, formatComparisonState, formatMissingSubjects, formatRanking, formatScoreState, formatShareMode } from '../src/lib/product-language.js';
+import { PRODUCT_LANGUAGE, formatComparisonState, formatComparisonSummary, formatMissingSubjects, formatRanking, formatScoreState, formatShareMode } from '../src/lib/product-language.js';
 
 test('score state distinguishes official total, six-subject sum and partial subtotal', () => {
   assert.equal(formatScoreState({ subjectCount: 6 }).label, '六科合计');
@@ -32,4 +32,9 @@ test('share modes use human descriptions', () => {
 test('prohibited terms are an explicit UI vocabulary list', () => {
   assert.ok(PRODUCT_LANGUAGE.prohibitedUiTerms.includes('口径'));
   assert.ok(PRODUCT_LANGUAGE.prohibitedUiTerms.includes('可比记录'));
+});
+test('comparison summary distinguishes first record, direct comparison and no direct comparison', () => {
+  assert.deepEqual(formatComparisonSummary({ hasHistory: false }), { title: '这是第一次记录。', detail: '' });
+  assert.deepEqual(formatComparisonSummary({ hasHistory: true, comparable: true, previousDate: '9月1日' }), { title: '和以前相比', detail: '和 9月1日 相比' });
+  assert.deepEqual(formatComparisonSummary({ hasHistory: true, comparable: false, reason: 'different_exam_type', historyCount: 1 }), { title: '暂时没有可以直接比较的考试', detail: '之前有 1 场考试，但考试类型不同。' });
 });
