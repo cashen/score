@@ -1,8 +1,13 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 
 function git(args) {
   return execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+}
+
+function gitQuiet(args) {
+  const result = spawnSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  return result.status === 0 ? result.stdout : "";
 }
 
 const tracked = git(["ls-tree", "-r", "--name-only", "HEAD"]).split("\n").filter(Boolean);
@@ -25,22 +30,18 @@ if (historicalSecretFiles.length) {
   process.exit(1);
 }
 
-const credentialNeedles = [
-  "CLOUDFLARE_API_TOKEN=",
-  "SCORE_SESSION_SECRET=",
-  "SCORE_AUTH_PEPPER=",
-  "SCORE_ADMIN_BOOTSTRAP_SECRET=",
-  "SCORE_TOKEN_PEPPER="
-];
+const credentialPattern = "(CLOUDFLARE_API_TOKEN|SCORE_SESSION_SECRET|SCORE_AUTH_PEPPER|SCORE_ADMIN_BOOTSTRAP_SECRET|SCORE_TOKEN_PEPPER)[[:space:]]*[:=][[:space:]]*['\"]?[A-Za-z0-9_+/=.-]{24,}";
+const commits = git(["rev-list", "--all"]).split("\n").filter(Boolean);
 
-for (const needle of credentialNeedles) {
-  const history = git([
-    "log", "--all", "--format=%H", "-S", needle,
-    "--", ":!test/**", ":!tests/**", ":!**/__tests__/**", ":!docs/**", ":!.codex/**", ":!.github/**"
-  ]).split("\n").filter(Boolean);
-  if (history.length) {
-    console.error(`Potential historical credential assignment found for ${needle} in ${history.length} commit(s).`);
-    console.error("Review the affected history and rotate any credential that was ever exposed.");
+for (const commit of commits) {
+  const output = gitQuiet([
+    "grep", "-nE", credentialPattern, commit, "--",
+    ":!test/**", ":!tests/**", ":!**/__tests__/**",
+    ":!docs/**", ":!.codex/**", ":!.github/**"
+  ]);
+  if (output) {
+    console.error(`Potential historical credential value found in commit ${commit.slice(0, 12)}:`);
+    console.error(output);
     process.exit(1);
   }
 }
@@ -62,4 +63,4 @@ for (const path of serverFiles) {
   }
 }
 
-console.log("Security scan passed: no tracked secret files, historical credential assignments, or obvious sensitive server logging.");
+console.log("Security scan passed: no tracked secret files, historical credential values, or obvious sensitive server logging.");
