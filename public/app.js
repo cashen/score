@@ -2,6 +2,7 @@ import "./draft.js";
 import { brandMark } from "./brand-logo-b.js";
 import { comparisonCategory as coreComparisonCategory, comparisonReason as coreComparisonReason, comparisonEligibility as coreComparisonEligibility, comparableSet as coreComparableSet, comparableRanking as coreComparableRanking, findComparableExam as coreFindComparableExam, findComparableExamForSubject as coreFindComparableExamForSubject, metricBetween as coreMetricBetween, latestExam as coreLatestExam, sortExamsChronologically, subjectRecordState, percentile as corePercentile } from "./record-semantics-v120.js";
 import { examScoreSummary, examCompleteness, scoreSummaryText, subjectScore } from "./score-core-v090.js";
+import { trajectoryAnalysis, changeDrivers } from "./trajectory-analysis-v010.js";
 import { shareUrlFor, shareFileName } from "./share-delivery-v092.js";
 import { deliverShareImage } from "./share-image-v092.js";
 
@@ -252,6 +253,35 @@ function changeSources(latest, previous, basis) {
     .slice(0, 3);
 }
 
+
+function trajectoryMetricLabel(metric) {
+  return metric === "schoolRank" ? "学校位置" : metric === "classRank" ? "班级排名" : "分数";
+}
+
+function trajectoryDirectionLabel(direction) {
+  return direction === "forward" ? "整体向前" : direction === "backward" ? "整体向后" : direction === "steady" ? "整体接近" : "记录还少";
+}
+
+function renderTrajectoryReading(exams = state.exams) {
+  const analysis = trajectoryAnalysis(exams);
+  if (!analysis.current) return "";
+  const recent = analysis.recent;
+  const recentText = recent.length >= 3
+    ? `最近 ${recent.length} 次：${recent.map(row => row.display).join(" → ")}`
+    : `目前有 ${recent.length} 次可比记录`;
+  const longText = analysis.baseline && analysis.current && analysis.baseline.display !== analysis.current.display
+    ? `第一次 ${analysis.baseline.display} → 现在 ${analysis.current.display}`
+    : "还没有足够的历史记录判断长期变化";
+  const driverItems = changeDrivers(exams).slice(0, 3);
+  const driverText = driverItems.length
+    ? driverItems.map(item => {
+        const label = SUBJECTS.find(([key]) => key === item.key)?.[1] || item.key;
+        return `<div class="change-source-row"><strong>${esc(label)}</strong><span>${esc(directionText(item.metric))}</span><small>${esc(item.analysis.stability.label)} · ${esc(trajectoryMetricLabel(item.analysis.metric))}</small></div>`;
+      }).join("")
+    : `<p class="muted">还没有足够的同口径单科数据来说明变化来源。</p>`;
+  return `<section class="reading-section trajectory-reading"><div class="section-head-simple"><div><div class="section-label">多次考试怎么看</div><h2>先看现在，再看是不是持续</h2></div></div><div class="trajectory-reading-grid"><div><small>现在</small><strong>${esc(analysis.current.display)}</strong><span>${esc(trajectoryDirectionLabel(analysis.direction))} · ${esc(trajectoryMetricLabel(analysis.metric))}</span></div><div><small>最近几次</small><strong>${esc(recentText)}</strong><span>${esc(analysis.stability.detail)}</span></div><div><small>长期位置</small><strong>${esc(longText)}</strong><span>只描述已记录考试，不把一次变化解释成能力变化。</span></div></div><div class="trajectory-driver"><div class="section-label">最近变化主要来自哪科</div>${driverText}</div>${analysis.skipped.length ? `<small class="muted">另有 ${analysis.skipped.length} 场考试因口径或数据不足未纳入这次趋势判断。</small>` : ""}</section>`;
+}
+
 function coordinateItems(exam) {
   const school = overallRank(exam, "school");
   const clazz = overallRank(exam, "class");
@@ -445,7 +475,7 @@ function renderOverview() {
   const primaryLabel = completeness.complete ? "记录下一次考试" : "继续补充这次考试";
   const primaryAction = completeness.complete ? "new-exam" : "continue-exam";
   const comparisonNote = previous ? [esc(previous.name), fmtDate(previous.date), coreComparisonReason(exam, previous)].join(" · ") : comparison.reason;
-  return `<section class="coordinate-hero"><div class="hero-head"><div><h1>${esc(state.student.displayName)}</h1><p>${identityMeta(state.student) || "孩子资料可稍后补充"}</p></div>${canEdit() ? `<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="${esc(exam.id)}">编辑这次考试</button>` : ""}</div><div class="exam-context"><strong>${esc(exam.name)}</strong><span>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</span></div>${coordinateRow(exam)}${completionText ? `<p class="completion-note">${esc(completionText)}</p>` : ""}${schoolPct != null || school?.participants ? `<div class="coordinate-note">${schoolPct != null ? `校前 ${fmtNumber(schoolPct)}%` : ""}${schoolPct != null && school?.participants ? " · " : ""}${school?.participants ? `本次共 ${school.participants} 人` : ""}</div>` : ""}</section><section class="reading-section change-section"><div class="section-label">和上一次可比考试相比</div><div class="change-main"><strong>${esc(directionText(overallMetric))}</strong><span>${esc(overallMetric?.detail || comparisonNote)}</span><p class="human-summary">${esc(humanChangeSummary(overallMetric))}</p></div>${previous ? `<small>比较对象：${comparisonNote}</small>` : `<small>${comparisonNote}</small>`}</section><section class="reading-section"><div class="section-head-simple"><div><div class="section-label">值得回看的科目</div><h2>先看同一种指标，再决定下一步</h2></div></div>${sources.length ? `<div class="change-source-list">${sources.map(({ key, label, metric }) => { const current = subjectRank(exam, key, "school") || subjectRank(exam, key, "class"); return `<div class="change-source-row"><strong>${label}</strong><span>${esc(metric.detail)}</span><small>${esc(metric.metric === "schoolRank" ? "以学校排名为依据" : metric.metric === "classRank" ? "以班级排名为依据" : "以分数为依据")}</small></div>`; }).join("")}</div>` : `<p class="muted">还没有足够的同口径数据。历史仍会保留，数据够用时再比较。</p>`}</section><section class="reading-section subjects-section"><div class="section-head-simple"><div><div class="section-label">六科</div><h2>这次考试的具体坐标</h2></div></div><div class="subject-rows">${renderSubjectRows(exam)}</div></section>${canEdit() ? `<section class="overview-actions" aria-label="下一步"><button class="btn btn-primary btn-block" data-action="${primaryAction}" data-id="${esc(exam.id)}" data-primary-action="record-next">${primaryLabel}</button><button class="btn btn-outline" data-action="open-trajectory" aria-controls="deep-trajectory">查看完整轨迹</button></section>` : ""}${renderDeepTrajectory()}`;
+  return `<section class="coordinate-hero"><div class="hero-head"><div><h1>${esc(state.student.displayName)}</h1><p>${identityMeta(state.student) || "孩子资料可稍后补充"}</p></div>${canEdit() ? `<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="${esc(exam.id)}">编辑这次考试</button>` : ""}</div><div class="exam-context"><strong>${esc(exam.name)}</strong><span>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</span></div>${coordinateRow(exam)}${completionText ? `<p class="completion-note">${esc(completionText)}</p>` : ""}${schoolPct != null || school?.participants ? `<div class="coordinate-note">${schoolPct != null ? `校前 ${fmtNumber(schoolPct)}%` : ""}${schoolPct != null && school?.participants ? " · " : ""}${school?.participants ? `本次共 ${school.participants} 人` : ""}</div>` : ""}</section><section class="reading-section change-section"><div class="section-label">和上一次可比考试相比</div><div class="change-main"><strong>${esc(directionText(overallMetric))}</strong><span>${esc(overallMetric?.detail || comparisonNote)}</span><p class="human-summary">${esc(humanChangeSummary(overallMetric))}</p></div>${previous ? `<small>比较对象：${comparisonNote}</small>` : `<small>${comparisonNote}</small>`}</section><section class="reading-section"><div class="section-head-simple"><div><div class="section-label">值得回看的科目</div><h2>先看同一种指标，再决定下一步</h2></div></div>${sources.length ? `<div class="change-source-list">${sources.map(({ key, label, metric }) => { const current = subjectRank(exam, key, "school") || subjectRank(exam, key, "class"); return `<div class="change-source-row"><strong>${label}</strong><span>${esc(metric.detail)}</span><small>${esc(metric.metric === "schoolRank" ? "以学校排名为依据" : metric.metric === "classRank" ? "以班级排名为依据" : "以分数为依据")}</small></div>`; }).join("")}</div>` : `<p class="muted">还没有足够的同口径数据。历史仍会保留，数据够用时再比较。</p>`}</section><section class="reading-section subjects-section"><div class="section-head-simple"><div><div class="section-label">六科</div><h2>这次考试的具体坐标</h2></div></div><div class="subject-rows">${renderSubjectRows(exam)}</div></section>${canEdit() ? `<section class="overview-actions" aria-label="下一步"><button class="btn btn-primary btn-block" data-action="${primaryAction}" data-id="${esc(exam.id)}" data-primary-action="record-next">${primaryLabel}</button><button class="btn btn-outline" data-action="open-trajectory" aria-controls="deep-trajectory">查看完整轨迹</button></section>` : ""}${renderTrajectoryReading(state.exams)}${renderDeepTrajectory()}`;
 }
 
 function renderExamList() {
