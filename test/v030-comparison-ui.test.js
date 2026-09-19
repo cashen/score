@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+const semantics = await readFile(new URL("../public/record-semantics-v120.js", import.meta.url), "utf8");
 
 test("comparison metadata stays optional and out of the primary exam path", () => {
   assert.match(app, /更多考试信息（可选）/);
@@ -18,8 +19,12 @@ test("comparison copy avoids causal claims", () => {
 });
 
 test("overall comparison prefers relative position before score", () => {
-  const metric = app.slice(app.indexOf("function metricBetween"), app.indexOf("function directionText"));
-  assert.ok(metric.indexOf("percentile") < metric.indexOf("school-rank"));
-  assert.ok(metric.indexOf("school-rank") < metric.indexOf("class-rank"));
-  assert.ok(metric.indexOf("class-rank") < metric.lastIndexOf("score"));
+  assert.match(semantics, /metric === "auto" \\|\\| metric === "schoolRank"/);
+  assert.match(semantics, /kind: "percentile"/);
+  assert.match(semantics, /kind: "school-rank"/);
+  assert.match(semantics, /kind: "class-rank"/);
+  assert.match(semantics, /kind: "score"/);
+  assert.ok(semantics.indexOf('kind: "percentile"') < semantics.indexOf('kind: "school-rank"'));
+  assert.ok(semantics.indexOf('kind: "school-rank"') < semantics.indexOf('kind: "class-rank"'));
+  assert.ok(semantics.indexOf('kind: "class-rank"') < semantics.indexOf('kind: "score"'));
 });
