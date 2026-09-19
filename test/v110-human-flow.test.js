@@ -30,10 +30,9 @@ test("editing preserves context and detail comparisons follow chronological dire
 
 test("change copy and source rows use the actual metric", () => {
   assert.match(app, /这次分数比上一次高/);
-  assert.match(app, /校内第 \${metric\.currentValue} 名|以学校排名为依据/);
-  assert.match(app, /班级第 \${metric\.currentValue} 名|以班级排名为依据/);
-  assert.match(app, /以学校排名为依据/);
-  assert.match(app, /以班级排名为依据/);
+  assert.match(app, /change-source-row/);
+  assert.match(app, /metric\.detail/);
+  assert.doesNotMatch(app, /以学校排名为依据|以班级排名为依据/);
 });
 
 test("editing an existing status preserves its exact semantic value", () => {
