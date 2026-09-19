@@ -1298,7 +1298,7 @@ function publicViewNavV080(active = "total", subject = null) {
 function publicBaselineV081(view, exams, share = {}) {
   if (!Array.isArray(exams) || exams.length !== 1) return "";
   const copy = {
-    total: "目前只有一次考试记录。先看这一场的总成绩和位置；有下一次同口径记录后再比较。",
+    total: "目前只有一次考试记录。先看这一场的总成绩和位置；有下一次可以直接比较的考试后再比较。",
     subject: "目前只有一次考试记录。这里先看这一次的成绩和位置。",
     timeline: "时间轴从这一次开始。打开节点可以查看本场全部已分享信息。"
   };
