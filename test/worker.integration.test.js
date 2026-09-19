@@ -298,6 +298,10 @@ test("v0.11.0 legacy share grants without scope remain readable", async () => {
   }));
   await e.SCORE_KV.put(`exam:${provision.studentId}:${exam.id}`, JSON.stringify(exam));
   await e.SCORE_KV.put(`exam-summary:${provision.studentId}:${exam.id}`, JSON.stringify({ id: exam.id, name: exam.name, date: exam.date, type: exam.type, revision: 1, updatedAt: "2026-08-01T00:00:00.000Z" }));
+  await e.SCORE_KV.put(`exam-index:${provision.studentId}`, JSON.stringify({
+    studentId: provision.studentId,
+    items: [{ id: exam.id, name: exam.name, date: exam.date, type: exam.type, revision: 1, updatedAt: "2026-08-01T00:00:00.000Z" }]
+  }));
   const locator = "legacy-v1";
   await e.SCORE_KV.put(`share:public:${locator}`, JSON.stringify({
     schemaVersion: 1,
