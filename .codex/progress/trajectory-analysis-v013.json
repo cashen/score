@@ -3,7 +3,7 @@
   "workstream": "trajectory-analysis-v013",
   "branch": "feat/trajectory-analysis-v013",
   "baseMain": "7ae75cb3d0c53dca267da3a773a9550cfabe8e55",
-  "targetVersion": "0.12.15",
+  "targetVersion": "0.12.16",
   "status": "ci-fix-applied",
   "completed": [
     "added public/trajectory-analysis-v010.js as the single trajectory analysis semantic layer",
@@ -20,6 +20,6 @@
     "verify main SHA/version and production deployment attestation"
   ],
   "resumeRule": "On interruption, read this file first, then inspect live main, this branch, PR checks, Actions and production attestation. Do not reset or overwrite user changes. Continue from the latest branch SHA.",
-  "updatedAt": "2026-09-19T00:45:00Z",
-  "latestBranchHead": "2bfbb20d39163062e1644c9d3a612421728de705"
+  "updatedAt": "2026-09-19T01:05:00Z",
+  "latestBranchHead": "1c2f4e389451721332768c517715d3cf0ba39b62"
 }
