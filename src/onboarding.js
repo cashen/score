@@ -1,7 +1,8 @@
-import { hashPassword, randomToken, sha256, signSession, timingSafeEqualText, tokenHash } from "./lib/crypto.js";
+import { hashPassword, randomToken, sha256, signSession, timingSafeEqualText, tokenHash, sessionStorageKey } from "./lib/crypto.js";
 import { assertPassword, assertUsername, normalizeUsername, safeText } from "./lib/model.js";
 import { errorJson, json, readJson, sessionCookie } from "./lib/http.js";
 import { enforceRateLimit } from "./lib/rate-limit.js";
+import { claimOneTime, consumeOneTime, releaseOneTime } from "./security-gate.js";
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const DEFAULT_INVITE_HOURS = 72;
@@ -81,14 +82,21 @@ function expired(record) {
 
 async function createSession(member, env) {
   requireRuntimeSecrets(env);
+  const jti = randomToken(18);
   const payload = {
     sub: member.id,
     fid: member.familyId,
     role: member.role,
     sv: member.sessionVersion,
     csrf: randomToken(18),
+    jti,
     exp: Date.now() + SESSION_TTL_MS
   };
+  await env.SCORE_KV.put(
+    await sessionStorageKey(jti),
+    JSON.stringify({ memberId: member.id, createdAt: now(), expiresAt: new Date(payload.exp).toISOString() }),
+    { expirationTtl: Math.ceil(SESSION_TTL_MS / 1000) }
+  );
   return { token: await signSession(payload, env.SESSION_SECRET), payload };
 }
 
@@ -178,6 +186,9 @@ async function handleInviteAccept(request, env, rawToken) {
   const uKey = await usernameKey(username);
   if (await env.SCORE_KV.get(uKey)) return errorJson("该账号已存在", 409, "username_exists");
 
+  const claimId = await claimOneTime(env, "invite", found.locator);
+  if (!claimId) return errorJson("邀请链接正在使用或已经失效，请重新获取", 409, "invite_in_progress");
+
   const familyId = id("fam");
   const memberId = id("mem");
   const studentId = id("stu");
@@ -224,31 +235,38 @@ async function handleInviteAccept(request, env, rawToken) {
     archivedAt: null
   };
 
-  // KV is not transactional. Write complete objects before exposing the username mapping.
-  await putJson(env, `member:${memberId}`, member);
-  await putJson(env, `family:${familyId}`, family);
-  await putJson(env, `student:${studentId}`, student);
-  await putJson(env, uKey, { memberId });
+  try {
+    // KV is not transactional. Write complete objects before exposing the username mapping.
+    await putJson(env, `member:${memberId}`, member);
+    await putJson(env, `family:${familyId}`, family);
+    await putJson(env, `student:${studentId}`, student);
+    await putJson(env, uKey, { memberId });
 
-  const usedAt = now();
-  await putJson(env, `invite:${found.locator}`, {
-    ...found.invite,
-    usedAt,
-    acceptedFamilyId: familyId,
-    acceptedMemberId: memberId
-  });
-  await updateInviteIndex(env, found.invite.issuedByMemberId, found.invite.id, { usedAt });
+    const usedAt = now();
+    await putJson(env, `invite:${found.locator}`, {
+      ...found.invite,
+      usedAt,
+      acceptedFamilyId: familyId,
+      acceptedMemberId: memberId
+    });
+    await updateInviteIndex(env, found.invite.issuedByMemberId, found.invite.id, { usedAt });
 
-  const session = await createSession(member, env);
-  return json({
-    ok: true,
-    familyId,
-    memberId,
-    studentId,
-    recoveryCode,
-    recoveryCodeNotice: "恢复码只显示这一次，请离线保存。以后每次使用恢复码重置密码后都会生成新的恢复码。",
-    csrf: session.payload.csrf
-  }, 201, { "set-cookie": sessionCookie(session.token) });
+    const session = await createSession(member, env);
+    const response = json({
+      ok: true,
+      familyId,
+      memberId,
+      studentId,
+      recoveryCode,
+      recoveryCodeNotice: "恢复码只显示这一次，请离线保存。以后每次使用恢复码重置密码后都会生成新的恢复码。",
+      csrf: session.payload.csrf
+    }, 201, { "set-cookie": sessionCookie(session.token) });
+    await consumeOneTime(env, "invite", found.locator, claimId);
+    return response;
+  } catch (error) {
+    await releaseOneTime(env, "invite", found.locator, claimId);
+    throw error;
+  }
 }
 
 async function handleMyRecoveryCode(request, env, session) {
@@ -273,6 +291,10 @@ async function handleRecoveryCodeReset(request, env) {
   const legacyHash = await legacySecretHash(body.recoveryCode, env);
   const validRecovery = timingSafeEqualText(suppliedHash, member.recoveryCodeHash) || timingSafeEqualText(legacyHash, member.recoveryCodeHash);
   if (!validRecovery) return errorJson("账号或恢复码无效", 403, "invalid_recovery");
+
+  const recoveryLocator = member.recoveryCodeHash;
+  const claimId = await claimOneTime(env, "recovery-code", recoveryLocator);
+  if (!claimId) return errorJson("恢复码正在使用或已经失效，请重新获取", 409, "recovery_in_progress");
 
   const rotatedRaw = randomToken(24);
   const updated = {
@@ -354,6 +376,9 @@ async function handleRecoveryLinkReset(request, env, rawToken) {
   const newPassword = assertPassword(body.newPassword);
   const member = await getJson(env, `member:${found.record.targetMemberId}`);
   if (!member || member.disabledAt) return errorJson("账号不可恢复", 404, "account_not_found");
+
+  const claimId = await claimOneTime(env, "recovery-link", found.locator);
+  if (!claimId) return errorJson("重置链接正在使用或已经失效，请重新获取", 409, "recovery_link_in_progress");
 
   const rotatedRaw = randomToken(24);
   const changedAt = now();
