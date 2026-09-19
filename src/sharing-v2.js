@@ -144,7 +144,13 @@ async function handleCreate(request, env, session, studentId) {
 async function normalizeGrant(grant) {
   if (!grant) return null;
   const scope = grant.scope === "trajectory" ? "trajectory" : "single";
-  return { ...grant, scope, examId: grant.examId || null, examName: grant.examName || null };
+  return {
+    ...grant,
+    scope,
+    examId: grant.examId || null,
+    examName: grant.examName || null,
+    fields: normalizeShareFields(grant.fields)
+  };
 }
 
 async function handleExternal(env, kind, rawLocator) {
