@@ -1234,8 +1234,8 @@ function bindDashboard() {
 
 function publicSubjectRows(exam, share = {}) {
   if (!exam?.subjects) return "";
-  const scoreShared = share.fields?.subjectScores !== false;
-  const rankShared = share.fields?.subjectRanks !== false;
+  const scoreShared = share.fields?.subjectScores === true;
+  const rankShared = share.fields?.subjectRanks === true;
   return SUBJECTS.map(([key, label]) => {
     const subject = exam.subjects[key] || {};
     const score = scoreShared ? scoreOf(subject) : null;
