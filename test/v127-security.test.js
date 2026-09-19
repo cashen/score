@@ -100,7 +100,7 @@ test("successful login lazily upgrades a legacy password record", async () => {
   const response = await call(runtime, "/api/login", {
     method: "POST",
     headers: { "content-type": "application/json", "CF-Connecting-IP": "127.0.0.10" },
-    body: JSON.stringify({ username: "legacy001", password })
+    body: JSON.stringify({ username: "legacy001", password: "legacy-login-123" })
   });
   assert.equal(response.status, 200);
 });
