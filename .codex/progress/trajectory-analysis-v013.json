@@ -4,7 +4,7 @@
   "branch": "feat/trajectory-analysis-v013",
   "baseMain": "7ae75cb3d0c53dca267da3a773a9550cfabe8e55",
   "targetVersion": "0.12.14",
-  "status": "implementation",
+  "status": "ready-for-pr",
   "completed": [
     "added public/trajectory-analysis-v010.js as the single trajectory analysis semantic layer",
     "added regression tests for multi-exam, baseline, non-comparable, metric coverage and change drivers",
@@ -13,8 +13,6 @@
     "added compact responsive CSS"
   ],
   "remaining": [
-    "add trajectory analysis module to package check",
-    "finalize version/changelog at 0.12.14",
     "open PR and wait for CI",
     "fix all CI failures",
     "second-round checks on final PR head",
@@ -22,5 +20,6 @@
     "verify main SHA/version and production deployment attestation"
   ],
   "resumeRule": "On interruption, read this file first, then inspect live main, this branch, PR checks, Actions and production attestation. Do not reset or overwrite user changes. Continue from the latest branch SHA.",
-  "updatedAt": "2026-09-19T00:00:00Z"
+  "updatedAt": "2026-09-19T00:30:00Z",
+  "latestBranchHead": "eec40826e918527e2c5ed94531f3278ce98a1318"
 }
