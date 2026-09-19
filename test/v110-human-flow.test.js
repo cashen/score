@@ -30,8 +30,8 @@ test("editing preserves context and detail comparisons follow chronological dire
 
 test("change copy and source rows use the actual metric", () => {
   assert.match(app, /这次分数比上一次高/);
-  assert.match(app, /学校排名比上一次/);
-  assert.match(app, /班级排名比上一次/);
+  assert.match(app, /校内第 \${metric\.currentValue} 名|以学校排名为依据/);
+  assert.match(app, /班级第 \${metric\.currentValue} 名|以班级排名为依据/);
   assert.match(app, /以学校排名为依据/);
   assert.match(app, /以班级排名为依据/);
 });
