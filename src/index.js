@@ -5,7 +5,8 @@ import {
   normalizeExam,
   normalizeUsername,
   safeText,
-  sortExamsChronologically
+  sortExamsChronologically,
+  compareExamsChronologically
 } from "./lib/model.js";
 import {
   clearSessionCookie,
@@ -99,7 +100,7 @@ async function loadExamIndex(env, studentId) {
     const summaries = await Promise.all((listed?.keys || []).map((key) => getJson(env, key.name)));
     const items = summaries.filter(Boolean);
     if (items.length) {
-      items.sort((a, b) => sortExamsChronologically([a, b])[0] === a ? -1 : 1);
+      items.sort(compareExamsChronologically);
       return { studentId, items: items.slice(0, MAX_EXAMS), updatedAt: now() };
     }
   } catch {
