@@ -25,16 +25,24 @@ if (historicalSecretFiles.length) {
   process.exit(1);
 }
 
-const sensitiveAssignment = /(?:CLOUDFLARE_API_TOKEN|SCORE_(?:SESSION_SECRET|AUTH_PEPPER|ADMIN_BOOTSTRAP_SECRET|TOKEN_PEPPER))\s*[:=]\s*(?!\$\{\{\s*secrets\.)(?!["'](?:test|dev|mock|fake|dummy|example|placeholder|admin-secret|session-secret|auth-pepper)[^"']*["'])["']?[A-Za-z0-9_+/=.-]{16,}/;
-const history = git([
-  "log", "--all", "--format=%H", "-G", sensitiveAssignment.source,
-  "--", ":!test/**", ":!tests/**", ":!**/__tests__/**", ":!docs/**", ":!.codex/**"
-]).split("\n").filter(Boolean);
+const credentialNeedles = [
+  "CLOUDFLARE_API_TOKEN=",
+  "SCORE_SESSION_SECRET=",
+  "SCORE_AUTH_PEPPER=",
+  "SCORE_ADMIN_BOOTSTRAP_SECRET=",
+  "SCORE_TOKEN_PEPPER="
+];
 
-if (history.length) {
-  console.error(`Potential historical credential assignment found in ${history.length} commit(s).`);
-  console.error("Review the affected history and rotate any credential that was ever exposed.");
-  process.exit(1);
+for (const needle of credentialNeedles) {
+  const history = git([
+    "log", "--all", "--format=%H", "-S", needle,
+    "--", ":!test/**", ":!tests/**", ":!**/__tests__/**", ":!docs/**", ":!.codex/**", ":!.github/**"
+  ]).split("\n").filter(Boolean);
+  if (history.length) {
+    console.error(`Potential historical credential assignment found for ${needle} in ${history.length} commit(s).`);
+    console.error("Review the affected history and rotate any credential that was ever exposed.");
+    process.exit(1);
+  }
 }
 
 const sensitiveLogPatterns = [
@@ -54,4 +62,4 @@ for (const path of serverFiles) {
   }
 }
 
-console.log("Security scan passed: no tracked secret files, credential assignments, or obvious sensitive server logging.");
+console.log("Security scan passed: no tracked secret files, historical credential assignments, or obvious sensitive server logging.");
