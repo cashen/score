@@ -1,3 +1,8 @@
+## 0.12.27.1
+
+- 修复 Cloudflare Web Crypto 不支持超过 100000 次 PBKDF2 iterations 导致登录失败的问题。
+- 将生产密码 KDF 参数调整为 Cloudflare 当前运行时可执行的 100000 次，并保留旧密码兼容与 lazy rehash。
+
 ## 0.12.27
 
 - 安全加固：提升密码 KDF 基线并支持旧密码登录后自动升级 hash。
