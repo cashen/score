@@ -770,11 +770,12 @@ async function saveExam(event) {
 
 async function deleteExam() {
   if (!state.editingExam || !confirm(`确认删除“${state.editingExam.name}”？`)) return;
+  const deletingExamId = state.editingExam.id;
   try {
-    await api(`/api/students/${state.student.id}/exams/${state.editingExam.id}`, { method: "DELETE", body: JSON.stringify({ expectedRevision: state.editingExam.revision }) });
+    await api(`/api/students/${state.student.id}/exams/${deletingExamId}`, { method: "DELETE", body: JSON.stringify({ expectedRevision: state.editingExam.revision }) });
     closeDialog();
     await loadStudentData();
-    if (state.selectedExamId === state.editingExam?.id || state.selectedExamId === state.editingExam?.id) state.selectedExamId = null;
+    if (state.selectedExamId === deletingExamId) state.selectedExamId = null;
     writePrivateNavigation({ replace: true });
     state.notice = "考试已删除";
     state.noticeTone = "success";
