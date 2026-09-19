@@ -1,4 +1,10 @@
 import { examScoreSummary } from "../../public/score-core-v090.js";
+import {
+  examComparisonCategory as semanticExamComparisonCategory,
+  comparableRanking as semanticComparableRanking,
+  percentile as semanticPercentile,
+  sortExamsChronologically
+} from "../../public/record-semantics-v120.js";
 
 export const SUBJECTS = ["chinese", "math", "english", "physics", "chemistry", "biology"];
 export const ROLES = new Set(["owner", "editor", "viewer"]);
@@ -7,10 +13,7 @@ export const SCORE_MODES = new Set(["raw", "converted", "raw_and_converted"]);
 export const COMPARISON_LEVELS = new Set(["school", "alliance", "district", "city", "province", "other"]);
 
 export function examComparisonCategory(value) {
-  const type = typeof value === "string" ? value : value?.type;
-  if (type === "joint" || type === "school") return "joint_school";
-  if (["mock1", "mock2", "mock3"].includes(type)) return "mock";
-  return EXAM_TYPES.has(type) ? type : "other";
+  return semanticExamComparisonCategory(value);
 }
 
 export function comparableExamCategory(a, b) {
@@ -166,14 +169,14 @@ export function normalizeShareFields(input = {}) {
 }
 
 export function percentile(rank, participants) {
-  if (!Number.isInteger(rank) || !Number.isInteger(participants) || rank < 1 || participants < rank) return null;
-  return Math.round((rank / participants) * 1000) / 10;
+  return semanticPercentile(rank, participants);
 }
 
 export function comparableRanking(a, b) {
-  if (!a || !b) return false;
-  return a.scope === b.scope && (a.label || "") === (b.label || "") && a.basis === b.basis;
+  return semanticComparableRanking(a, b);
 }
+
+export { sortExamsChronologically };
 
 export function publicProjection(student, exams, fields) {
   const result = {
