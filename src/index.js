@@ -1,4 +1,4 @@
-import { randomToken, sha256, hashPassword, verifyPassword, signSession, verifySessionToken } from "./lib/crypto.js";
+import { randomToken, sha256, hashPassword, verifyPassword, signSession, verifySessionToken, sessionStorageKey } from "./lib/crypto.js";
 import {
   assertPassword,
   assertUsername,
@@ -63,14 +63,21 @@ function requireRuntimeSecrets(env) {
 
 async function createSession(member, env) {
   requireRuntimeSecrets(env);
+  const jti = randomToken(18);
   const payload = {
     sub: member.id,
     fid: member.familyId,
     role: member.role,
     sv: member.sessionVersion,
     csrf: randomToken(18),
+    jti,
     exp: Date.now() + SESSION_TTL_MS
   };
+  await env.SCORE_KV.put(
+    await sessionStorageKey(jti),
+    JSON.stringify({ memberId: member.id, createdAt: now(), expiresAt: new Date(payload.exp).toISOString() }),
+    { expirationTtl: Math.ceil(SESSION_TTL_MS / 1000) }
+  );
   return { token: await signSession(payload, env.SESSION_SECRET), payload };
 }
 
@@ -79,6 +86,7 @@ async function auth(request, env) {
   const token = parseCookies(request).score_session;
   const payload = await verifySessionToken(token, env.SESSION_SECRET);
   if (!payload) return null;
+  if (payload.jti && !(await env.SCORE_KV.get(await sessionStorageKey(payload.jti)))) return null;
   const member = await getJson(env, `member:${payload.sub}`);
   if (!member || member.familyId !== payload.fid || member.sessionVersion !== payload.sv || member.disabledAt) return null;
   return { member, payload };
@@ -166,6 +174,7 @@ async function getShareIndex(env, studentId) {
 
 async function handleAdminProvision(request, env) {
   await enforceRateLimit(env, request, { scope: "admin-provision", ipMax: 5, windowSeconds: 900 });
+  if (env.BOOTSTRAP_ENABLED !== "true" || await env.SCORE_KV.get("bootstrap:completed")) return errorJson("管理员建户入口已关闭", 404, "not_found");
   if (!env.ADMIN_BOOTSTRAP_SECRET) return errorJson("管理员建户入口未启用", 404, "not_found");
   const authHeader = request.headers.get("authorization") || "";
   if (authHeader !== `Bearer ${env.ADMIN_BOOTSTRAP_SECRET}`) return errorJson("管理员凭据无效", 403, "forbidden");
@@ -222,6 +231,7 @@ async function handleAdminProvision(request, env) {
   await putJson(env, `member:${memberId}`, member);
   await putJson(env, `family:${familyId}`, family);
   await putJson(env, `student:${studentId}`, student);
+  await putJson(env, "bootstrap:completed", { completedAt: createdAt, memberId });
   return json({ ok: true, familyId, memberId, studentId }, 201);
 }
 
@@ -290,6 +300,13 @@ async function handleLogoutAll(request, env, session) {
   requireCsrf(request, session);
   const updated = { ...session.member, sessionVersion: session.member.sessionVersion + 1, sessionsRevokedAt: now() };
   await putJson(env, `member:${updated.id}`, updated);
+  if (session.payload.jti) await env.SCORE_KV.delete(await sessionStorageKey(session.payload.jti));
+  return json({ ok: true }, 200, { "set-cookie": clearSessionCookie() });
+}
+
+async function handleLogout(request, env, session) {
+  requireCsrf(request, session);
+  if (session.payload.jti) await env.SCORE_KV.delete(await sessionStorageKey(session.payload.jti));
   return json({ ok: true }, 200, { "set-cookie": clearSessionCookie() });
 }
 
@@ -436,6 +453,7 @@ async function handleShareList(env, member, studentId) {
 
 async function handleShareRevoke(request, env, session, studentId) {
   requireCsrf(request, session);
+  await enforceRateLimit(env, request, { scope: "share-revoke", identity: session.member.id, identityMax: 30, ipMax: 60, windowSeconds: 600 });
   await requireStudent(env, session.member, studentId, true);
   const body = await readJson(request);
   const kind = body.kind === "public" ? "public" : "secret";
@@ -456,14 +474,13 @@ async function routeApi(request, env) {
   }
   if (request.method === "POST" && path === "/api/admin/provision") return handleAdminProvision(request, env);
   if (request.method === "POST" && path === "/api/login") return handleLogin(request, env);
-  if (request.method === "POST" && path === "/api/logout") return json({ ok: true }, 200, { "set-cookie": clearSessionCookie() });
-
   const publicSharing = await routePublicSharingV2(request, env);
   if (publicSharing) return publicSharing;
 
   const session = await auth(request, env);
   if (!session) return errorJson("请先登录", 401, "unauthorized");
 
+  if (request.method === "POST" && path === "/api/logout") return handleLogout(request, env, session);
   if (request.method === "GET" && path === "/api/me") return handleMe(request, env, session);
   if (request.method === "POST" && path === "/api/me/password") return handleChangePassword(request, env, session);
   if (request.method === "POST" && path === "/api/me/logout-all") return handleLogoutAll(request, env, session);
