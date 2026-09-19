@@ -33,6 +33,8 @@ export function comparisonEligibility(latest, previous) {
   return { status: "comparable", reason: "按" + a.level + "口径比较" };
 }
 
+export const comparisonCategory = examComparisonCategory;
+
 export function compareExamsChronologically(a, b) {
   return String(b?.date || "").localeCompare(String(a?.date || "")) ||
     String(b?.createdAt || "").localeCompare(String(a?.createdAt || "")) ||
