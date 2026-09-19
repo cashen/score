@@ -11,12 +11,14 @@ test('deploy workflow is triggered only by main CI completions', () => {
   assert.match(workflow, /types: \[completed\]/);
   assert.match(workflow, /branches: \[main\]/);
   assert.match(workflow, /workflow_run\.conclusion == 'success'/);
+  assert.match(workflow, /actions\/checkout@11d5960a326750d5838078e36cf38b85af677262/);
+  assert.match(workflow, /actions\/setup-node@a0853c24544627f65ddf259abe73b1d18a591444/);
   assert.doesNotMatch(workflow, /workflow_run\.head_branch/);
 });
 
 test('release version is aligned', () => {
-  assert.equal(pkg.version, '0.12.26');
-  assert.match(wrangler, /APP_VERSION = "0\.12\.26"/);
+  assert.equal(pkg.version, '0.12.27');
+  assert.match(wrangler, /APP_VERSION = "0\.12\.27"/);
 });
 
 test('deployment still checks exact tested SHA', () => {
