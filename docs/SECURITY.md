@@ -23,7 +23,7 @@
 
 - 邀请、恢复码、恢复链接的一次性消费由 SQLite-backed Durable Object `OneTimeCredentialGate` 串行化；成绩数据继续保存在 Workers KV。
 - 新生成 Secret Share 使用 URL fragment 保存原始 token；页面读取后立即移除 fragment，再通过同源 POST redeem；旧 path 格式继续兼容。
-- Session payload 增加随机 `jti`；服务端保存短期 session record。普通退出删除当前 session record，改密码、退出所有设备和恢复密码仍通过 `sessionVersion` 撤销旧 Session。
+- Session payload 增加随机 `jti`；服务端保存短期 session record。普通退出删除当前 session record，改密码、退出所有设备和恢复密码仍通过 `sessionVersion` 撤销旧 Session。由于 session record 当前保存在 Workers KV，普通退出的跨 POP 撤销受 KV 最终一致性影响，不宣称零传播延迟。
 - `BOOTSTRAP_ENABLED` 默认关闭；临时开启时成功创建一次后写入 `bootstrap:completed`，之后永久关闭该入口。
 - 分享创建、撤销、公开兑换均有限流；429 响应带 `Retry-After`。
 - Workers invocation logs 显式关闭，避免默认 invocation 日志记录请求 URL 中的新 Secret Share token。
