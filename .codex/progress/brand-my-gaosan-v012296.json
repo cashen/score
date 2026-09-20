@@ -14,5 +14,11 @@
     ]
   },
   "historicalFilesPolicy": "保留历史 CHANGELOG / PR / checkpoint 中的旧品牌文字，不改写历史事实。",
-  "status": "in_progress"
+  "status": "ready_for_ci",
+  "pr": 59,
+  "headSha": "85455c33832194f78b2ca5d9975e11a327f26e95",
+  "verification": {
+    "currentBrandSurfaceOldCount": 0,
+    "targetVersion": "0.12.29.6"
+  }
 }
