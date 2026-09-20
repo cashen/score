@@ -14,7 +14,7 @@ const fields = { displayName: true, graduationYear: true, school: true, classNam
 async function fixture(page, count = 1, allowed = fields, mode = "live") {
   const errors = [];
   page.on("pageerror", error => errors.push(error.message));
-  const exams = count === 2 ? [exam, { ...exam, id: "fixture-0", name: "八月校考", date: "2026-08-01", overall: { officialScore: 570, rankings } }] : count ? [exam] : [];
+  const exams = count === 2 ? [exam, { ...exam, id: "fixture-0", name: "八月校考", date: "2026-08-01", overall: { officialScore: 570, rankings }, subjects: { ...exam.subjects, english: { ...exam.subjects.english, rawScore: 105 } } }] : count ? [exam] : [];
   const data = publicProjection({ displayName: "示例同学", graduationYear: 2027, schoolLabel: "示例学校", className: "高三一班", notes: "PRIVATE_STUDENT_NOTE" }, exams, allowed);
   await page.route("**/api/**", route => {
     if (/\/api\/share\/(secret|public)\/fixture$/.test(route.request().url())) return route.fulfill({ json: { share: { mode, fields: allowed }, data } });
@@ -61,6 +61,7 @@ test("single record: total, six subjects, timeline and complete detail", async (
   await expect(page.getByRole("heading", { name: "示例同学" })).toBeVisible();
   await expect(page.locator(".coordinate-row")).toContainText("585 分");
   await expect(page.getByText("目前的记录", { exact: true })).toBeVisible();
+  await expect(page.getByText("比上一场高 15 分", { exact: true })).toBeVisible();
   await expect(page.locator(".subject-row")).toHaveCount(6);
   await layout(page);
   await info.attach("total", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
@@ -110,6 +111,7 @@ test("public multi-record deep links preserve each examination", async ({ page }
   await expect(page.locator(".subject-row")).toHaveCount(6);
   await page.getByRole("link", { name: "英语", exact: true }).click();
   await expect(page.getByRole("heading", { name: "英语的历次记录" })).toBeVisible();
+  await expect(page.getByText("分数高 7 分", { exact: true })).toBeVisible();
   await expect(page.locator(".subject-compare-row")).toHaveCount(2);
   await expect(page.locator(".subject-compare-row").first()).toContainText("最近一次有记录的成绩");
   const subjectText = await page.locator(".public-shell").innerText();
