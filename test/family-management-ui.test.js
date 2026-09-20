@@ -21,7 +21,7 @@ test("family and account actions are rendered directly", () => {
   assert.match(app, /生成 \/ 更换恢复码/);
   assert.match(app, /导出全部数据/);
   assert.match(app, /退出所有设备/);
-  assert.match(app, /邀请另一户家庭使用高三坐标/);
+  assert.match(app, /邀请另一户家庭使用我的高三/);
   assert.doesNotMatch(index, /family-management\.js/);
 });
 

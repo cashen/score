@@ -1,6 +1,6 @@
 import { brandMark } from "./brand-logo-b.js";
 
-const PRODUCT_NAME = "高三坐标";
+const PRODUCT_NAME = "我的高三";
 const app = document.querySelector("#app");
 const path = location.pathname;
 
@@ -92,7 +92,7 @@ async function renderJoin(token) {
           })
         });
         history.replaceState(null, "", "/");
-        shell("家庭空间已经建立", "先保存恢复码，再进入高三坐标。", recoveryResult(result.recoveryCode, { loggedIn: true }));
+        shell("家庭空间已经建立", "先保存恢复码，再进入我的高三。", recoveryResult(result.recoveryCode, { loggedIn: true }));
         bindRecoveryResult(true);
       } catch (errorValue) {
         error.innerHTML = `<div class="error-box">${esc(errorValue.message)}</div>`;

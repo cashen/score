@@ -1,0 +1,26 @@
+{
+  "task": "brand-my-gaosan-v012296",
+  "repository": "cashen/score",
+  "branch": "brand/my-gaosan-v012296",
+  "baseSha": "2867255835fa63c1d027087c54b3ef0ebff30a5b",
+  "targetVersion": "0.12.29.7",
+  "brandContract": {
+    "productName": "我的高三",
+    "technicalPackageName": "score-track",
+    "tagline": "看见这次成绩，也看见前后的变化",
+    "featureConceptsRetained": [
+      "轨迹",
+      "时间轴"
+    ]
+  },
+  "historicalFilesPolicy": "保留历史 CHANGELOG / PR / checkpoint 中的旧品牌文字，不改写历史事实。",
+  "status": "ci_running",
+  "pr": 59,
+  "headSha": null,
+  "verification": {
+    "currentBrandSurfaceOldCount": 0,
+    "targetVersion": "0.12.29.6"
+  },
+  "ciRunId": 35483435213,
+  "ciFix": "v0.12.29.7 fixes stale security release contract assertion discovered by CI"
+}
