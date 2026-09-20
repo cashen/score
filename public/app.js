@@ -1327,7 +1327,7 @@ function publicSubjectRows(exam, share = {}, exams = []) {
     const rankText = rankShared ? meta : "未分享";
     return `<div class="subject-row"><strong>${label}</strong><b>${esc(scoreText)}</b><span class="subject-row-meta">${esc(rankText)}${change ? `<small class="score-change-inline">${esc(change)}</small>` : ""}</span></div>`;
   }).join("");
-
+}
 function publicHistory(exams) {
   if (!Array.isArray(exams) || exams.length < 2) return "";
   return `<section class="public-history"><div class="section-label">历次成绩</div><h2>把不同考试放回时间里看</h2><div class="history-list">${exams.map((exam, index) => {
@@ -1437,26 +1437,7 @@ function publicExamDetailV080(exam, share = {}, exams = []) {
   const overall = [scoreText, rankText].filter(Boolean).join(" · ");
   const change = share.fields?.overallScore === true ? renderScoreChange(overallScoreMetric) : "";
   return `<section class="public-reading-section public-exam-detail"><div class="section-label">考试详情</div><h2>${esc(exam.name)}</h2><p>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</p><div class="exam-detail-overall"><strong>${esc(overall)}</strong>${change}</div><div class="exam-detail-subjects">${rows}</div></section>`;
-}) {
-  if (!exam) return "";
-  const scoreShared = share.fields?.subjectScores === true;
-  const rankShared = share.fields?.subjectRanks === true;
-  const rows = SUBJECTS.map(([key, label]) => {
-    const subject = exam.subjects?.[key] || {};
-    const score = scoreShared ? scoreOf(subject) : null;
-    const school = rankShared ? rankByScope(subject.rankings, "school") : null;
-    const clazz = rankShared ? rankByScope(subject.rankings, "class") : null;
-    const values = [score == null ? null : `${fmtNumber(score)} 分`, subject.fullScore ? `满分 ${subject.fullScore}` : null, school?.rank != null ? `校内第 ${school.rank}` : null, clazz?.rank != null ? `班级第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
-    const display = !scoreShared && !rankShared ? "未分享" : values;
-    return `<div class="exam-detail-subject"><strong>${label}</strong><span>${esc(display)}</span></div>`;
-  }).join("");
-  const summary = examScoreSummary(exam);
-  const scoreText = share.fields?.overallScore !== true ? "总分未分享" : (summary.kind === "missing" ? "" : scoreSummaryText(summary));
-  const rankText = share.fields?.overallRank !== true ? "" : rankingDetails(exam.overallRankings || []);
-  const overall = [scoreText, rankText].filter(Boolean).join(" · ");
-  return `<section class="public-reading-section public-exam-detail"><div class="section-label">考试详情</div><h2>${esc(exam.name)}</h2><p>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</p><div class="exam-detail-overall"><strong>${esc(overall)}</strong></div><div class="exam-detail-subjects">${rows}</div></section>`;
 }
-
 function publicTimelineV080(exams, selectedExamId = null, share = {}) {
   const ordered = sortExamsChronologically(exams);
   const selected = ordered.find((exam) => exam.id === selectedExamId) || null;
