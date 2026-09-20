@@ -1,6 +1,6 @@
 {
-  "version": "0.12.28.8",
-  "stage": "ci-v020-entry-correction",
+  "version": "0.12.28.9",
+  "stage": "ci-v020-gateway-testability",
   "baseSha": "9dd4dbd49c5c2ce9c005c12afc24a86f8f593449",
   "branch": "security/v01228-hardening",
   "completed": [
