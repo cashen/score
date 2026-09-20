@@ -77,6 +77,12 @@ test("bootstrap is covered by the same one-time gate namespace", async () => {
   assert.match(source, /consumeOneTime\(env, "bootstrap", "root", claimId\)/);
 });
 
+test("v020 gateway checks session jti revocation", async () => {
+  const source = await readFile(new URL("../src/v020.js", import.meta.url), "utf8");
+  assert.match(source, /sessionStorageKey/);
+  assert.match(source, /payload\.jti/);
+});
+
 test("production configuration disables bootstrap and enables the one-time gate", async () => {
   const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
   assert.match(wrangler, /BOOTSTRAP_ENABLED = "false"/);
