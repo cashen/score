@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import worker from "../src/v020.js";
+import worker from "../src/v020-gateway.js";
 
 class MockKV {
   constructor() { this.map = new Map(); }
