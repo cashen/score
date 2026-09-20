@@ -1,3 +1,10 @@
+## 0.12.29.6
+
+- 产品品牌由“高三坐标”更名为“我的高三”，统一浏览器标题、登录/引导、家庭入口、当前 README 与架构标题。
+- 保留“轨迹”“时间轴”等功能概念；不改变成绩事实、比较算法、认证、分享、KV、Schema 1 或 API。
+- 同步 package、lockfile、Worker APP_VERSION 与品牌回归测试。
+- 历史版本记录中的“高三坐标”保留为历史事实，不改写。
+
 ## 0.12.29.5
 
 - 修正生产部署配置契约：显式设置 `[observability.logs] enabled = false`，兼容当前 Wrangler，并继续关闭 invocation logs。
