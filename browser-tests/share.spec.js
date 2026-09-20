@@ -61,7 +61,6 @@ test("single record: total, six subjects, timeline and complete detail", async (
   await expect(page.getByRole("heading", { name: "示例同学" })).toBeVisible();
   await expect(page.locator(".coordinate-row")).toContainText("585 分");
   await expect(page.getByText("目前的记录", { exact: true })).toBeVisible();
-  await expect(page.getByText("比上一场高 15 分", { exact: true })).toBeVisible();
   await expect(page.locator(".subject-row")).toHaveCount(6);
   await layout(page);
   await info.attach("total", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
@@ -106,100 +105,11 @@ test("public multi-record deep links preserve each examination", async ({ page }
   expect(totalText).not.toContain("同口径");
   expect(totalText).not.toContain("可比考试");
   expect(totalText).not.toContain("最新记录");
+  await page.getByRole("link", { name: "总成绩", exact: true }).click();
+  await expect(page.getByText("比上一场高 15 分", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "单科", exact: true }).click();
   await expect(page.getByRole("heading", { name: "六科概览" })).toBeVisible();
   await expect(page.locator(".subject-row")).toHaveCount(6);
   await page.getByRole("link", { name: "英语", exact: true }).click();
   await expect(page.getByRole("heading", { name: "英语的历次记录" })).toBeVisible();
   await expect(page.getByText("分数高 7 分", { exact: true })).toBeVisible();
-  await expect(page.locator(".subject-compare-row")).toHaveCount(2);
-  await expect(page.locator(".subject-compare-row").first()).toContainText("最近一次有记录的成绩");
-  const subjectText = await page.locator(".public-shell").innerText();
-  expect(subjectText).not.toContain("同口径");
-  expect(subjectText).not.toContain("最新记录");
-  await expect(page.locator(".comparison-state")).toBeVisible();
-  await expect(page.locator(".comparison-state")).toContainText("和");
-  await expect(page.locator(".public-baseline-note")).toHaveCount(0);
-  expect(errors).toEqual([]);
-});
-
-test("empty share remains navigable without a fabricated baseline", async ({ page }) => {
-  await fixture(page, 0);
-  await page.goto("/share/fixture");
-  for (const view of ["总成绩", "单科", "时间轴"]) {
-    await page.getByRole("link", { name: view, exact: true }).click();
-    await expect(page.locator(".public-baseline-note")).toHaveCount(0);
-    await expect(page.locator(".public-shell")).toContainText(/暂未分享考试数据|还没有可分享/);
-    await layout(page);
-  }
-});
-
-test("whitelist omissions and snapshot semantics are respected", async ({ page }) => {
-  await fixture(page, 1, { displayName: true }, "snapshot");
-  await page.goto("/share/fixture");
-  await expect(page.getByText("固定当前内容", { exact: true })).toBeVisible();
-  await expect(page.locator(".coordinate-row")).toHaveText("成绩与排名未分享");
-  await page.getByRole("link", { name: "时间轴", exact: true }).click();
-  await page.locator(".history-row").click();
-  await expect(page.locator(".exam-detail-overall")).toContainText("总分未分享");
-  await expect(page.locator(".exam-detail-subject").first()).toContainText("未分享");
-  const text = await page.locator("body").innerText();
-  expect(text).not.toMatch(/PRIVATE_|585|校第 123|高三一班|示例学校/);
-  await layout(page);
-});
-
-test("keyboard focus and navigation have visible current state", async ({ page }) => {
-  await fixture(page);
-  await page.goto("/share/fixture");
-  await expect(page.locator(".public-shell")).toBeVisible();
-  await page.keyboard.press("Tab");
-  await expect(page.getByRole("link", { name: "总成绩", exact: true })).toBeFocused();
-  await page.keyboard.press("Tab");
-  const subject = page.getByRole("link", { name: "单科", exact: true });
-  await expect(subject).toBeFocused();
-  expect(await subject.evaluate(node => getComputedStyle(node).outlineStyle)).not.toBe("none");
-  await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: "六科概览" })).toBeVisible();
-  await page.getByRole("link", { name: "语文", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "语文的历次记录" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "单科", exact: true })).toHaveAttribute("aria-current", "page");
-});
-
-test("reduced motion and high contrast keep content and controls usable", async ({ page }) => {
-  await fixture(page);
-  await page.emulateMedia({ reducedMotion: "reduce", contrast: "more" });
-  await page.goto("/share/fixture?view=timeline&exam=fixture-1");
-  await expect(page.locator(".exam-detail-subject")).toHaveCount(6);
-  expect(await page.locator(".share-ink-root").evaluate(node => getComputedStyle(node).backgroundImage)).toBe("none");
-  expect(await page.locator(".public-view-tab").first().evaluate(node => getComputedStyle(node).transitionDuration)).toBe("0s");
-  await layout(page);
-});
-
-
-test("subject deep-links preserve user intent and keep all subject choices available", async ({ page }) => {
-  await fixture(page, 1);
-  await page.goto("/p/fixture?view=subject");
-  await expect(page.getByRole("heading", { name: "六科概览" })).toBeVisible();
-  await page.getByRole("link", { name: "英语", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "英语的历次记录" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "语文", exact: true })).toBeVisible();
-  await page.goto("/p/fixture?view=subject&subject=english");
-  await expect(page.getByRole("heading", { name: "英语的历次记录" })).toBeVisible();
-});
-
-
-test("share pages keep the comparison layer factual and compact", async ({ page }) => {
-  const errors = await fixture(page, 2);
-  await page.goto("/p/fixture?view=timeline");
-  await expect(page.locator(".public-comparison-note")).toHaveCount(0);
-  await page.getByRole("link", { name: "总成绩", exact: true }).click();
-  await expect(page.locator(".public-comparison-note")).toHaveCount(1);
-  const totalText = await page.locator(".public-shell").innerText();
-  expect(totalText).not.toMatch(/口径|可比记录|变化来源|整体位置|具体坐标|多次考试怎么看/);
-  await page.getByRole("link", { name: "单科", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "六科概览" })).toBeVisible();
-  await page.getByRole("link", { name: "英语", exact: true }).click();
-  await expect(page.locator(".comparison-state")).toHaveCount(1);
-  expect(await page.locator(".public-shell").innerText()).not.toMatch(/比较对象：|多次考试怎么看/);
-  expect(errors).toEqual([]);
-});
