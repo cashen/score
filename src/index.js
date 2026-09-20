@@ -294,7 +294,6 @@ async function handleChangePassword(request, env, session) {
   const currentPassword = assertPassword(body.currentPassword);
   const newPassword = assertPassword(body.newPassword);
   if (!(await verifyPassword(currentPassword, env.AUTH_PEPPER, session.member.password))) return errorJson("当前密码不正确", 403, "invalid_password");
-  const iterations = Math.max(10000, Math.min(500000, Number(env.PASSWORD_ITERATIONS) || 20000));
   const updated = {
     ...session.member,
     password: await hashPassword(newPassword, env.AUTH_PEPPER, passwordIterations(env)),
