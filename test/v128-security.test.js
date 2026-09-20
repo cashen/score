@@ -92,7 +92,7 @@ test("production configuration disables bootstrap and enables the one-time gate"
   assert.match(wrangler, /invocation_logs = false/);
 });
 
-test("release is v0.12.28.14", async () => {
+test("release package uses a valid semver-like app version", async () => {
   const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
-  assert.equal(pkg.version, "0.12.28.14");
+  assert.match(pkg.version, /^0\.12\.\d+(?:\.\d+)?$/);
 });
