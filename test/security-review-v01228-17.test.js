@@ -9,7 +9,7 @@ const lock = JSON.parse(await readFile(new URL("../package-lock.json", import.me
 const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
 
 test("release is v0.12.29 across package and Worker contracts", () => {
-  assert.equal(pkg.version, "0.12.28.19");
+  assert.equal(pkg.version, "0.12.29");
   assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[""].version, pkg.version);
   assert.match(wrangler, /^APP_VERSION\s*=\s*"0\.12\.29"\s*$/m);
