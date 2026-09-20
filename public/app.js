@@ -433,11 +433,13 @@ function renderExamDetail(exam) {
 
 function renderTimelineView() {
   const selected = state.exams.find((exam) => exam.id === state.selectedExamId) || null;
-  const rows = state.exams.map((exam, index) => `<a class="history-row timeline-row ${index === 0 ? "is-latest" : ""}" href="?view=timeline&exam=${encodeURIComponent(exam.id)}" data-action="view-exam" data-id="${esc(exam.id)}"><span><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最近一次考试" : ""}</small></span>${coordinateRow(exam, "history-coordinate")}<span class="row-chevron" aria-hidden="true">›</span></a>`).join("");
+  const rows = state.exams.map((exam, index) => {
+    const previous = previousComparableExam(state.exams, exam);
+    const scoreMetric = previous ? metricBetween(exam, previous, null, "score") : null;
+    return `<a class="history-row timeline-row ${index === 0 ? "is-latest" : ""}" href="?view=timeline&exam=${encodeURIComponent(exam.id)}" data-action="view-exam" data-id="${esc(exam.id)}"><span><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最近一次考试" : ""}</small></span><div class="history-coordinate">${coordinateItems(exam).map((item) => `<span>${esc(item)}</span>`).join("")}${renderScoreChange(scoreMetric)}</div><span class="row-chevron" aria-hidden="true">›</span></a>`;
+  }).join("");
   return `<section class="trajectory-view timeline-view"><div class="page-heading"><div><div class="section-label">时间轴</div><h1>每一次考试都在这里</h1><p>打开任意一场，查看这次考试的完整记录。</p></div>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录考试</button>` : ""}</div>${selected ? renderExamDetail(selected) : ""}${rows ? `<div class="history-list full-timeline-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试。</p></div>`}</section>`;
-}
-
-function renderHeader() {
+}function renderHeader() {
   const students = state.me?.students || [];
   const selector = students.length > 1 ? `<select id="student-select" aria-label="切换孩子">${students.map((student) => `<option value="${esc(student.id)}" ${state.student?.id === student.id ? "selected" : ""}>${esc(student.displayName)}</option>`).join("")}</select>` : "";
   return `<header class="topbar"><div class="topbar-inner"><div class="brand">${brandMark()}<span>${PRODUCT_NAME}</span></div><div class="top-actions"><span class="privacy-pill" aria-label="数据默认仅家庭成员可见">仅家庭可见</span>${selector}<details class="account-menu"><summary class="btn btn-outline btn-small">账号</summary><div class="account-menu-panel"><button type="button" data-tab-jump="family">家庭与账号</button><button type="button" data-action="export">导出全部数据</button><button type="button" data-action="logout">退出登录</button></div></details></div></div></header>`;
@@ -463,7 +465,7 @@ function renderDeepTrajectory() {
   const overallRows = exams.map((exam) => {
     const previous = previousComparableExam(exams, exam);
     const scoreMetric = previous ? metricBetween(exam, previous, null, "score") : null;
-    return \`<div class="history-row" data-action="edit-exam" data-id="\${esc(exam.id)}" tabindex="0" role="button"><div><strong>\${esc(exam.name)}</strong><small>\${fmtDate(exam.date)} · \${examTypeLabel(exam.type)}</small></div><div class="history-coordinate">\${coordinateItems(exam).map((item) => \`<span>\${esc(item)}</span>\`).join("")}\${renderScoreChange(scoreMetric)}</div></div>\`;
+    return `<div class="history-row" data-action="edit-exam" data-id="${esc(exam.id)}" tabindex="0" role="button"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div><div class="history-coordinate">${coordinateItems(exam).map((item) => `<span>${esc(item)}</span>`).join("")}${renderScoreChange(scoreMetric)}</div></div>`;
   }).join("");
   const subjectHistory = SUBJECTS.map(([key, label]) => {
     const rows = exams.map((exam) => {
@@ -473,13 +475,13 @@ function renderDeepTrajectory() {
       const clazz = subjectRank(exam, key, "class");
       const previous = previousComparableExam(exams, exam);
       const scoreMetric = previous ? metricBetween(exam, previous, key, "score") : null;
-      const values = [score != null ? \`\${score} 分\` : null, school?.rank ? \`校内第 \${school.rank}\` : null, clazz?.rank ? \`班级第 \${clazz.rank}\` : null].filter(Boolean).join(" · ");
+      const values = [score != null ? `${score} 分` : null, school?.rank ? `校内第 ${school.rank}` : null, clazz?.rank ? `班级第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
       const change = scoreMetric && shouldShowScoreDelta(scoreMetric) ? scoreChangeSentence(scoreMetric) : "";
-      return \`<div class="subject-history-row"><span>\${fmtDate(exam.date)}</span><strong>\${esc(exam.name)}</strong><b>\${esc([values, change].filter(Boolean).join(" · ") || "—")}</b></div>\`;
+      return `<div class="subject-history-row"><span>${fmtDate(exam.date)}</span><strong>${esc(exam.name)}</strong><b>${esc([values, change].filter(Boolean).join(" · ") || "—")}</b></div>`;
     }).join("");
-    return rows ? \`<details class="subject-history"><summary>\${label}<span>查看历次记录</span></summary><div>\${rows}</div></details>\` : "";
+    return rows ? `<details class="subject-history"><summary>${label}<span>查看历次记录</span></summary><div>${rows}</div></details>` : "";
   }).join("");
-  return \`<details class="deep-trajectory" id="deep-trajectory" data-deep-trajectory><summary><span><strong>查看历次考试</strong><small>历次考试、各科历史与变化</small></span><span aria-hidden="true">＋</span></summary><div class="deep-trajectory-body"><section><h3>历次考试</h3><div class="history-list">\${overallRows}</div></section><section><h3>各科历史</h3><div class="subject-history-list">\${subjectHistory}</div></section></div></details>\`;
+  return `<details class="deep-trajectory" id="deep-trajectory" data-deep-trajectory><summary><span><strong>查看历次考试</strong><small>历次考试、各科历史与变化</small></span><span aria-hidden="true">＋</span></summary><div class="deep-trajectory-body"><section><h3>历次考试</h3><div class="history-list">${overallRows}</div></section><section><h3>各科历史</h3><div class="subject-history-list">${subjectHistory}</div></section></div></details>`;
 }
 
 // Legacy source wording retained: 变化较明显的科目；先看事实，再决定下一步
