@@ -357,3 +357,14 @@ test("v0.11.0 trajectory live creation with one exam still requires acknowledgem
   assert.equal(rejected.status, 400);
   assert.equal((await rejected.json()).error, "future_exams_acknowledgement_required");
 });
+
+
+test("bootstrap initialization is protected from concurrent reuse", async () => {
+  const e = env();
+  const headers = { authorization: "Bearer admin-secret" };
+  const body = JSON.stringify({ username: "bootstrap-race", password: "bootstrap-long-password", student: { displayName: "孩子" } });
+  const first = await call(e, "/api/admin/provision", { method: "POST", headers, body });
+  assert.equal(first.status, 201);
+  const second = await call(e, "/api/admin/provision", { method: "POST", headers, body: JSON.stringify({ username: "bootstrap-race-2", password: "bootstrap-long-password", student: { displayName: "孩子二" } }) });
+  assert.equal(second.status, 404);
+});
