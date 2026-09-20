@@ -1,3 +1,9 @@
+## 0.12.28.9
+
+- 测试架构修订：抽出可由 Node 直接加载的 v0.20 gateway 模块，生产入口继续单独导出 SQLite Durable Object。
+- 修正 v0.20 集成测试的运行入口，避免 Node 对 `cloudflare:` 内置模块的非 Worker 运行时限制。
+- 不改变生产 Worker 路由、认证与成绩数据 Schema 1。
+
 ## 0.12.28.8
 
 - 测试修订：v0.20 集成测试改为通过真实 v0.20 gateway 入口运行，确保新增 Session `jti` 撤销校验本身被覆盖。
