@@ -1425,7 +1425,33 @@ function publicSubjectComparisonV080(exams, key, share = {}) {
   return `<section class="public-reading-section public-subject-comparison"><div class="section-label">单科</div><h2>${label}的历次记录</h2>${publicBaselineV081("subject", subjectExams, share)}${picker}${changeBlock}${rows ? `<div class="subject-compare-list">${rows}</div>` : `<p class="muted">还没有可分享的${label}记录。</p>`}<p class="muted subject-history-scope">这里只列出实际记录过${label}成绩的考试；没有记录这门课的考试不会出现在这里。</p></section>`;
 }
 
-function publicExamDetailV080(exam, share = {}) {
+function publicExamDetailV080(exam, share = {}, exams = []) {
+  if (!exam) return "";
+  const scoreShared = share.fields?.subjectScores === true;
+  const rankShared = share.fields?.subjectRanks === true;
+  const overallPreviousResult = share.fields?.overallScore === true && exams.length > 1 ? coreFindComparableExam(exams, exam) : null;
+  const overallPrevious = overallPreviousResult?.status === "comparable" ? overallPreviousResult.reference : null;
+  const overallScoreMetric = overallPrevious ? metricBetween(exam, overallPrevious, null, "score") : null;
+  const rows = SUBJECTS.map(([key, label]) => {
+    const subject = exam.subjects?.[key] || {};
+    const score = scoreShared ? scoreOf(subject) : null;
+    const school = rankShared ? rankByScope(subject.rankings, "school") : null;
+    const clazz = rankShared ? rankByScope(subject.rankings, "class") : null;
+    const values = [score == null ? null : `${fmtNumber(score)} 分`, subject.fullScore ? `满分 ${subject.fullScore}` : null, school?.rank != null ? `校内第 ${school.rank}` : null, clazz?.rank != null ? `班级第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
+    const previousResult = scoreShared && exams.length > 1 ? coreFindComparableExamForSubject(exams, exam, key, "score") : null;
+    const previous = previousResult?.status === "comparable" ? previousResult.reference : null;
+    const scoreMetric = previous ? metricBetween(exam, previous, key, "score") : null;
+    const change = scoreMetric && shouldShowScoreDelta(scoreMetric) ? scoreChangeSentence(scoreMetric) : "";
+    const display = !scoreShared && !rankShared ? "未分享" : [values, change].filter(Boolean).join(" · ");
+    return `<div class="exam-detail-subject"><strong>${label}</strong><span>${esc(display)}</span></div>`;
+  }).join("");
+  const summary = examScoreSummary(exam);
+  const scoreText = share.fields?.overallScore !== true ? "总分未分享" : (summary.kind === "missing" ? "" : scoreSummaryText(summary));
+  const rankText = share.fields?.overallRank !== true ? "" : rankingDetails(exam.overallRankings || []);
+  const overall = [scoreText, rankText].filter(Boolean).join(" · ");
+  const change = share.fields?.overallScore === true ? renderScoreChange(overallScoreMetric) : "";
+  return `<section class="public-reading-section public-exam-detail"><div class="section-label">考试详情</div><h2>${esc(exam.name)}</h2><p>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</p><div class="exam-detail-overall"><strong>${esc(overall)}</strong>${change}</div><div class="exam-detail-subjects">${rows}</div></section>`;
+}) {
   if (!exam) return "";
   const scoreShared = share.fields?.subjectScores === true;
   const rankShared = share.fields?.subjectRanks === true;
