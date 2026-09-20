@@ -1308,7 +1308,25 @@ function bindDashboard() {
   document.querySelector("[data-action='create-recovery-link']")?.addEventListener("click", createRecoveryLink);
 }
 
-function publicSubjectRows(exam, share = {}) {
+function publicSubjectRows(exam, share = {}, exams = []) {
+  if (!exam?.subjects) return "";
+  const scoreShared = share.fields?.subjectScores === true;
+  const rankShared = share.fields?.subjectRanks === true;
+  return SUBJECTS.map(([key, label]) => {
+    const subject = exam.subjects[key] || {};
+    const score = scoreShared ? scoreOf(subject) : null;
+    const school = rankShared ? rankByScope(subject.rankings, "school") : null;
+    const clazz = rankShared ? rankByScope(subject.rankings, "class") : null;
+    const meta = [school?.rank != null ? `校内第 ${school.rank}` : null, clazz?.rank != null ? `班级第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
+    const previousResult = scoreShared && exams.length > 1 ? coreFindComparableExamForSubject(exams, exam, key, "score") : null;
+    const previous = previousResult?.status === "comparable" ? previousResult.reference : null;
+    const scoreMetric = previous ? metricBetween(exam, previous, key, "score") : null;
+    const change = scoreMetric && shouldShowScoreDelta(scoreMetric) ? scoreChangeSentence(scoreMetric) : "";
+    const scoreText = scoreShared ? (score == null ? "" : fmtNumber(score)) : "未分享";
+    const rankText = rankShared ? meta : "未分享";
+    return `<div class="subject-row"><strong>${label}</strong><b>${esc(scoreText)}</b><span class="subject-row-meta">${esc(rankText)}${change ? `<small class="score-change-inline">${esc(change)}</small>` : ""}</span></div>`;
+  }).join("");
+}) {
   if (!exam?.subjects) return "";
   const scoreShared = share.fields?.subjectScores === true;
   const rankShared = share.fields?.subjectRanks === true;
