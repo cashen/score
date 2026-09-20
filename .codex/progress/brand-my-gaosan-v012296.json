@@ -14,11 +14,12 @@
     ]
   },
   "historicalFilesPolicy": "保留历史 CHANGELOG / PR / checkpoint 中的旧品牌文字，不改写历史事实。",
-  "status": "ready_for_ci",
+  "status": "ci_running",
   "pr": 59,
-  "headSha": "85455c33832194f78b2ca5d9975e11a327f26e95",
+  "headSha": "7e6548399d856cef4162282008b0f15a4f9b0ad7",
   "verification": {
     "currentBrandSurfaceOldCount": 0,
     "targetVersion": "0.12.29.6"
-  }
+  },
+  "ciRunId": 35483435213
 }
