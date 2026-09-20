@@ -17,8 +17,8 @@ test('deploy workflow is triggered only by main CI completions', () => {
 });
 
 test('release version is aligned', () => {
-  assert.equal(pkg.version, '0.12.28.10');
-  assert.match(wrangler, /APP_VERSION = "0\.12\.27\.1"/);
+  assert.equal(pkg.version, '0.12.28.11');
+  assert.match(wrangler, /APP_VERSION = "0\.12\.28\.11"/);
 });
 
 test('deployment still checks exact tested SHA', () => {
