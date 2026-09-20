@@ -78,7 +78,7 @@ test("bootstrap is covered by the same one-time gate namespace", async () => {
 });
 
 test("v020 gateway checks session jti revocation", async () => {
-  const source = await readFile(new URL("../src/v020.js", import.meta.url), "utf8");
+  const source = await readFile(new URL("../src/v020-gateway.js", import.meta.url), "utf8");
   assert.match(source, /sessionStorageKey/);
   assert.match(source, /payload\.jti/);
 });
@@ -92,7 +92,7 @@ test("production configuration disables bootstrap and enables the one-time gate"
   assert.match(wrangler, /invocation_logs = false/);
 });
 
-test("release is v0.12.28.10", async () => {
+test("release is v0.12.28.11", async () => {
   const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
-  assert.equal(pkg.version, "0.12.28.10");
+  assert.equal(pkg.version, "0.12.28.11");
 });
