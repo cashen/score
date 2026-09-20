@@ -92,7 +92,7 @@ test("production configuration disables bootstrap and enables the one-time gate"
   assert.match(wrangler, /invocation_logs = false/);
 });
 
-test("release is v0.12.28.5", async () => {
+test("release is v0.12.28.6", async () => {
   const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
-  assert.equal(pkg.version, "0.12.28.5");
+  assert.equal(pkg.version, "0.12.28.6");
 });
