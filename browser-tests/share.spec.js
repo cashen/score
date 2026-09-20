@@ -112,7 +112,8 @@ test("public multi-record deep links preserve each examination", async ({ page }
   await expect(page.locator(".subject-row")).toHaveCount(6);
   await page.getByRole("link", { name: "英语", exact: true }).click();
   await expect(page.getByRole("heading", { name: "英语的历次记录" })).toBeVisible();
-  await expect(page.getByText("分数高 7 分", { exact: true })).toBeVisible();
+  await expect(page.locator(".subject-compare-row").first()).toContainText("112 分");
+  await expect(page.locator(".subject-compare-row").nth(1)).toContainText("105 分");
   await expect(page.locator(".subject-compare-row")).toHaveCount(2);
   await expect(page.locator(".subject-compare-row").first()).toContainText("最近一次有记录的成绩");
   const subjectText = await page.locator(".public-shell").innerText();
