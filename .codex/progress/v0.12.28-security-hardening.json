@@ -1,6 +1,6 @@
 {
-  "version": "0.12.28.13",
-  "stage": "ci-final-regression-fix",
+  "version": "0.12.28.14",
+  "stage": "ci-version-sync-final",
   "baseSha": "9dd4dbd49c5c2ce9c005c12afc24a86f8f593449",
   "branch": "security/v01228-hardening",
   "completed": [
