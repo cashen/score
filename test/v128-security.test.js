@@ -71,6 +71,12 @@ test("new Secret Share links keep raw tokens in URL fragments and redeem via POS
   assert.match(source, /history\.replaceState\(null, "", location\.pathname \+ location\.search\)/);
 });
 
+test("bootstrap is covered by the same one-time gate namespace", async () => {
+  const source = await readFile(new URL("../src/index.js", import.meta.url), "utf8");
+  assert.match(source, /claimOneTime\(env, "bootstrap", "root"\)/);
+  assert.match(source, /consumeOneTime\(env, "bootstrap", "root", claimId\)/);
+});
+
 test("production configuration disables bootstrap and enables the one-time gate", async () => {
   const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
   assert.match(wrangler, /BOOTSTRAP_ENABLED = "false"/);
