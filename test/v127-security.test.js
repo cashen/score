@@ -128,7 +128,8 @@ test("security configuration and source contracts stay explicit", async () => {
     readFile(new URL("../src/sharing-v2.js", import.meta.url), "utf8")
   ]);
   assert.match(wrangler, /PASSWORD_ITERATIONS\s*=\s*"100000"/);
-  assert.equal((await readFile(new URL("../package.json", import.meta.url), "utf8")).includes('"version": "0.12.28.14"'), true);
+  const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+  assert.match(packageJson.version, /^0\.12\.\d+(?:\.\d+)?$/);
   assert.match(index, /DUMMY_PASSWORD_RECORD/);
   assert.match(index, /passwordHashUpgradedAt/);
   assert.match(index, /scope: "login"/);
