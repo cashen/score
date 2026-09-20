@@ -1,6 +1,6 @@
 export { OneTimeCredentialGate } from "./one-time-gate.js";
 import baseWorker from "./index.js";
-import { verifySessionToken } from "./lib/crypto.js";
+import { verifySessionToken, sessionStorageKey } from "./lib/crypto.js";
 import { errorJson, parseCookies, withSecurity } from "./lib/http.js";
 import { rateLimitHeaders } from "./lib/rate-limit.js";
 import { routePrivateOnboarding, routePublicOnboarding } from "./onboarding.js";
@@ -15,6 +15,7 @@ async function auth(request, env) {
   const token = parseCookies(request).score_session;
   const payload = await verifySessionToken(token, env.SESSION_SECRET);
   if (!payload) return null;
+  if (payload.jti && !(await env.SCORE_KV.get(await sessionStorageKey(payload.jti)))) return null;
   const member = await getJson(env, `member:${payload.sub}`);
   if (!member || member.familyId !== payload.fid || member.sessionVersion !== payload.sv || member.disabledAt) return null;
   return { member, payload };
