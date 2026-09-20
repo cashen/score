@@ -51,7 +51,7 @@ test("router has one normal app path and one onboarding path", () => {
 
 test("brand and primary navigation are direct source content", () => {
   expectAll(app, [
-    'const PRODUCT_NAME = "高三坐标"',
+    'const PRODUCT_NAME = "我的高三"',
     "看见这次成绩，也看见前后的变化",
     'data-tab="overview">成绩',
     'data-tab="exams">考试',
@@ -106,7 +106,7 @@ test("copy contract keeps implementation jargon out of rendered user copy", () =
 });
 
 test("family and another-household invitation are semantically separated", () => {
-  expectAll(app, ["家庭里的孩子", "谁可以登录这个家庭", "邀请另一户家庭使用高三坐标"]);
+  expectAll(app, ["家庭里的孩子", "谁可以登录这个家庭", "邀请另一户家庭使用我的高三"]);
   expectAll(onboarding, ["建立你的家庭空间", "邀请人也无法查看"]);
 });
 
