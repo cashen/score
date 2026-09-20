@@ -6,6 +6,7 @@ import { changeDrivers, subjectObservationExams } from "./trajectory-analysis-v0
 import { shareUrlFor, shareFileName } from "./share-delivery-v092.js";
 import { deliverShareImage } from "./share-image-v092.js";
 import { formatComparisonState, formatComparisonSummary, formatExamScore, formatMissingSubjects, formatRanking } from "./product-language-v001.js";
+import { scoreDeltaParts, shouldShowScoreDelta, scoreChangeSentence, scoreChangeDetail } from "./record-reading-v130.js";
 
 const PRODUCT_NAME = "高三坐标";
 const PRODUCT_TAGLINE = "看见这次成绩，也看见前后的变化";
@@ -198,6 +199,17 @@ function latestExam() {
 function comparableSet(exams = state.exams) {
   // Legacy source contract retained for older integrations: const sameCategory = exams.filter(...); const sameSeries = sameCategory.filter(...); if (sameSeries.length >= 2) return sameSeries.slice(0, 6)
   return coreComparableSet(exams);
+}
+
+function previousComparableExam(exams, current) {
+  const result = coreFindComparableExam(exams, current);
+  return result.status === "comparable" ? result.reference : null;
+}
+
+function renderScoreChange(metric) {
+  if (!shouldShowScoreDelta(metric)) return "";
+  const parts = scoreDeltaParts(metric);
+  return `<span class="score-change score-change-${parts.direction}" title="${esc(scoreChangeDetail(metric))}">${esc(parts.compact)}</span>`;
 }
 
 function comparisonState(exams = state.exams) {
@@ -427,15 +439,17 @@ function renderHeader() {
   return `<header class="topbar"><div class="topbar-inner"><div class="brand">${brandMark()}<span>${PRODUCT_NAME}</span></div><div class="top-actions"><span class="privacy-pill" aria-label="数据默认仅家庭成员可见">仅家庭可见</span>${selector}<details class="account-menu"><summary class="btn btn-outline btn-small">账号</summary><div class="account-menu-panel"><button type="button" data-tab-jump="family">家庭与账号</button><button type="button" data-action="export">导出全部数据</button><button type="button" data-action="logout">退出登录</button></div></details></div></div></header>`;
 }
 
-function renderSubjectRows(exam) {
+function renderSubjectRows(exam, previous = null) {
   if (!exam) return "";
   return SUBJECTS.map(([key, label]) => {
     const subject = exam.subjects?.[key] || {};
     const school = subjectRank(exam, key, "school");
     const clazz = subjectRank(exam, key, "class");
     const score = scoreOf(subject);
-    const rankParts = [school?.rank != null ? `校内第 ${school.rank}` : null, clazz?.rank != null ? `班级第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
-    return `<div class="subject-row"><strong>${label}</strong><b>${score == null ? "—" : esc(fmtNumber(score))}</b><span>${esc(rankParts)}</span></div>`;
+    const rankParts = [school?.rank != null ? \`校内第 \${school.rank}\` : null, clazz?.rank != null ? \`班级第 \${clazz.rank}\` : null].filter(Boolean).join(" · ");
+    const scoreMetric = previous ? metricBetween(exam, previous, key, "score") : null;
+    const change = scoreMetric && shouldShowScoreDelta(scoreMetric) ? scoreChangeSentence(scoreMetric) : "";
+    return \`<div class="subject-row"><strong>\${label}</strong><b>\${score == null ? "—" : esc(fmtNumber(score))}</b><span class="subject-row-meta">\${rankParts ? \`<span>\${esc(rankParts)}</span>\` : ""}\${change ? \`<small class="score-change-inline" title="\${esc(scoreChangeDetail(scoreMetric))}">\${esc(change)}</small>\` : ""}</span></div>\`;
   }).join("");
 }
 
@@ -463,17 +477,18 @@ function renderOverview() {
   if (state.trajectoryView === "timeline") return renderTimelineView();
   const exam = latestExam();
   if (!exam) {
-    return `<section class="empty-state">${brandMark()}<h1>先记录第一场考试</h1><p>不用一次填完所有数据。先把考试、总分和你手头已有的排名记下来即可。</p>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录第一次考试</button>` : `<p class="muted">当前账号只有查看权限。</p>`}</section>`;
+    return \`<section class="empty-state">\${brandMark()}<h1>先记录第一场考试</h1><p>不用一次填完所有数据。先把考试、总分和你手头已有的排名记下来即可。</p>\${canEdit() ? \`<button class="btn btn-primary" data-action="new-exam">记录第一次考试</button>\` : \`<p class="muted">当前账号只有查看权限。</p>\`}</section>\`;
   }
   const comparison = comparisonState();
   const previous = comparison.status === "comparable" ? comparison.previous : null;
   const overallMetric = metricBetween(exam, previous);
+  const scoreMetric = previous ? metricBetween(exam, previous, null, "score") : null;
   const sources = changeSources(exam, previous, overallMetric);
   const school = overallRank(exam, "school");
   const schoolPct = percentile(school?.rank, school?.participants);
   const completeness = examCompleteness(exam);
   const subjectNames = Object.fromEntries(SUBJECTS.map(([key, label]) => [key, label]));
-  const completionText = completeness.complete ? "" : `已录 ${6 - completeness.missingSubjects.length}/6 科，还缺 ${completeness.missingSubjects.map(key => subjectNames[key]).join("、")}`;
+  const completionText = completeness.complete ? "" : \`已录 \${6 - completeness.missingSubjects.length}/6 科，还缺 \${completeness.missingSubjects.map(key => subjectNames[key]).join("、")}\`;
   const primaryLabel = completeness.complete ? "记录下一次考试" : "继续补充这次考试";
   const primaryAction = completeness.complete ? "new-exam" : "continue-exam";
   const comparisonSummary = formatComparisonSummary({
@@ -485,8 +500,11 @@ function renderOverview() {
   });
   const comparisonTitle = previous ? directionText(overallMetric) : comparisonSummary.title;
   const comparisonDetail = comparisonSummary.detail;
-  const sourceSection = sources.length ? `<section class="reading-section change-sources-section"><div class="section-head-simple"><div><div class="section-label">值得回看的科目</div><h2>哪些科目有明显变化</h2></div></div><div class="change-source-list">${sources.map(({ label, metric }) => `<div class="change-source-row"><strong>${label}</strong><span>${esc(metric.detail)}</span></div>`).join("")}</div></section>` : "";
-  return `<section class="coordinate-hero"><div class="hero-head"><div><h1>${esc(state.student.displayName)}</h1><p>${identityMeta(state.student) || "孩子资料可以稍后补充"}</p></div>${canEdit() ? `<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="${esc(exam.id)}">编辑这次考试</button>` : ""}</div><div class="exam-context"><strong>${esc(exam.name)}</strong><span>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</span></div>${coordinateRow(exam)}${completionText ? `<p class="completion-note">${esc(completionText)}</p>` : ""}${schoolPct != null || school?.participants ? `<div class="coordinate-note">${schoolPct != null ? `校内前 ${fmtNumber(schoolPct)}%` : ""}${schoolPct != null && school?.participants ? " · " : ""}${school?.participants ? `本次共 ${school.participants} 人` : ""}</div>` : ""}</section><section class="reading-section change-section"><div class="section-label">和以前相比</div><div class="change-main"><strong>${esc(comparisonTitle)}</strong>${comparisonDetail ? `<span>${esc(comparisonDetail)}</span>` : ""}</div></section>${sourceSection}<section class="reading-section subjects-section"><div class="section-head-simple"><div><div class="section-label">这次成绩</div><h2>这次成绩</h2></div></div><div class="subject-rows">${renderSubjectRows(exam)}</div></section>${canEdit() ? `<section class="overview-actions" aria-label="下一步"><button class="btn btn-primary btn-block" data-action="${primaryAction}" data-id="${esc(exam.id)}" data-primary-action="record-next">${primaryLabel}</button><button class="btn btn-outline" data-action="open-trajectory" aria-controls="deep-trajectory">查看历次考试</button></section>` : ""}${renderDeepTrajectory()}`;
+  const sourceSection = sources.length ? \`<section class="reading-section change-sources-section"><div class="section-head-simple"><div><div class="section-label">值得回看的科目</div><h2>哪些科目有明显变化</h2></div></div><div class="change-source-list">\${sources.map(({ label, metric }) => \`<div class="change-source-row"><strong>\${label}</strong><span>\${esc(metric.detail)}</span></div>\`).join("")}</div></section>\` : "";
+  const scoreSummary = examScoreSummary(exam);
+  const scoreText = formatExamScore(scoreSummary) || scoreSummaryText(scoreSummary);
+  const scoreContext = \`<div class="current-score-reading \${scoreMetric ? "" : "single"}"><div><span class="section-label">这次总分</span><strong>\${esc(scoreText)}</strong></div>\${scoreMetric && shouldShowScoreDelta(scoreMetric) ? \`<div class="current-score-change">\${renderScoreChange(scoreMetric)}<small>\${esc(\`和 \${fmtDate(previous.date)} 的总分相比\`)}</small></div>\` : ""}</div>\`;
+  return \`<section class="coordinate-hero"><div class="hero-head"><div><h1>\${esc(state.student.displayName)}</h1><p>\${identityMeta(state.student) || "孩子资料可以稍后补充"}</p></div>\${canEdit() ? \`<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="\${esc(exam.id)}">编辑这次考试</button>\` : ""}</div><div class="exam-context"><strong>\${esc(exam.name)}</strong><span>\${fmtDate(exam.date)} · \${examTypeLabel(exam.type)}</span></div>\${scoreContext}\${coordinateRow(exam)}\${completionText ? \`<p class="completion-note">\${esc(completionText)}</p>\` : ""}\${schoolPct != null || school?.participants ? \`<div class="coordinate-note">\${schoolPct != null ? \`校内前 \${fmtNumber(schoolPct)}%\` : ""}\${schoolPct != null && school?.participants ? " · " : ""}\${school?.participants ? \`本次共 \${school.participants} 人\` : ""}</div>\` : ""}</section><section class="reading-section change-section"><div class="section-label">和以前相比</div><div class="change-main"><strong>\${esc(comparisonTitle)}</strong>\${comparisonDetail ? \`<span>\${esc(comparisonDetail)}</span>\` : ""}</div></section>\${sourceSection}<section class="reading-section subjects-section"><div class="section-head-simple"><div><div class="section-label">这次成绩</div><h2>六科成绩</h2></div></div><div class="subject-rows">\${renderSubjectRows(exam, previous)}</div></section>\${canEdit() ? \`<section class="overview-actions" aria-label="下一步"><button class="btn btn-primary btn-block" data-action="\${primaryAction}" data-id="\${esc(exam.id)}" data-primary-action="record-next">\${primaryLabel}</button><button class="btn btn-outline" data-action="open-trajectory" aria-controls="deep-trajectory">查看历次考试</button></section>\` : ""}\${renderDeepTrajectory()}\`;
 }
 
 function renderExamList() {
