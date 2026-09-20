@@ -306,10 +306,15 @@ async function handleRecoveryCodeReset(request, env) {
     passwordChangedAt: now(),
     sessionsRevokedAt: now()
   };
-  await putJson(env, `member:${member.id}`, updated);
-  const consumed = await consumeOneTime(env, "recovery-code", recoveryLocator, claimId);
-  if (!consumed) throw Object.assign(new Error("恢复码状态无法确认，请重新获取恢复码"), { status: 500, code: "recovery_consume_failed" });
-  return json({ ok: true, recoveryCode: rotatedRaw, notice: "密码已重置，所有旧登录会话已失效。新的恢复码只显示这一次。" });
+  try {
+    await putJson(env, `member:${member.id}`, updated);
+    const consumed = await consumeOneTime(env, "recovery-code", recoveryLocator, claimId);
+    if (!consumed) throw Object.assign(new Error("恢复码状态无法确认，请重新获取恢复码"), { status: 500, code: "recovery_consume_failed" });
+    return json({ ok: true, recoveryCode: rotatedRaw, notice: "密码已重置，所有旧登录会话已失效。新的恢复码只显示这一次。" });
+  } catch (error) {
+    await releaseOneTime(env, "recovery-code", recoveryLocator, claimId);
+    throw error;
+  }
 }
 
 async function handleRecoveryLinkCreate(request, env, session) {
