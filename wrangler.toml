@@ -33,4 +33,5 @@ tag = "v1"
 new_sqlite_classes = ["OneTimeCredentialGate"]
 
 [observability.logs]
+enabled = false
 invocation_logs = false
