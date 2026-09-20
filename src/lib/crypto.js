@@ -24,6 +24,10 @@ export async function sha256(value) {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+export async function sessionStorageKey(jti) {
+  return `session:${await sha256("score-session-v1:" + String(jti || ""))}`;
+}
+
 export async function hmacHex(secret, value) {
   const key = await crypto.subtle.importKey(
     "raw",

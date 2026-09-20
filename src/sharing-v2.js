@@ -1,6 +1,7 @@
 import { randomToken, sha256, tokenHash } from "./lib/crypto.js";
 import { normalizePublicSlug, normalizeShareFields, publicProjection } from "./lib/model.js";
 import { errorJson, json, readJson } from "./lib/http.js";
+import { enforceRateLimit } from "./lib/rate-limit.js";
 
 const MAX_EXAMS = 80;
 
@@ -81,6 +82,7 @@ async function shareIndex(env, studentId) {
 
 async function handleCreate(request, env, session, studentId) {
   requireCsrf(request, session);
+  await enforceRateLimit(env, request, { scope: "share-create", identity: session.member.id, identityMax: 20, ipMax: 40, windowSeconds: 600 });
   const student = await requireStudent(env, session.member, studentId, true);
   if (student.archivedAt) return errorJson("该孩子资料已归档，恢复后才能创建分享", 409, "student_archived");
   const body = await readJson(request);
@@ -236,11 +238,25 @@ export async function routePrivateSharingV2(request, env, session) {
 }
 
 export async function routePublicSharingV2(request, env) {
-  if (request.method !== "GET") return null;
   const path = new URL(request.url).pathname;
-  const secret = path.match(/^\/api\/share\/secret\/(.+)$/);
-  if (secret) return handleExternal(env, "secret", decodeURIComponent(secret[1]));
-  const publicMatch = path.match(/^\/api\/share\/public\/([a-z0-9-]+)$/);
-  if (publicMatch) return handleExternal(env, "public", publicMatch[1]);
+
+  if (request.method === "POST" && path === "/api/share/secret/redeem") {
+    await enforceRateLimit(env, request, { scope: "share-redeem", ipMax: 60, windowSeconds: 600 });
+    const body = await readJson(request);
+    const token = String(body.token || "").trim();
+    if (token.length < 20 || token.length > 200) return errorJson("分享链接无效", 400, "invalid_share_token");
+    return handleExternal(env, "secret", token);
+  }
+
+  if (request.method === "GET") {
+    const secret = path.match(/^\/api\/share\/secret\/(.+)$/);
+    if (secret) {
+      await enforceRateLimit(env, request, { scope: "share-redeem-legacy", ipMax: 60, windowSeconds: 600 });
+      return handleExternal(env, "secret", decodeURIComponent(secret[1]));
+    }
+    const publicMatch = path.match(/^\/api\/share\/public\/([a-z0-9-]+)$/);
+    if (publicMatch) return handleExternal(env, "public", publicMatch[1]);
+  }
+
   return null;
 }

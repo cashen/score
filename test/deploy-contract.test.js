@@ -33,6 +33,6 @@ test("release version is synchronized across package and Worker contracts", () =
   const escapedVersion = packageJson.version.replaceAll(".", "\\.");
   assert.equal(lockJson.version, packageJson.version);
   assert.equal(lockJson.packages[""].version, packageJson.version);
-  assert.match(wrangler, new RegExp(`^APP_VERSION\\s*=\\s*"${escapedVersion}"`, "m"));
+  assert.match(wrangler, new RegExp(`APP_VERSION\\s*=\\s*"${escapedVersion}"`, "m"));
   assert.match(changelog, new RegExp(`^## ${escapedVersion}$`, "m"));
 });

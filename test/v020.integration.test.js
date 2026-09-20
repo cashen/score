@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import worker from "../src/v020.js";
+import worker from "../src/v020-gateway.js";
 
 class MockKV {
   constructor() { this.map = new Map(); }
@@ -13,12 +13,45 @@ class MockKV {
   async delete(key) { this.map.delete(key); }
 }
 
+
+
+function oneTimeGate() {
+  const state = new Map();
+  return {
+    getByName(name) {
+      return {
+        claim: async () => {
+          const current = state.get(name);
+          if (current?.status === "claimed" || current?.status === "consumed") return null;
+          const claimId = "claim-" + name;
+          state.set(name, { status: "claimed", claimId });
+          return claimId;
+        },
+        consume: async (claimId) => {
+          const current = state.get(name);
+          if (current?.status !== "claimed" || current.claimId !== claimId) return false;
+          state.set(name, { status: "consumed" });
+          return true;
+        },
+        release: async (claimId) => {
+          const current = state.get(name);
+          if (current?.status !== "claimed" || current.claimId !== claimId) return false;
+          state.delete(name);
+          return true;
+        }
+      };
+    }
+  };
+}
+
 function makeEnv() {
   return {
     SCORE_KV: new MockKV(),
     SESSION_SECRET: "session-secret-for-v020-tests",
     AUTH_PEPPER: "pepper-for-v020-tests",
     ADMIN_BOOTSTRAP_SECRET: "admin-secret",
+    BOOTSTRAP_ENABLED: "true",
+    ONE_TIME_GATE: oneTimeGate(),
     PASSWORD_ITERATIONS: "10000",
     APP_VERSION: "0.2.0",
     SCHEMA_VERSION: "1",

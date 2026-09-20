@@ -113,6 +113,10 @@ export function analyzeCoordinate(exams) {
   };
 }
 
+function esc(value = "") {
+  return String(value).replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c]));
+}
+
 function fmt(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number.toFixed(1).replace(/\.0$/, "") : "—";
@@ -196,7 +200,7 @@ function renderInsight(result) {
   const section = document.createElement("section");
   section.className = "reading-section coordinate-insight";
   section.dataset.coordinateInsight = "v100";
-  section.innerHTML = `<div class="section-head-simple"><div><div class="section-label">成绩变化</div><h2>${result.status === "empty" ? "先记录第一场考试" : "把这次变化看懂"}</h2></div></div><div class="coordinate-insight-grid"><div class="coordinate-insight-box"><small>这次的成绩与排名</small><strong>${positionText(result.position)}</strong>${result.latest ? `<span>${result.latest.name} · ${String(result.latest.date || "").replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$2月$3日")}</span>` : ""}</div><div class="coordinate-insight-box"><small>和上一次比</small><strong>${changeText(result.overall)}</strong><span>${result.previous ? `比较：${result.previous.name}` : result.boundary}</span></div></div>${drivers}${attention}${action}<p class="coordinate-insight-boundary">这里描述的是考试记录中的成绩、排名和前后变化，不代表能力提高或下降。</p>`;
+  section.innerHTML = `<div class="section-head-simple"><div><div class="section-label">成绩变化</div><h2>${result.status === "empty" ? "先记录第一场考试" : "把这次变化看懂"}</h2></div></div><div class="coordinate-insight-grid"><div class="coordinate-insight-box"><small>这次的成绩与排名</small><strong>${positionText(result.position)}</strong>${result.latest ? `<span>${esc(result.latest.name)} · ${String(result.latest.date || "").replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$2月$3日")}</span>` : ""}</div><div class="coordinate-insight-box"><small>和上一次比</small><strong>${changeText(result.overall)}</strong><span>${result.previous ? `比较：${esc(result.previous.name)}` : result.boundary}</span></div></div>${drivers}${attention}${action}<p class="coordinate-insight-boundary">这里描述的是考试记录中的成绩、排名和前后变化，不代表能力提高或下降。</p>`;
   anchor.insertAdjacentElement("afterend", section);
 }
 

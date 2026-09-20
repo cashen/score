@@ -1,0 +1,23 @@
+{
+  "version": "0.12.28.16",
+  "stage": "ci-final-dynamic-contract",
+  "baseSha": "9dd4dbd49c5c2ce9c005c12afc24a86f8f593449",
+  "branch": "security/v01228-hardening",
+  "completed": [
+    "stored-xss-sink-escape",
+    "durable-object-one-time-credential-gate",
+    "session-jti-revocation",
+    "secret-share-fragment-redeem",
+    "bootstrap-disabled-by-default",
+    "share-rate-limits",
+    "retry-after-propagation",
+    "invocation-log-policy"
+  ],
+  "pending": [
+    "ci",
+    "browser-share-regression",
+    "pr-review",
+    "main-merge",
+    "production-attestation"
+  ]
+}
