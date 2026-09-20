@@ -1,6 +1,6 @@
 {
-  "version": "0.12.28.4",
-  "stage": "ci-fix-bootstrap-race",
+  "version": "0.12.28.5",
+  "stage": "ci-fix-bootstrap-race-docs",
   "baseSha": "9dd4dbd49c5c2ce9c005c12afc24a86f8f593449",
   "branch": "security/v01228-hardening",
   "completed": [
