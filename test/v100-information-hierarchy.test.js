@@ -9,8 +9,8 @@ const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url
 const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
 
 test("v0.12.27 security hardening retains visual hierarchy baseline", () => {
-  assert.equal(pkg.version, "0.12.28.10");
-  assert.match(wrangler, /APP_VERSION = "0.12.28.8"/);
+  assert.equal(pkg.version, "0.12.28.11");
+  assert.match(wrangler, /APP_VERSION = "0.12.28.11"/);
 });
 
 test("overview keeps current exam before comparison, score list and history", () => {
