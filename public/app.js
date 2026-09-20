@@ -417,7 +417,7 @@ function renderExamDetail(exam) {
   if (!exam) return "";
   const comparison = coreFindComparableExam(state.exams, exam);
   const previous = comparison.status === "comparable" ? comparison.reference : null;
-  const comparisonText = previous ? \`和 \${fmtDate(previous.date)} 相比\` : humanComparisonState(comparison, state.exams.length - 1);
+  const comparisonText = previous ? `和 ${fmtDate(previous.date)} 相比` : humanComparisonState(comparison, state.exams.length - 1);
   const scoreMetric = previous ? metricBetween(exam, previous, null, "score") : null;
   const subjectRows = SUBJECTS.map(([key, label]) => {
     const subject = exam.subjects?.[key] || {};
@@ -425,10 +425,10 @@ function renderExamDetail(exam) {
     const details = rankingDetails(subject.rankings);
     const subjectMetric = previous ? metricBetween(exam, previous, key, "score") : null;
     const change = subjectMetric && shouldShowScoreDelta(subjectMetric) ? scoreChangeSentence(subjectMetric) : "";
-    return \`<div class="exam-detail-subject"><strong>\${label}</strong><span>\${score == null ? "" : \`\${fmtNumber(score)} 分\`}</span><small>\${esc([details, change].filter(Boolean).join(" · "))}</small></div>\`;
+    return `<div class="exam-detail-subject"><strong>${label}</strong><span>${score == null ? "" : `${fmtNumber(score)} 分`}</span><small>${esc([details, change].filter(Boolean).join(" · "))}</small></div>`;
   }).join("");
   const overallScore = formatExamScore(examScoreSummary(exam)) || scoreSummaryText(examScoreSummary(exam));
-  return \`<section class="exam-detail section-surface"><div class="section-head-simple"><div><div class="section-label">考试详情</div><h2>\${esc(exam.name)}</h2><p>\${fmtDate(exam.date)} · \${examTypeLabel(exam.type)}</p></div>\${canEdit() ? \`<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="\${esc(exam.id)}">编辑</button>\` : ""}</div><div class="exam-detail-overall"><strong>\${esc(overallScore)}</strong><span>\${esc(rankingDetails(exam.overall?.rankings || []))}</span>\${renderScoreChange(scoreMetric)}</div><p class="trajectory-boundary-note">\${esc(comparisonText)}</p><div class="exam-detail-subjects">\${subjectRows}</div>\${exam.notes && canEdit() ? \`<details class="private-detail"><summary>家庭内部备注</summary><p>\${esc(exam.notes)}</p></details>\` : ""}\${exam.reflection?.studentNote || exam.reflection?.nextTry ? \`<details class="private-detail reflection-detail" open><summary>学生自己的回看</summary>\${exam.reflection.studentNote ? \`<p><strong>我想补充：</strong>\${esc(exam.reflection.studentNote)}</p>\` : ""}\${exam.reflection.nextTry ? \`<p><strong>下次想试：</strong>\${esc(exam.reflection.nextTry)}</p>\` : ""}</details>\` : ""}</section>\`;
+  return `<section class="exam-detail section-surface"><div class="section-head-simple"><div><div class="section-label">考试详情</div><h2>${esc(exam.name)}</h2><p>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</p></div>${canEdit() ? `<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="${esc(exam.id)}">编辑</button>` : ""}</div><div class="exam-detail-overall"><strong>${esc(overallScore)}</strong><span>${esc(rankingDetails(exam.overall?.rankings || []))}</span>${renderScoreChange(scoreMetric)}</div><p class="trajectory-boundary-note">${esc(comparisonText)}</p><div class="exam-detail-subjects">${subjectRows}</div>${exam.notes && canEdit() ? `<details class="private-detail"><summary>家庭内部备注</summary><p>${esc(exam.notes)}</p></details>` : ""}${exam.reflection?.studentNote || exam.reflection?.nextTry ? `<details class="private-detail reflection-detail" open><summary>学生自己的回看</summary>${exam.reflection.studentNote ? `<p><strong>我想补充：</strong>${esc(exam.reflection.studentNote)}</p>` : ""}${exam.reflection.nextTry ? `<p><strong>下次想试：</strong>${esc(exam.reflection.nextTry)}</p>` : ""}</details>` : ""}</section>`;
 }
 
 function renderTimelineView() {
