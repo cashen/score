@@ -450,10 +450,10 @@ function renderSubjectRows(exam, previous = null) {
     const school = subjectRank(exam, key, "school");
     const clazz = subjectRank(exam, key, "class");
     const score = scoreOf(subject);
-    const rankParts = [school?.rank != null ? \`校内第 \${school.rank}\` : null, clazz?.rank != null ? \`班级第 \${clazz.rank}\` : null].filter(Boolean).join(" · ");
+    const rankParts = [school?.rank != null ? `校内第 ${school.rank}` : null, clazz?.rank != null ? `班级第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
     const scoreMetric = previous ? metricBetween(exam, previous, key, "score") : null;
     const change = scoreMetric && shouldShowScoreDelta(scoreMetric) ? scoreChangeSentence(scoreMetric) : "";
-    return \`<div class="subject-row"><strong>\${label}</strong><b>\${score == null ? "—" : esc(fmtNumber(score))}</b><span class="subject-row-meta">\${rankParts ? \`<span>\${esc(rankParts)}</span>\` : ""}\${change ? \`<small class="score-change-inline" title="\${esc(scoreChangeDetail(scoreMetric))}">\${esc(change)}</small>\` : ""}</span></div>\`;
+    return `<div class="subject-row"><strong>${label}</strong><b>${score == null ? "—" : esc(fmtNumber(score))}</b><span class="subject-row-meta">${rankParts ? `<span>${esc(rankParts)}</span>` : ""}${change ? `<small class="score-change-inline" title="${esc(scoreChangeDetail(scoreMetric))}">${esc(change)}</small>` : ""}</span></div>`;
   }).join("");
 }
 
