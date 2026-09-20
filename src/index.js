@@ -20,6 +20,7 @@ import {
 import { handleFamilyMemberPatch, handleFamilyMembers, handleFamilyStudentCreate } from "./family.js";
 import { routePrivateSharingV2, routePublicSharingV2 } from "./sharing-v2.js";
 import { enforceRateLimit, rateLimitHeaders } from "./lib/rate-limit.js";
+import { claimOneTime, consumeOneTime, releaseOneTime } from "./security-gate.js";
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_EXAMS = 80;
@@ -178,8 +179,11 @@ async function handleAdminProvision(request, env) {
   if (!env.ADMIN_BOOTSTRAP_SECRET) return errorJson("管理员建户入口未启用", 404, "not_found");
   const authHeader = request.headers.get("authorization") || "";
   if (authHeader !== `Bearer ${env.ADMIN_BOOTSTRAP_SECRET}`) return errorJson("管理员凭据无效", 403, "forbidden");
-  requireRuntimeSecrets(env);
-  const body = await readJson(request);
+  const claimId = await claimOneTime(env, "bootstrap", "root");
+  if (!claimId) return errorJson("管理员建户入口正在初始化或已经使用", 409, "bootstrap_in_progress");
+  try {
+    requireRuntimeSecrets(env);
+    const body = await readJson(request);
   const username = assertUsername(body.username);
   const password = assertPassword(body.password);
   const uKey = await usernameKey(username);
@@ -231,8 +235,14 @@ async function handleAdminProvision(request, env) {
   await putJson(env, `member:${memberId}`, member);
   await putJson(env, `family:${familyId}`, family);
   await putJson(env, `student:${studentId}`, student);
-  await putJson(env, "bootstrap:completed", { completedAt: createdAt, memberId });
-  return json({ ok: true, familyId, memberId, studentId }, 201);
+    await putJson(env, "bootstrap:completed", { completedAt: createdAt, memberId });
+    const response = json({ ok: true, familyId, memberId, studentId }, 201);
+    await consumeOneTime(env, "bootstrap", "root", claimId);
+    return response;
+  } catch (error) {
+    await releaseOneTime(env, "bootstrap", "root", claimId);
+    throw error;
+  }
 }
 
 async function handleLogin(request, env) {
