@@ -1,3 +1,8 @@
+## 0.12.28.10
+
+- 修订发布契约：统一 Worker APP_VERSION 与 package/lock/test 版本为 v0.12.28.10。
+- 修正上一版遗留的 APP_VERSION 契约不一致，不改变安全逻辑或成绩数据 Schema 1。
+
 ## 0.12.28.9
 
 - 测试架构修订：抽出可由 Node 直接加载的 v0.20 gateway 模块，生产入口继续单独导出 SQLite Durable Object。
