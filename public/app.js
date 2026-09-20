@@ -460,19 +460,26 @@ function renderSubjectRows(exam, previous = null) {
 function renderDeepTrajectory() {
   const exams = sortExamsChronologically(state.exams);
   if (!exams.length) return "";
-  const overallRows = exams.map((exam) => `<div class="history-row" data-action="edit-exam" data-id="${esc(exam.id)}" tabindex="0" role="button"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div>${coordinateRow(exam, "history-coordinate")}</div>`).join("");
+  const overallRows = exams.map((exam) => {
+    const previous = previousComparableExam(exams, exam);
+    const scoreMetric = previous ? metricBetween(exam, previous, null, "score") : null;
+    return \`<div class="history-row" data-action="edit-exam" data-id="\${esc(exam.id)}" tabindex="0" role="button"><div><strong>\${esc(exam.name)}</strong><small>\${fmtDate(exam.date)} · \${examTypeLabel(exam.type)}</small></div><div class="history-coordinate">\${coordinateItems(exam).map((item) => \`<span>\${esc(item)}</span>\`).join("")}\${renderScoreChange(scoreMetric)}</div></div>\`;
+  }).join("");
   const subjectHistory = SUBJECTS.map(([key, label]) => {
     const rows = exams.map((exam) => {
       const subject = exam.subjects?.[key] || {};
       const score = scoreOf(subject);
       const school = subjectRank(exam, key, "school");
       const clazz = subjectRank(exam, key, "class");
-      const values = [score != null ? `${score} 分` : null, school?.rank ? `校内第 ${school.rank}` : null, clazz?.rank ? `班级第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
-      return `<div class="subject-history-row"><span>${fmtDate(exam.date)}</span><strong>${esc(exam.name)}</strong><b>${esc(values || "—")}</b></div>`;
+      const previous = previousComparableExam(exams, exam);
+      const scoreMetric = previous ? metricBetween(exam, previous, key, "score") : null;
+      const values = [score != null ? \`\${score} 分\` : null, school?.rank ? \`校内第 \${school.rank}\` : null, clazz?.rank ? \`班级第 \${clazz.rank}\` : null].filter(Boolean).join(" · ");
+      const change = scoreMetric && shouldShowScoreDelta(scoreMetric) ? scoreChangeSentence(scoreMetric) : "";
+      return \`<div class="subject-history-row"><span>\${fmtDate(exam.date)}</span><strong>\${esc(exam.name)}</strong><b>\${esc([values, change].filter(Boolean).join(" · ") || "—")}</b></div>\`;
     }).join("");
-    return rows ? `<details class="subject-history"><summary>${label}<span>查看历次记录</span></summary><div>${rows}</div></details>` : "";
+    return rows ? \`<details class="subject-history"><summary>\${label}<span>查看历次记录</span></summary><div>\${rows}</div></details>\` : "";
   }).join("");
-  return `<details class="deep-trajectory" id="deep-trajectory" data-deep-trajectory><summary><span><strong>查看历次考试</strong><small>历次考试、各科历史</small></span><span aria-hidden="true">＋</span></summary><div class="deep-trajectory-body"><section><h3>历次考试</h3><div class="history-list">${overallRows}</div></section><section><h3>各科历史</h3><div class="subject-history-list">${subjectHistory}</div></section></div></details>`;
+  return \`<details class="deep-trajectory" id="deep-trajectory" data-deep-trajectory><summary><span><strong>查看历次考试</strong><small>历次考试、各科历史与变化</small></span><span aria-hidden="true">＋</span></summary><div class="deep-trajectory-body"><section><h3>历次考试</h3><div class="history-list">\${overallRows}</div></section><section><h3>各科历史</h3><div class="subject-history-list">\${subjectHistory}</div></section></div></details>\`;
 }
 
 // Legacy source wording retained: 变化较明显的科目；先看事实，再决定下一步
