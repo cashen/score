@@ -1,3 +1,9 @@
+## 0.12.28.11
+
+- 修订安全回归测试契约：v020 入口已拆分为 gateway 后，测试改为检查真实 gateway。
+- 修正部署版本断言，统一 Worker / package / lock / tests 为 v0.12.28.11。
+- 保留此前全部安全修复，不改变成绩数据 Schema 1。
+
 ## 0.12.28.10
 
 - 修订发布契约：统一 Worker APP_VERSION 与 package/lock/test 版本为 v0.12.28.10。
