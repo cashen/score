@@ -1,0 +1,16 @@
+{
+  "task": "share-history-reading-v012298",
+  "status": "executing",
+  "baseMainSha": "ba0181641b609636bcd72264d8e9987b8bac3844",
+  "branch": "fix/share-history-reading-v012298",
+  "version": "0.12.29.8",
+  "phases": {
+    "plan": "done",
+    "publicRenderer": "in_progress",
+    "subjectSemantics": "pending",
+    "tests": "pending",
+    "ci": "pending",
+    "merge": "pending"
+  },
+  "note": "Do not merge until tests and exact-SHA CI/deployment checks are clean."
+}
