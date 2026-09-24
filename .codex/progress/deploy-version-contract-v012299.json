@@ -1,0 +1,11 @@
+{
+  "task": "deploy-version-contract-v012299",
+  "status": "executing",
+  "baseMainSha": "e78de6cd8f55b686e2312b9c14e11119cb8b7275",
+  "branch": "fix/deploy-version-contract-v012299",
+  "version": "0.12.29.9",
+  "productionIncident": "--keep-vars preserved stale APP_VERSION 0.12.29.7",
+  "ci": "pending",
+  "deploy": "pending",
+  "merge": "pending"
+}
