@@ -26,5 +26,8 @@ test('deployment still checks exact tested SHA', () => {
   assert.match(workflow, /TESTED_SHA:\s*\$\{\{ github\.event\.workflow_run\.head_sha \}\}/);
   assert.match(workflow, /CHECKED_OUT_SHA.*TESTED_SHA/);
   assert.match(workflow, /payload\.buildSha === sha/);
-  assert.match(workflow, /--var APP_VERSION:\$\{EXPECTED_VERSION\}/);
+  assert.match(workflow, /--secrets-file \.runtime-secrets\.json/);
+  assert.match(workflow, /--var BUILD_SHA:\$\{TESTED_SHA\}/);
+  assert.doesNotMatch(workflow, /--keep-vars/);
+  assert.doesNotMatch(workflow, /--var APP_VERSION:/);
 });

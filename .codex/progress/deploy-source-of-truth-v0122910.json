@@ -1,0 +1,11 @@
+{
+  "task": "deploy-source-of-truth-v0122910",
+  "status": "executing",
+  "baseMainSha": "d8c6e3c6c7cbcc30f260e650b5be1f78bcf9974f",
+  "branch": "fix/deploy-source-of-truth-v0122910",
+  "version": "0.12.29.10",
+  "rootCause": "keep-vars retained stale dashboard APP_VERSION despite repository and CLI override",
+  "ci": "pending",
+  "deploy": "pending",
+  "merge": "pending"
+}
