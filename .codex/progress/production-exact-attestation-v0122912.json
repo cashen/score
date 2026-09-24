@@ -1,0 +1,11 @@
+{
+  "task": "production-exact-version-attestation-v0122912",
+  "status": "executing",
+  "baseMainSha": "ea325c98ae7f461cb4419720387974cfebb395d7",
+  "branch": "fix/production-exact-version-attestation-v0122912",
+  "version": "0.12.29.12",
+  "rootCause": "post-deploy public requests can briefly hit previous Worker version during propagation",
+  "ci": "pending",
+  "deploy": "pending",
+  "merge": "pending"
+}
