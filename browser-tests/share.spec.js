@@ -107,6 +107,13 @@ test("public multi-record deep links preserve each examination", async ({ page }
   expect(totalText).not.toContain("最新记录");
   await page.getByRole("link", { name: "总成绩", exact: true }).click();
   await expect(page.getByText("比上一场高 15 分", { exact: true })).toBeVisible();
+  await expect(page.locator(".public-history")).toBeVisible();
+  await expect(page.locator(".public-history h2")).toHaveText("每一场考试都保留在这里");
+  await expect(page.locator(".public-history .history-row")).toHaveCount(2);
+  await expect(page.locator(".public-history .history-row").first()).toContainText("585 分");
+  await expect(page.locator(".public-history .history-row").first()).toContainText("校内第 123 名");
+  await expect(page.locator(".public-history .history-row").nth(1)).toContainText("570 分");
+  await expect(page.locator(".public-history .history-row").nth(1)).toContainText("八月校考");
   await page.getByRole("link", { name: "单科", exact: true }).click();
   await expect(page.getByRole("heading", { name: "六科概览" })).toBeVisible();
   await expect(page.locator(".subject-row")).toHaveCount(6);
@@ -125,6 +132,23 @@ test("public multi-record deep links preserve each examination", async ({ page }
   expect(errors).toEqual([]);
 });
 
+test("subject view uses the latest actual subject record", async ({ page }) => {
+  const errors = await fixture(page, 2);
+  await page.route("**/api/share/public/subject-missing-latest", route => {
+    const exams = [exam, { ...exam, id: "fixture-0", name: "八月校考", date: "2026-08-01", overall: { officialScore: 570, rankings }, subjects: { ...exam.subjects, english: { ...exam.subjects.english, rawScore: 105 } } }];
+    delete exams[0].subjects.english;
+    const data = publicProjection({ displayName: "示例同学", graduationYear: 2027, schoolLabel: "示例学校", className: "高三一班" }, exams, fields);
+    return route.fulfill({ json: { share: { mode: "live", fields }, data } });
+  });
+  await page.goto("/p/subject-missing-latest?view=subject&subject=english");
+  await expect(page.getByRole("heading", { name: "英语的历次记录" })).toBeVisible();
+  await expect(page.locator(".subject-focus-fact")).toContainText("105 分");
+  await expect(page.locator(".subject-compare-row")).toHaveCount(1);
+  await expect(page.locator(".subject-compare-row").first()).toContainText("八月校考");
+  await expect(page.locator(".subject-compare-row").first()).toContainText("105 分");
+  expect(errors).toEqual([]);
+});
+
 test("empty share remains navigable without a fabricated baseline", async ({ page }) => {
   await fixture(page, 0);
   await page.goto("/share/fixture");
@@ -134,6 +158,23 @@ test("empty share remains navigable without a fabricated baseline", async ({ pag
     await expect(page.locator(".public-shell")).toContainText(/暂未分享考试数据|还没有可分享/);
     await layout(page);
   }
+});
+
+test("historical total and timeline respect share-field omissions", async ({ page }) => {
+  const errors = await fixture(page, 2, { ...fields, overallScore: false, overallRank: false });
+  await page.goto("/p/fixture");
+  await expect(page.locator(".public-history .history-row")).toHaveCount(2);
+  await expect(page.locator(".public-history .history-row").first()).not.toContainText("585");
+  await expect(page.locator(".public-history .history-row").first()).not.toContainText("123");
+  await page.getByRole("link", { name: "时间轴", exact: true }).click();
+  await expect(page.locator(".history-row")).toHaveCount(2);
+  for (const row of await page.locator(".history-row").all()) {
+    await expect(row).not.toContainText("585");
+    await expect(row).not.toContainText("570");
+    await expect(row).not.toContainText("123");
+    await expect(row).not.toContainText("12");
+  }
+  expect(errors).toEqual([]);
 });
 
 test("whitelist omissions and snapshot semantics are respected", async ({ page }) => {

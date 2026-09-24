@@ -361,11 +361,12 @@ function subjectMetricValue(exam, key, metric) {
   const school = subjectRank(exam, key, "school");
   const clazz = subjectRank(exam, key, "class");
   if (metric === "auto") {
+    if (score != null) return `${fmtNumber(score)} 分`;
     const schoolPct = percentile(school?.rank, school?.participants);
     if (schoolPct != null) return `校内前 ${fmtNumber(schoolPct)}%`;
     if (school?.rank != null) return `校内第 ${school.rank} 名`;
     if (clazz?.rank != null) return `班级第 ${clazz.rank} 名`;
-    return score == null ? null : `${fmtNumber(score)} 分`;
+    return null;
   }
   if (metric === "score") return score == null ? null : `${fmtNumber(score)} 分`;
   const ranking = metric === "schoolRank" ? school : clazz;
@@ -395,15 +396,16 @@ function renderSubjectComparison() {
   if (!key) return renderSubjectOverview();
   const metric = validSubjectMetric(state.subjectMetric);
   const label = SUBJECTS.find(([subject]) => subject === key)?.[1] || "单科";
-  const current = latestExam();
+  const subjectExams = subjectObservationExams(sortExamsChronologically(state.exams), key);
+  const current = subjectExams[0] || null;
   const currentState = subjectRecordState(current, key);
-  const comparison = coreFindComparableExamForSubject(state.exams, current, key, metric);
+  const comparison = coreFindComparableExamForSubject(subjectExams, current, key, metric);
   const change = comparison.status === "comparable" ? comparison.metric : null;
   const recentValue = currentState.hasAny ? subjectMetricValue(current, key, metric) : null;
   const comparisonText = change
     ? `和 ${fmtDate(comparison.reference.date)} 相比`
-    : humanComparisonState(comparison, state.exams.length);
-  const rows = sortExamsChronologically(state.exams).map((exam) => `<div class="subject-compare-row"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div><b>${esc(subjectMetricValue(exam, key, metric) || "")}</b><span>${esc(subjectRecordState(exam, key).hasAny ? (metric === "auto" ? "按当前记录显示" : metric === "score" ? "按分数记录" : metric === "schoolRank" ? "按学校排名记录" : "按班级排名记录") : "")}</span></div>`).join("");
+    : humanComparisonState(comparison, subjectExams.length);
+  const rows = subjectExams.map((exam) => `<div class="subject-compare-row"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div><b>${esc(subjectMetricValue(exam, key, metric) || "")}</b><span>${esc(subjectRecordState(exam, key).hasAny ? (metric === "auto" ? "按当前记录显示" : metric === "score" ? "按分数记录" : metric === "schoolRank" ? "按学校排名记录" : "按班级排名记录") : "")}</span></div>`).join("");
   const currentBlock = current
     ? `<div class="exam-context"><strong>${esc(current.name)}</strong><span>${fmtDate(current.date)} · ${examTypeLabel(current.type)}</span></div><div class="subject-focus-fact"><strong>${esc(recentValue || "")}</strong></div>`
     : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试，从这门课开始记录。</p></div>`;
@@ -1328,14 +1330,20 @@ function publicSubjectRows(exam, share = {}, exams = []) {
     return `<div class="subject-row"><strong>${label}</strong><b>${esc(scoreText)}</b><span class="subject-row-meta">${esc(rankText)}${change ? `<small class="score-change-inline">${esc(change)}</small>` : ""}</span></div>`;
   }).join("");
 }
-function publicHistory(exams) {
-  if (!Array.isArray(exams) || exams.length < 2) return "";
-  return `<section class="public-history"><div class="section-label">历次成绩</div><h2>把不同考试放回时间里看</h2><div class="history-list">${exams.map((exam, index) => {
-    const projected = { ...exam, overall: { rankings: exam.overallRankings || [] }, overallScore: exam.overallScore };
-    const school = overallRank(projected, "school");
-    const clazz = overallRank(projected, "class");
-    return `<div class="history-row ${index === 0 ? "is-latest" : ""}"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最近一次考试" : ""}</small></div><div class="history-coordinate"><span>${school?.rank ? `校内第 ${school.rank} 名` : ""}</span><span>${clazz?.rank ? `班级第 ${clazz.rank} 名` : ""}</span><span>${overallScore(projected) != null ? `${fmtNumber(overallScore(projected))} 分` : ""}</span></div></div>`;
-  }).join("")}</div><p class="muted">不同考试难度可能不同，优先看相对位置；分数只作辅助。页面只显示你选择分享的内容。</p></section>`;
+function publicOverallHistoryCoordinate(exam, share = {}) {
+  const projected = { ...exam, overall: { rankings: exam.overallRankings || [] }, overallScore: exam.overallScore };
+  const score = share.fields?.overallScore === true && overallScore(projected) != null ? `${fmtNumber(overallScore(projected))} 分` : "";
+  const school = share.fields?.overallRank === true ? overallRank(projected, "school") : null;
+  const clazz = share.fields?.overallRank === true ? overallRank(projected, "class") : null;
+  return [score, school?.rank != null ? `校内第 ${school.rank} 名` : "", clazz?.rank != null ? `班级第 ${clazz.rank} 名` : ""].filter(Boolean);
+}
+
+function publicHistory(exams, share = {}) {
+  if (share.fields?.history !== true || !Array.isArray(exams) || exams.length < 2) return "";
+  return `<section class="public-history"><div class="section-label">历次总成绩</div><h2>每一场考试都保留在这里</h2><div class="history-list">${exams.map((exam, index) => {
+    const items = publicOverallHistoryCoordinate(exam, share);
+    return `<a class="history-row ${index === 0 ? "is-latest" : ""}" href="?view=timeline&exam=${encodeURIComponent(exam.id)}"><span><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最近一次考试" : ""}</small></span><div class="history-coordinate">${items.map((item) => `<span>${esc(item)}</span>`).join("")}</div><span class="row-chevron" aria-hidden="true">›</span></a>`;
+  }).join("")}</div><p class="muted">每一场只显示这场考试自己分享的成绩和排名。</p></section>`;
 }
 
 function publicViewNavV080(active = "total", subject = null) {
@@ -1442,13 +1450,11 @@ function publicTimelineV080(exams, selectedExamId = null, share = {}) {
   const ordered = sortExamsChronologically(exams);
   const selected = ordered.find((exam) => exam.id === selectedExamId) || null;
   const rows = ordered.map((exam, index) => {
-    const projected = { ...exam, overall: { rankings: exam.overallRankings || [] }, overallScore: exam.overallScore };
-    const school = share.fields?.overallRank !== true ? null : overallRank(projected, "school");
-    const clazz = share.fields?.overallRank !== true ? null : overallRank(projected, "class");
+    const coordinateItems = publicOverallHistoryCoordinate(exam, share);
     const previousResult = share.fields?.overallScore === true && ordered.length > 1 ? coreFindComparableExam(ordered, exam) : null;
     const previous = previousResult?.status === "comparable" ? previousResult.reference : null;
     const scoreMetric = previous ? metricBetween(exam, previous, null, "score") : null;
-    return `<a class="history-row ${index === 0 ? "is-latest" : ""}" href="?view=timeline&exam=${encodeURIComponent(exam.id)}"><span><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最近一次考试" : ""}</small></span><div class="history-coordinate"><span>${school?.rank != null ? `校内第 ${school.rank} 名` : ""}</span><span>${clazz?.rank != null ? `班级第 ${clazz.rank} 名` : ""}</span><span>${overallScore(projected) != null ? `${fmtNumber(overallScore(projected))} 分` : ""}</span>${renderScoreChange(scoreMetric)}</div><span class="row-chevron" aria-hidden="true">›</span></a>`;
+    return `<a class="history-row ${index === 0 ? "is-latest" : ""}" href="?view=timeline&exam=${encodeURIComponent(exam.id)}"><span><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最近一次考试" : ""}</small></span><div class="history-coordinate">${coordinateItems.map((item) => `<span>${esc(item)}</span>`).join("")}${renderScoreChange(scoreMetric)}</div><span class="row-chevron" aria-hidden="true">›</span></a>`;
   }).join("");
   return `<section class="public-reading-section public-timeline"><div class="section-label">时间轴</div><h2>每一次考试都可以打开</h2>${publicBaselineV081("timeline", ordered, share)}${selected ? publicExamDetailV080(selected, share, ordered) : ""}<div class="history-list">${rows || `<div class="empty compact">暂未分享考试数据。</div>`}</div><p class="muted">页面只显示你选择分享的内容。</p></section>`;
 }
@@ -1468,7 +1474,7 @@ function renderPublicV080(result) {
   const coordinate = latest ? [result.share.fields?.overallRank !== true ? null : school?.rank != null ? `校内第 ${school.rank} 名` : null, result.share.fields?.overallRank !== true ? null : clazz?.rank != null ? `班级第 ${clazz.rank} 名` : null, result.share.fields?.overallScore !== true ? null : totalText].filter(Boolean) : [];
   const coordinateText = coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>成绩与排名未分享</span>`;
   const meta = [data.student?.graduationYear ? `${data.student.graduationYear}届` : null, data.student?.schoolLabel, data.student?.className].filter(Boolean).map(esc).join(" · ");
-  const total = `<section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "固定当前内容" : result.share.scope === "trajectory" ? "历次成绩 · 以后新增的考试也会显示" : "以后新增的考试也会显示"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinateText}</div>${publicBaselineV081("total", exams, result.share)}${publicComparisonNote(exams, null, result.share)}${result.share.fields?.overallScore === true && exams.length > 1 ? (() => { const previousResult = coreFindComparableExam(exams, latest); const previous = previousResult.status === "comparable" ? previousResult.reference : null; const metric = previous ? metricBetween(latest, previous, null, "score") : null; return metric && shouldShowScoreDelta(metric) ? `<div class="public-score-change"><strong>${esc(scoreChangeSentence(metric))}</strong><small>${esc(scoreChangeDetail(metric))}</small></div>` : ""; })() : ""}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share, exams)}</div>` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
+  const total = `<section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "固定当前内容" : result.share.scope === "trajectory" ? "历次成绩 · 以后新增的考试也会显示" : "以后新增的考试也会显示"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinateText}</div>${publicBaselineV081("total", exams, result.share)}${publicComparisonNote(exams, null, result.share)}${result.share.fields?.overallScore === true && exams.length > 1 ? (() => { const previousResult = coreFindComparableExam(exams, latest); const previous = previousResult.status === "comparable" ? previousResult.reference : null; const metric = previous ? metricBetween(latest, previous, null, "score") : null; return metric && shouldShowScoreDelta(metric) ? `<div class="public-score-change"><strong>${esc(scoreChangeSentence(metric))}</strong><small>${esc(scoreChangeDetail(metric))}</small></div>` : ""; })() : ""}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share, exams)}</div>${publicHistory(exams, result.share)}` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
   const body = view === "subject" ? publicSubjectComparisonV080(exams, subject, result.share) : view === "timeline" ? publicTimelineV080(exams, selectedExamId, result.share) : total;
   app.innerHTML = `<main class="public-shell ink-share" data-share-view="${view}" data-exam-count="${exams.length}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span><i class="ink-share-flourish" aria-hidden="true"></i></div><div class="privacy-note">这是家庭主动分享的内容，请不要随意转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">需要时可以随时撤销分享</footer>`;
 }

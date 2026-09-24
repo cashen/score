@@ -1,0 +1,20 @@
+{
+  "task": "share-history-reading-v012298",
+  "status": "executing",
+  "baseMainSha": "ba0181641b609636bcd72264d8e9987b8bac3844",
+  "branch": "fix/share-history-reading-v012298",
+  "version": "0.12.29.8",
+  "phases": {
+    "plan": "done",
+    "publicRenderer": "in_progress",
+    "subjectSemantics": "pending",
+    "tests": "pending",
+    "ci": "rerun",
+    "merge": "pending",
+    "browserTests": "rerun_after_copy_assertion_fix",
+    "verify": "passed"
+  },
+  "note": "Do not merge until tests and exact-SHA CI/deployment checks are clean.",
+  "currentHead": "f71a4c35c8930d83e4b688dd72c46d45609f1ff1",
+  "lastFailure": "browser test asserted h2=历次总成绩; implementation intentionally uses h2=每一场考试都保留在这里 with section label=历次总成绩. No product defect; test expectation corrected."
+}
