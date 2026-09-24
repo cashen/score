@@ -10,7 +10,8 @@ test("external sharing is rendered as a calm report from the source renderer", (
   assert.match(app, /function renderExternal\(/);
   assert.match(app, /public-coordinate/);
   assert.match(app, /publicSubjectRows/);
-  assert.match(app, /publicHistory/);
+  assert.match(app, /publicHistory\(exams, result\.share\)/);
+  assert.match(app, /publicOverallHistoryCoordinate/);
   assert.doesNotMatch(index, /share-comparison\.css/);
   assert.doesNotMatch(index, /share-timeline-v2\.js/);
 });
@@ -22,7 +23,7 @@ test("shared report keeps identity above equal-weight coordinates", () => {
 });
 
 test("history states stay factual rather than gamified", () => {
-  assert.match(app, /历次成绩/);
-  assert.match(app, /不同考试难度可能不同，优先看相对位置；分数只作辅助/);
+  assert.match(app, /历次总成绩/);
+  assert.match(app, /每一场只显示这场考试自己分享的成绩和排名/);
   assert.doesNotMatch(app, /排行榜/);
 });
