@@ -26,7 +26,8 @@ test("deployment still preserves required Worker secret hardening", () => {
   assert.match(workflow, /SCORE_SESSION_SECRET/);
   assert.match(workflow, /SCORE_AUTH_PEPPER/);
   assert.match(workflow, /SCORE_ADMIN_BOOTSTRAP_SECRET/);
-  assert.match(workflow, /--keep-vars --secrets-file \.runtime-secrets\.json/);
+  assert.match(workflow, /--secrets-file \.runtime-secrets\.json/);
+  assert.doesNotMatch(workflow, /--keep-vars/);
 });
 
 test("release version is synchronized across package and Worker contracts", () => {
