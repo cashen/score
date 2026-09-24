@@ -19,12 +19,15 @@ export function references(text, path) {
   });
 }
 
-export async function verifyProduction({ origin, buildSha, version, publicRoot, fetchFn = fetch }) {
+export async function verifyProduction({ origin, buildSha, version, versionId = null, publicRoot, fetchFn = fetch }) {
   assert.match(buildSha, /^[a-f0-9]{40}$/);
+  if (versionId != null) assert.match(versionId, /^[a-f0-9-]{36}$/i);
   const get = async path => {
     const url = new URL(path, origin);
     url.searchParams.set("releaseCheck", buildSha);
-    const response = await fetchFn(url, { headers: { "cache-control": "no-cache" }, signal: AbortSignal.timeout(20000) });
+    const headers = { "cache-control": "no-cache" };
+    if (versionId) headers["Cloudflare-Workers-Version-Overrides"] = `score-track="${versionId}"`;
+    const response = await fetchFn(url, { headers, signal: AbortSignal.timeout(20000) });
     assert.equal(response.ok, true, `HTTP ${response.status}: ${path}`);
     return response;
   };
@@ -61,6 +64,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const pkg = JSON.parse(await readFile("package.json", "utf8"));
   console.log(JSON.stringify(await verifyProduction({
     origin: "https://score-track.cashen.workers.dev", buildSha: process.argv[2],
-    version: pkg.version, publicRoot: resolve("public")
+    version: pkg.version, versionId: process.argv[3] || null, publicRoot: resolve("public")
   }), null, 2));
 }
