@@ -17,7 +17,7 @@ test("production verification pins every request to the deployed Worker version"
     if (path === "/api/health") {
       return new Response(JSON.stringify({
         ok: true,
-        appVersion: "0.12.29.11",
+        appVersion: "0.12.29.12",
         buildSha,
         schemaVersion: 1,
         storage: "workers-kv"
@@ -30,7 +30,7 @@ test("production verification pins every request to the deployed Worker version"
   await verifyProduction({
     origin: "https://score-track.cashen.workers.dev",
     buildSha,
-    version: "0.12.29.11",
+    version: "0.12.29.12",
     versionId,
     publicRoot,
     fetchFn
