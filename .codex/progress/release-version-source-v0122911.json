@@ -1,0 +1,11 @@
+{
+  "task": "release-version-source-v0122911",
+  "status": "executing",
+  "baseMainSha": "1e34eafcf2a7416bd44387e49099c15f1683ff73",
+  "branch": "fix/release-version-source-v0122911",
+  "version": "0.12.29.11",
+  "rootCause": "wrangler active APP_VERSION remained 0.12.29.7; comment alone was updated",
+  "ci": "pending",
+  "deploy": "pending",
+  "merge": "pending"
+}
