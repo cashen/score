@@ -108,7 +108,7 @@ test("public multi-record deep links preserve each examination", async ({ page }
   await page.getByRole("link", { name: "总成绩", exact: true }).click();
   await expect(page.getByText("比上一场高 15 分", { exact: true })).toBeVisible();
   await expect(page.locator(".public-history")).toBeVisible();
-  await expect(page.locator(".public-history h2")).toHaveText("历次总成绩");
+  await expect(page.locator(".public-history h2")).toHaveText("每一场考试都保留在这里");
   await expect(page.locator(".public-history .history-row")).toHaveCount(2);
   await expect(page.locator(".public-history .history-row").first()).toContainText("585 分");
   await expect(page.locator(".public-history .history-row").first()).toContainText("校内第 123 名");
