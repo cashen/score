@@ -24,5 +24,5 @@ test("current product surfaces use 我的高三", () => {
 test("technical package identity remains stable", async () => {
   const pkg = JSON.parse(await read("package.json"));
   assert.equal(pkg.name, "score-track");
-  assert.equal(pkg.version, "0.12.29.11");
+  assert.equal(pkg.version, "0.12.29.12");
 });
