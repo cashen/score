@@ -1,3 +1,8 @@
+## 0.12.29.10
+
+- 修正生产部署的变量来源：不再保留 Cloudflare Dashboard 中旧的 Worker 非敏感变量，正式部署以仓库 Wrangler 配置为准。
+- 继续通过 `secrets-file` 保留加密密钥，并用精确 buildSha 做生产收口验收。
+
 ## 0.12.29.9
 
 - 修复 Cloudflare Worker 部署版本契约：在保留既有变量的同时，显式写入本次测试提交对应的 APP_VERSION，避免生产继续保留旧版本号。
