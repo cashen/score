@@ -1,4 +1,5 @@
 import { SUBJECT_KEYS, comparisonEligibility, sortExamsChronologically, percentile, subjectRecordState, metricBetween } from "./record-semantics-v120.js";
+import { resolveDisplayMetric } from "./human-reading-v140.js";
 
 const RECENT_WINDOW = 5;
 
@@ -58,7 +59,8 @@ export function chooseTrajectoryMetric(exams = [], key = null, preferred = "auto
   const ordered = subjectObservationExams(exams, key);
   const current = ordered[0];
   if (!current) return "score";
-  const candidates = ["schoolRank", "classRank", "score"];
+  const displayFirst = resolveDisplayMetric(current, key, "auto");
+  const candidates = [displayFirst, ...["score", "schoolRank", "classRank"].filter((metric) => metric !== displayFirst)];
   if (ordered.length === 1) {
     for (const metric of candidates) if (candidateMetric(current, key, metric)) return metric;
   }

@@ -17,13 +17,13 @@ test("subject is a focus, not a destructive filter", () => {
 test("private navigation state is URL-restorable", () => {
   assert.match(app, /function syncPrivateNavigationFromUrl\(/);
   assert.match(app, /function writePrivateNavigation\(/);
-  assert.match(app, /state\.tab = \["overview", "exams", "sharing", "family"\]/);
-  assert.match(app, /state\.selectedExamId = state\.trajectoryView === "timeline"/);
+  assert.match(app, /dispatchViewAction\(state, \{\s*type: "view\/tab"/);
+  assert.match(app, /type: "view\/overview"[\s\S]*examId:/);
 });
 
 test("editing preserves context and detail comparisons follow chronological direction", () => {
   assert.match(app, /const returnContext = \{/);
-  assert.match(app, /state\.tab = returnContext\.tab/);
+  assert.match(app, /dispatchViewAction\(state, \{\s*type: "view\/tab", tab: returnContext\.tab/);
   assert.match(app, /coreFindComparableExam\(state\.exams, exam\)/);
   assert.doesNotMatch(app, /state\.tab = wasNew \? "overview" : "exams"/);
 });

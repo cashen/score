@@ -6,7 +6,7 @@ const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8")
 const css = await readFile(new URL("../public/css/app-v094.css", import.meta.url), "utf8");
 
 test("record-first reading imports the centralized score delta layer", () => {
-  assert.match(app, /from "\.\/record-reading-v130\.js"/);
+  assert.match(app, /from "\.\/domain-v001\.js"/);
   assert.match(app, /function previousComparableExam\(exams, current\)/);
   assert.match(app, /metricBetween\(exam, previous, key, "score"\)/);
   assert.match(app, /shouldShowScoreDelta\(scoreMetric\)/);

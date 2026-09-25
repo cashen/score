@@ -1,17 +1,11 @@
 import { randomToken, sha256, tokenHash } from "./lib/crypto.js";
-import { normalizePublicSlug, normalizeShareFields, publicProjection } from "./lib/model.js";
+import { normalizePublicSlug, normalizeShareFields } from "./lib/model.js";
+import { publicProjection } from "./domain/share-projection.js";
 import { errorJson, json, readJson } from "./lib/http.js";
 import { enforceRateLimit } from "./lib/rate-limit.js";
+import { getJson, putJson, listKeys } from "./repositories/kv.js";
 
 const MAX_EXAMS = 80;
-
-async function getJson(env, key) {
-  return env.SCORE_KV.get(key, "json");
-}
-
-async function putJson(env, key, value) {
-  await env.SCORE_KV.put(key, JSON.stringify(value));
-}
 
 function requireCsrf(request, session) {
   const supplied = request.headers.get("x-score-csrf") || "";
@@ -48,9 +42,9 @@ function isExpired(grant) {
 
 async function loadExams(env, studentId) {
   let index = (await getJson(env, `exam-index:${studentId}`)) || { items: [] };
-  if (typeof env.SCORE_KV.list === "function") {
+  {
     try {
-      const listed = await env.SCORE_KV.list({ prefix: `exam-summary:${studentId}:`, limit: MAX_EXAMS });
+      const listed = await listKeys(env, { prefix: `exam-summary:${studentId}:`, limit: MAX_EXAMS });
       const summaries = await Promise.all((listed?.keys || []).map((key) => getJson(env, key.name)));
       if (summaries.some(Boolean)) index = { items: summaries.filter(Boolean) };
     } catch {}
@@ -129,7 +123,7 @@ async function handleCreate(request, env, session, studentId) {
   } else {
     locator = normalizePublicSlug(body.slug);
     lookupKey = `share:public:${locator}`;
-    if (await env.SCORE_KV.get(lookupKey)) return errorJson("这个公开地址已被占用", 409, "slug_exists");
+    if (await getJson(env, lookupKey)) return errorJson("这个公开地址已被占用", 409, "slug_exists");
   }
 
   const grant = { ...base, locator, ...(tokenVersion ? { tokenVersion } : {}) };
