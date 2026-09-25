@@ -33,6 +33,7 @@ import {
   shareBehaviorLabel,
   metricBetween as canonicalMetricBetween
 } from "./domain-v001.js";
+import { createAppState, dispatchViewAction, selectCurrentExam } from "./application-v001.js";
 import { shareUrlFor, shareFileName } from "./share-delivery-v092.js";
 import { deliverShareImage } from "./share-image-v092.js";
 
@@ -76,25 +77,7 @@ const EXAM_STATUS_LABELS = {
   absent: "缺考"
 };
 
-const state = {
-  me: null,
-  csrf: null,
-  student: null,
-  exams: [],
-  trash: [],
-  shares: [],
-  shareResult: null,
-  familyMembers: [],
-  invitations: [],
- tab: "overview",
-  trajectoryView: "total",
-  subjectKey: null,
-  subjectMetric: "auto",
-  selectedExamId: null,
- editingExam: null,
-  notice: "",
-  noticeTone: "notice"
-};
+const state = createAppState();
 
 const app = document.querySelector("#app");
 
@@ -361,11 +344,16 @@ function validSubjectMetric(value) {
 
 function syncPrivateNavigationFromUrl() {
   const params = new URLSearchParams(location.search);
-  state.tab = ["overview", "exams", "sharing", "family"].includes(params.get("tab")) ? params.get("tab") : "overview";
-  state.trajectoryView = ["total", "subject", "timeline"].includes(params.get("view")) ? params.get("view") : "total";
-  state.subjectKey = state.trajectoryView === "subject" ? validSubjectKey(params.get("subject")) : null;
-  state.subjectMetric = state.trajectoryView === "subject" ? validSubjectMetric(params.get("metric")) : "auto";
-  state.selectedExamId = state.trajectoryView === "timeline" ? params.get("exam") || null : null;
+  const tab = ["overview", "exams", "sharing", "family"].includes(params.get("tab")) ? params.get("tab") : "overview";
+  const view = ["total", "subject", "timeline"].includes(params.get("view")) ? params.get("view") : "total";
+  dispatchViewAction(state, {
+    type: "view/overview",
+    view,
+    subjectKey: validSubjectKey(params.get("subject")),
+    metric: validSubjectMetric(params.get("metric")),
+    examId: params.get("exam") || null
+  });
+  dispatchViewAction(state, { type: "view/tab", tab });
 }
 
 function writePrivateNavigation({ replace = false } = {}) {
@@ -680,7 +668,7 @@ function subjectEditor(exam, key, label, full) {
 }
 
 function examDialog(exam = null) {
-  state.editingExam = exam;
+  dispatchViewAction(state, { type: "view/exam-edit", exam });
   const school = overallRank(exam, "school");
   const clazz = overallRank(exam, "class");
   const joint = overallRank(exam, "joint");
@@ -749,7 +737,7 @@ function syncSubjectMode(form, key) {
 function closeDialog() {
   document.querySelector("#exam-dialog")?.remove();
   document.querySelector("#password-dialog")?.remove();
-  state.editingExam = null;
+  dispatchViewAction(state, { type: "view/exam-edit", exam: null });
 }
 
 function value(form, name) {
@@ -882,7 +870,7 @@ async function deleteExam() {
     await api(`/api/students/${state.student.id}/exams/${deletingExamId}`, { method: "DELETE", body: JSON.stringify({ expectedRevision: state.editingExam.revision }) });
     closeDialog();
     await loadStudentData();
-    if (state.selectedExamId === deletingExamId) state.selectedExamId = null;
+    if (state.selectedExamId === deletingExamId) dispatchViewAction(state, { type: "view/clear-exam" });
     writePrivateNavigation({ replace: true });
     state.notice = "考试已删除";
     state.noticeTone = "success";
@@ -1164,7 +1152,7 @@ async function loadPrivateApp() {
     if (!state.student) throw new Error("当前家庭还没有孩子资料");
     await loadStudentData();
     syncPrivateNavigationFromUrl();
-    if (state.selectedExamId && !state.exams.some((item) => item.id === state.selectedExamId)) state.selectedExamId = null;
+    if (state.selectedExamId && !state.exams.some((item) => item.id === state.selectedExamId)) dispatchViewAction(state, { type: "view/clear-exam" });
     if (state.tab === "sharing") await loadShares();
     if (state.tab === "family") await loadFamilyData();
     renderDashboard();
@@ -1176,38 +1164,44 @@ async function loadPrivateApp() {
 
 function bindDashboard() {
   document.querySelectorAll("[data-trajectory-view]").forEach((button) => button.addEventListener("click", () => {
-    state.trajectoryView = button.dataset.trajectoryView;
-    state.selectedExamId = null;
-    if (state.trajectoryView !== "subject") {
-      state.subjectKey = null;
-      state.subjectMetric = "auto";
-    }
+    dispatchViewAction(state, {
+      type: "view/overview",
+      view: button.dataset.trajectoryView,
+      subjectKey: state.subjectKey,
+      metric: state.subjectMetric,
+      examId: null
+    });
     writePrivateNavigation();
     renderDashboard();
   }));
   document.querySelectorAll("[data-subject-key]").forEach((button) => button.addEventListener("click", () => {
-    state.subjectKey = validSubjectKey(button.dataset.subjectKey);
-    state.trajectoryView = "subject";
-    state.selectedExamId = null;
+    dispatchViewAction(state, {
+      type: "view/subject",
+      subjectKey: validSubjectKey(button.dataset.subjectKey),
+      metric: state.subjectMetric,
+    });
     writePrivateNavigation();
     renderDashboard();
   }));
   document.querySelectorAll("[data-subject-metric]").forEach((button) => button.addEventListener("click", () => {
-    state.subjectMetric = validSubjectMetric(button.dataset.subjectMetric);
-    state.trajectoryView = "subject";
+    dispatchViewAction(state, {
+      type: "view/subject",
+      subjectKey: state.subjectKey,
+      metric: validSubjectMetric(button.dataset.subjectMetric),
+    });
     writePrivateNavigation();
     renderDashboard();
   }));
   document.querySelectorAll("[data-action='view-exam']").forEach((row) => row.addEventListener("click", (event) => {
     event.preventDefault();
-    state.selectedExamId = row.dataset.id;
+    dispatchViewAction(state, { type: "view/timeline", examId: row.dataset.id });
     const url = new URL(row.href, location.href);
     history.pushState({}, "", url);
     renderDashboard();
     document.querySelector(".exam-detail")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }));
   document.querySelectorAll("[data-tab]").forEach((button) => button.addEventListener("click", async () => {
-    state.tab = button.dataset.tab;
+    dispatchViewAction(state, { type: "view/tab", tab: button.dataset.tab });
     clearNotice();
     if (state.tab === "sharing") await loadShares();
     if (state.tab === "family") await loadFamilyData();
@@ -1215,7 +1209,7 @@ function bindDashboard() {
     renderDashboard();
   }));
   document.querySelectorAll("[data-tab-jump]").forEach((button) => button.addEventListener("click", async () => {
-    state.tab = button.dataset.tabJump;
+    dispatchViewAction(state, { type: "view/tab", tab: button.dataset.tabJump });
     if (state.tab === "family") await loadFamilyData();
     writePrivateNavigation({ replace: true });
     renderDashboard();
@@ -1538,8 +1532,7 @@ async function bootstrap() {
   if (path.startsWith("/share/")) return renderExternal("secret", path.slice("/share/".length));
   if (path.startsWith("/p/")) return renderExternal("public", path.slice("/p/".length));
   const params = new URLSearchParams(location.search);
-  if (["total", "subject", "timeline"].includes(params.get("view"))) state.trajectoryView = params.get("view");
-  if (params.get("exam")) state.selectedExamId = params.get("exam");
+  if (["total", "subject", "timeline"].includes(params.get("view")) || params.get("exam")) syncPrivateNavigationFromUrl();
   window.addEventListener("popstate", async () => {
     syncPrivateNavigationFromUrl();
     if (state.me) {
