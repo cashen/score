@@ -46,7 +46,7 @@ export function recordSaveSummary(exam) {
   else pieces.push("学校公布总分待补");
   const positions = [state.hasSchoolRank ? "学校排名已记" : null, state.hasClassRank ? "班级排名已记" : null].filter(Boolean);
   if (positions.length) pieces.push(positions.join("、"));
-  return { line: pieces.join(" · "), nextAction: state.missingSubjects.length ? "继续补这场考试" : "记录下一场考试" };
+  return { line: pieces.join(" · "), nextAction: state.missingSubjects.length || !state.officialTotal ? "继续补这场考试" : "记录下一场考试" };
 }
 
 export function shareBehaviorLabel({ scope = "single", mode = "live" } = {}) {
