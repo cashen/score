@@ -24,8 +24,8 @@ test("multi-exam trajectory keeps baseline, recent window and stability separate
   const result = trajectoryAnalysis(exams, "math");
   assert.equal(result.metric, "schoolRank");
   assert.equal(result.comparableCount, 5);
-  assert.equal(result.baseline.display, "校内第 18 名");
-  assert.equal(result.current.display, "校内第 13 名");
+  assert.equal(result.baseline.display, "校内前 18%");
+  assert.equal(result.current.display, "校内前 13%");
   assert.equal(result.longDirection, "forward");
   assert.equal(result.stability.label, "有一定波动");
 });
@@ -69,7 +69,6 @@ test("change drivers identify subject movement from the same semantic metric", (
   assert.equal(drivers[0].key, "math");
   assert.equal(drivers[0].analysis.longDirection, "forward");
 });
-
 
 test("single-subject trajectory ignores exams without that subject, including the latest exam", () => {
   const exams = [

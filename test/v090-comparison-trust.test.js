@@ -2,7 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { comparisonEligibility, findComparableExam } from "../public/trajectory-core-v060.js";
 
-const exam = (id, overrides = {}) => ({ id, type: "monthly", status: "normal", comparison: { series: "A", level: "school" }, ...overrides });
+const exam = (id, overrides = {}) => ({
+  id,
+  date: ({ latest: "2026-09-03", special: "2026-09-02", middle: "2026-09-02", older: "2026-09-01", other: "2026-08-01" }[id] || "2026-08-01"),
+  type: "monthly",
+  status: "normal",
+  comparison: { series: "A", level: "school" },
+  ...overrides
+});
 
 test("the nearest same-category exam can be used even when series metadata differs", () => {
   const latest = exam("latest");
