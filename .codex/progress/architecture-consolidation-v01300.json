@@ -1,0 +1,37 @@
+{
+  "task": "architecture-consolidation-v01300",
+  "repository": "cashen/score",
+  "mergedPr": 66,
+  "baseSha": "4ab56cf57978195245c57528e2fe2134372f3656",
+  "mergeSha": "7cae669c2a216cb873abe3a64c9999529113fbfd",
+  "version": "0.13.0.0",
+  "principle": "one product, one entrance, one data model; student-parent-teacher are audit perspectives only",
+  "completed": [
+    "canonical-domain-facade",
+    "application-view-actions-and-selectors",
+    "score-first-comparison-alignment",
+    "trajectory-metric-alignment",
+    "share-projection-boundary",
+    "kv-repository-boundary",
+    "architecture-contract-tests",
+    "pr-ci",
+    "browser-regression",
+    "main-ci",
+    "production-attestation"
+  ],
+  "production": {
+    "version": "0.13.0.0",
+    "buildSha": "7cae669c2a216cb873abe3a64c9999529113fbfd",
+    "workerVersionId": "0e359baf-016f-4a36-af8c-354fe755dd11",
+    "verifiedBy": "deploy workflow exact tested SHA attestation"
+  },
+  "retainedCompatibility": [
+    "versioned semantic implementation modules",
+    "runtime-independent legacy trajectory/UI source files"
+  ],
+  "nextArchitectureLine": [
+    "gradually move domain implementation out of versioned compatibility files",
+    "consolidate remaining legacy UI/CSS sources only when runtime references are proven absent"
+  ],
+  "rule": "Only passing submitted code counts as complete; production is accepted only when appVersion and buildSha match the tested main SHA."
+}
