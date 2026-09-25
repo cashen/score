@@ -806,7 +806,7 @@ async function saveExam(event) {
       rankings: [rankingFromForm(form, `${key}-school`, "school", "学校"), rankingFromForm(form, `${key}-class`, "class", state.student.className || "班级")].filter(Boolean)
     };
   }
-  const subjectSet=[...form.querySelectorAll('input[name="subjectSet"]:checked')].map(input=>input.value);if(!subjectSet.length){formElement.querySelector("#exam-form-error").innerHTML='<div class="error-box">请至少选择一门科目。</div>';return;}
+  const subjectSet=[...form.querySelectorAll('input[name="subjectSet"]:checked')].map(input=>input.value);if(!subjectSet.length){const errorBox=formElement.querySelector("#exam-form-error");if(errorBox)errorBox.innerHTML='<div class="error-box">请至少选择一门科目。</div>';return;}
   const overallRankings = [rankingFromForm(form, "overall-school", "school", "学校"), rankingFromForm(form, "overall-class", "class", state.student.className || "班级")];
   if (value(form, "type") === "joint") overallRankings.push(rankingFromForm(form, "overall-joint", "joint", "联考"));
   const officialScore = numOrNull(value(form, "officialScore"));
