@@ -2,16 +2,9 @@ import { randomToken, sha256, tokenHash } from "./lib/crypto.js";
 import { normalizePublicSlug, normalizeShareFields, publicProjection } from "./lib/model.js";
 import { errorJson, json, readJson } from "./lib/http.js";
 import { enforceRateLimit } from "./lib/rate-limit.js";
+import { getJson, putJson } from "./repositories/kv.js";
 
 const MAX_EXAMS = 80;
-
-async function getJson(env, key) {
-  return env.SCORE_KV.get(key, "json");
-}
-
-async function putJson(env, key, value) {
-  await env.SCORE_KV.put(key, JSON.stringify(value));
-}
 
 function requireCsrf(request, session) {
   const supplied = request.headers.get("x-score-csrf") || "";
