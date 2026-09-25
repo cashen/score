@@ -12,7 +12,7 @@ test("release version stays synchronized across package and Worker contracts", (
   assert.match(pkg.version, /^0\.13\.\d+(?:\.\d+)*$/);
   assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[""].version, pkg.version);
-  assert.match(wrangler, new RegExp(`^APP_VERSION\\s*=\\s*"${pkg.version.replaceAll(".", "\\\\.")}"\\s*import test from "node:test";
+  assert.match(wrangler, new RegExp(`^APP_VERSION\\s*=\\s*"${pkg.version.replaceAll(".", "\\.")}"\\s*import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
@@ -26,7 +26,7 @@ test("release version stays synchronized across package and Worker contracts", (
   assert.match(pkg.version, /^0\.13\.\d+(?:\.\d+)*$/);
   assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[""].version, pkg.version);
-  assert.match(wrangler, , "m"));
+  , "m"));
 });
 
 test("recovery-code reset consumes its one-time claim after the member mutation", () => {
