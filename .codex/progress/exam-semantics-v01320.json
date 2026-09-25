@@ -1,0 +1,25 @@
+{
+  "version": "0.13.2.0",
+  "status": "implementation",
+  "branch": "refactor/exam-semantics-v01320",
+  "base": "main@6d3af0c4631420cb6535d4dfa0684c39d211f5ca",
+  "tasks": [
+    "exam context preservation",
+    "subjectSet end-to-end semantics",
+    "score consistency",
+    "indicator-level comparison",
+    "history/trash closure",
+    "create idempotency",
+    "share wording cleanup",
+    "regression coverage",
+    "release contract"
+  ],
+  "mergeGate": [
+    "npm run verify",
+    "Chromium",
+    "WebKit",
+    "exact PR head",
+    "main SHA",
+    "production appVersion/buildSha attestation"
+  ]
+}
