@@ -824,12 +824,13 @@ async function saveExam(event) {
   button.textContent = "正在保存…";
   const savedExamId = state.editingExam?.id || null;
   try {
-    if (state.editingExam) await api(`/api/students/${state.student.id}/exams/${state.editingExam.id}`, { method: "PUT", body: JSON.stringify(payload) });
-    else await api(`/api/students/${state.student.id}/exams`, { method: "POST", body: JSON.stringify(payload) });
+    const savedResult = state.editingExam
+      ? await api(`/api/students/${state.student.id}/exams/${state.editingExam.id}`, { method: "PUT", body: JSON.stringify(payload) })
+      : await api(`/api/students/${state.student.id}/exams`, { method: "POST", body: JSON.stringify(payload) });
     formElement.dispatchEvent(new CustomEvent("score:save-succeeded", { bubbles: true }));
     closeDialog();
     await loadStudentData();
-    const savedExam = savedExamId ? state.exams.find((item) => item.id === savedExamId) : latestExam();
+    const savedExam = savedResult?.exam || (savedExamId ? state.exams.find((item) => item.id === savedExamId) : state.exams.find((item) => item.id === savedResult?.exam?.id));
     state.tab = returnContext.tab;
     state.trajectoryView = returnContext.trajectoryView;
     state.subjectKey = returnContext.subjectKey;
