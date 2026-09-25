@@ -19,6 +19,8 @@ function normalizedComparison(exam) {
 
 export function comparisonEligibility(latest, previous) {
   if (!latest || !previous) return { status: "baseline", reason: "还没有第二次可以直接比较的考试" };
+  if (latest.attendance === "absent" || latest.status === "absent") return { status: "not_comparable", reason: "这次考试标记为缺考，暂不直接比较" };
+  if (previous.attendance === "absent" || previous.status === "absent") return { status: "not_comparable", reason: "对比的考试标记为缺考，暂不直接比较" };
   if (examComparisonCategory(latest) !== examComparisonCategory(previous)) {
     return { status: "not_comparable", reason: "考试类别不同，暂不直接比较" };
   }
