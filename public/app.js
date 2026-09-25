@@ -1364,7 +1364,7 @@ function publicBaselineV081(view, exams, share = {}) {
   if (!Array.isArray(exams) || exams.length !== 1) return "";
   const behavior = shareBehaviorLabel(share);
   const scopeText = share.scope === "trajectory" ? "目前记录到这里" : "这次考试";
-  return `<aside class="public-baseline-note" aria-label="记录状态"><span class="public-baseline-mark" aria-hidden="true"></span><div><strong>${scopeText}</strong><p>${share.scope === "trajectory" ? "现在只记录到这一场考试。" : "分享只包含这一场考试。"}${behavior}。</p></div></aside>`;
+  return `<aside class="public-baseline-note" aria-label="记录状态"><span class="public-baseline-mark" aria-hidden="true"></span><div><strong>目前的记录 · ${scopeText}</strong><p>${share.scope === "trajectory" ? "现在只记录到这一场考试。" : "分享只包含这一场考试。"}${behavior}。</p></div></aside>`;
 }
 
 function publicComparisonNote(exams, key = null, share = {}) {
