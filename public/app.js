@@ -749,9 +749,9 @@ function rankingFromForm(form, prefix, scope, label) {
   return { scope, label, rank, participants, basis: "final_score" };
 }
 
-function deriveDataStatus(subjects, officialScore) {
+function deriveDataStatus(subjects) {
   const six = SUBJECTS.every(([key]) => scoreOf(subjects[key]) != null);
-  return six && officialScore != null ? "complete" : "partial";
+  return six ? "complete" : "partial";
 }
 
 function validateExamEntry(subjects, form) {
@@ -806,7 +806,7 @@ async function saveExam(event) {
     date: value(form, "date"),
     type: value(form, "type"),
     status: value(form, "status") || "normal",
-    dataStatus: deriveDataStatus(subjects, officialScore),
+    dataStatus: deriveDataStatus(subjects),
     comparison: { series: value(form, "comparisonSeries"), level: value(form, "comparisonLevel") },
     overall: { officialScore, rankings: overallRankings.filter(Boolean) },
     subjects,
