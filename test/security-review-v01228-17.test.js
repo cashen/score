@@ -12,7 +12,7 @@ test("release version stays synchronized across package and Worker contracts", (
   assert.match(pkg.version, /^0\.13\.\d+(?:\.\d+)*$/);
   assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[""].version, pkg.version);
-  const versionPattern = new RegExp(`^APP_VERSION\\s*=\\s*"${pkg.version.replaceAll(".", "\\\\.")}"\\s*$`, "m");
+  const versionPattern = new RegExp("^APP_VERSION\\\\s*=\\\\s*\"" + pkg.version.replaceAll(".", "\\\\.") + "\"\\\\s*$", "m");
   assert.match(wrangler, versionPattern);
 });
 
