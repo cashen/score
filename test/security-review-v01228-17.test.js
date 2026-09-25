@@ -8,11 +8,25 @@ const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url
 const lock = JSON.parse(await readFile(new URL("../package-lock.json", import.meta.url), "utf8"));
 const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
 
-test("release is v0.12.30.0 across package and Worker contracts", () => {
-  assert.equal(pkg.version, "0.12.30.0");
+test("release version stays synchronized across package and Worker contracts", () => {
+  assert.match(pkg.version, /^0\.13\.\d+(?:\.\d+)*$/);
   assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[""].version, pkg.version);
-  assert.match(wrangler, /^APP_VERSION\s*=\s*"0\.12\.30\.0"\s*$/m);
+  assert.match(wrangler, new RegExp(`^APP_VERSION\\s*=\\s*"${pkg.version.replaceAll(".", "\\\\.")}"\\s*import test from "node:test";
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+
+const onboarding = await readFile(new URL("../src/onboarding.js", import.meta.url), "utf8");
+const index = await readFile(new URL("../src/index.js", import.meta.url), "utf8");
+const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+const lock = JSON.parse(await readFile(new URL("../package-lock.json", import.meta.url), "utf8"));
+const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
+
+test("release version stays synchronized across package and Worker contracts", () => {
+  assert.match(pkg.version, /^0\.13\.\d+(?:\.\d+)*$/);
+  assert.equal(lock.version, pkg.version);
+  assert.equal(lock.packages[""].version, pkg.version);
+  assert.match(wrangler, , "m"));
 });
 
 test("recovery-code reset consumes its one-time claim after the member mutation", () => {
