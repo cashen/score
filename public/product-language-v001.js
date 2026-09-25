@@ -33,8 +33,15 @@ export function formatMissingSubjects({ subjects = [], recorded = [] } = {}) {
 
 export function formatExamScore(summary = {}) {
   if (summary.kind === 'official') return `${summary.value} 分`;
-  if (summary.kind === 'calculated_complete') return `六科合计 ${summary.value} 分`;
-  if (summary.kind === 'calculated_partial') return `${summary.recordedSubjects}/6 科小计 ${summary.subtotal} 分`;
+  if (summary.kind === 'calculated_complete') {
+    if (summary.expectedSubjects === 1) return `${summary.label} ${summary.value} 分`;
+    if (summary.expectedSubjects === 6) return `六科合计 ${summary.value} 分`;
+    return `本次 ${summary.expectedSubjects} 科合计 ${summary.value} 分`;
+  }
+  if (summary.kind === 'calculated_partial') {
+    if (summary.expectedSubjects === 6) return `${summary.recordedSubjects}/6 科小计 ${summary.subtotal} 分`;
+    return `已录 ${summary.recordedSubjects}/${summary.expectedSubjects} 科`;
+  }
   if (summary.kind === 'absent') return '缺考';
   return '';
 }
