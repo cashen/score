@@ -21,6 +21,7 @@ import { handleFamilyMemberPatch, handleFamilyMembers, handleFamilyStudentCreate
 import { routePrivateSharingV2, routePublicSharingV2 } from "./sharing-v2.js";
 import { enforceRateLimit, rateLimitHeaders } from "./lib/rate-limit.js";
 import { claimOneTime, consumeOneTime, releaseOneTime } from "./security-gate.js";
+import { getJson, putJson, deleteKey, listKeys } from "./repositories/kv.js";
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_EXAMS = 80;
@@ -46,14 +47,6 @@ function id(prefix) {
   return `${prefix}_${crypto.randomUUID().replace(/-/g, "")}`;
 }
 
-async function getJson(env, key) {
-  return env.SCORE_KV.get(key, "json");
-}
-
-async function putJson(env, key, value) {
-  await env.SCORE_KV.put(key, JSON.stringify(value));
-}
-
 async function usernameKey(username) {
   return `username:${await sha256(normalizeUsername(username))}`;
 }
@@ -74,9 +67,10 @@ async function createSession(member, env) {
     jti,
     exp: Date.now() + SESSION_TTL_MS
   };
-  await env.SCORE_KV.put(
+  await putJson(
+    env,
     await sessionStorageKey(jti),
-    JSON.stringify({ memberId: member.id, createdAt: now(), expiresAt: new Date(payload.exp).toISOString() }),
+    { memberId: member.id, createdAt: now(), expiresAt: new Date(payload.exp).toISOString() },
     { expirationTtl: Math.ceil(SESSION_TTL_MS / 1000) }
   );
   return { token: await signSession(payload, env.SESSION_SECRET), payload };
@@ -87,7 +81,7 @@ async function auth(request, env) {
   const token = parseCookies(request).score_session;
   const payload = await verifySessionToken(token, env.SESSION_SECRET);
   if (!payload) return null;
-  if (payload.jti && !(await env.SCORE_KV.get(await sessionStorageKey(payload.jti)))) return null;
+  if (payload.jti && !(await getJson(env, await sessionStorageKey(payload.jti)))) return null;
   const member = await getJson(env, `member:${payload.sub}`);
   if (!member || member.familyId !== payload.fid || member.sessionVersion !== payload.sv || member.disabledAt) return null;
   return { member, payload };
@@ -119,7 +113,7 @@ async function loadExamIndex(env, studentId) {
   const legacy = (await getJson(env, `exam-index:${studentId}`)) || { studentId, items: [], updatedAt: null };
   if (typeof env.SCORE_KV.list !== "function") return legacy;
   try {
-    const listed = await env.SCORE_KV.list({ prefix: `exam-summary:${studentId}:`, limit: MAX_EXAMS });
+    const listed = await listKeys(env, { prefix: `exam-summary:${studentId}:`, limit: MAX_EXAMS });
     const summaries = await Promise.all((listed?.keys || []).map((key) => getJson(env, key.name)));
     const items = await Promise.all(summaries.filter(Boolean).map(async (summary) => {
       if (summary.createdAt) return summary;
@@ -175,7 +169,7 @@ async function getShareIndex(env, studentId) {
 
 async function handleAdminProvision(request, env) {
   await enforceRateLimit(env, request, { scope: "admin-provision", ipMax: 5, windowSeconds: 900 });
-  if (env.BOOTSTRAP_ENABLED !== "true" || await env.SCORE_KV.get("bootstrap:completed")) return errorJson("管理员建户入口已关闭", 404, "not_found");
+  if (env.BOOTSTRAP_ENABLED !== "true" || await getJson(env, "bootstrap:completed")) return errorJson("管理员建户入口已关闭", 404, "not_found");
   if (!env.ADMIN_BOOTSTRAP_SECRET) return errorJson("管理员建户入口未启用", 404, "not_found");
   const authHeader = request.headers.get("authorization") || "";
   if (authHeader !== `Bearer ${env.ADMIN_BOOTSTRAP_SECRET}`) return errorJson("管理员凭据无效", 403, "forbidden");
@@ -187,7 +181,7 @@ async function handleAdminProvision(request, env) {
   const username = assertUsername(body.username);
   const password = assertPassword(body.password);
   const uKey = await usernameKey(username);
-  if (await env.SCORE_KV.get(uKey)) return errorJson("该账号已存在", 409, "username_exists");
+  if (await getJson(env, uKey)) return errorJson("该账号已存在", 409, "username_exists");
 
   const familyId = id("fam");
   const memberId = id("mem");
@@ -309,7 +303,7 @@ async function handleLogoutAll(request, env, session) {
   requireCsrf(request, session);
   const updated = { ...session.member, sessionVersion: session.member.sessionVersion + 1, sessionsRevokedAt: now() };
   await putJson(env, `member:${updated.id}`, updated);
-  if (session.payload.jti) await env.SCORE_KV.delete(await sessionStorageKey(session.payload.jti));
+  if (session.payload.jti) await deleteKey(env, await sessionStorageKey(session.payload.jti));
   return json({ ok: true }, 200, { "set-cookie": clearSessionCookie() });
 }
 
@@ -424,7 +418,7 @@ async function handleStudentLifecycle(request, env, session, studentId) {
     const shares = await getShareIndex(env, studentId);
     await Promise.all((shares.items || []).map(async (item) => {
       const key = `share:${item.kind}:${item.kind === "secret" ? item.locator : item.locator}`;
-      await env.SCORE_KV.delete(key);
+      await deleteKey(env, key);
     }));
     await putJson(env, shareIndexKey(studentId), { studentId, items: [] });
   }
@@ -468,7 +462,7 @@ async function handleShareRevoke(request, env, session, studentId) {
   const kind = body.kind === "public" ? "public" : "secret";
   const locator = String(body.locator || "");
   if (!locator) throw new Error("缺少分享标识");
-  await env.SCORE_KV.delete(`share:${kind}:${locator}`);
+  await deleteKey(env, `share:${kind}:${locator}`);
   const index = await getShareIndex(env, studentId);
   await putJson(env, shareIndexKey(studentId), { studentId, items: (index.items || []).filter((x) => !(x.kind === kind && x.locator === locator)) });
   return json({ ok: true });
