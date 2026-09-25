@@ -11,7 +11,7 @@ export function normalizeSubjectSet(value){
   return result;
 }
 function hasRecord(exam,key){const subject=exam?.subjects?.[key]||{};return subject.finalScore!=null||subject.rawScore!=null||(Array.isArray(subject.rankings)&&subject.rankings.some(item=>item?.rank!=null||item?.participants!=null));}
-export function legacySubjectSet(exam){const recorded=SUBJECT_KEYS.filter(key=>hasRecord(exam,key));return recorded.length===1?recorded:[...SUBJECT_KEYS];}
+export function legacySubjectSet(exam){return [...SUBJECT_KEYS];}
 export function resolveExamScope(exam){const explicit=Array.isArray(exam?.subjectSet)?exam.subjectSet.filter(valid):null;const subjects=explicit?.length?[...new Set(explicit)]:legacySubjectSet(exam);return {subjects,source:explicit?.length?"explicit":subjects.length===1?"legacy-inferred-single":"legacy-fallback",subjectCount:subjects.length,isSingle:subjects.length===1,isFull:subjects.length===SUBJECT_KEYS.length};}
 export const subjectLabel=key=>LABELS[key]||key;
 export const subjectLabels=keys=>keys.map(subjectLabel);
