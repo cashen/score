@@ -46,5 +46,5 @@ test("app source does not expose the old misleading live-share claim", () => {
   assert.match(app, /shareBehaviorLabel\(\{ scope, mode \}\)/);
   assert.doesNotMatch(app, /item\.mode === "snapshot" \? "固定当前内容" : "以后新增的考试也会显示"/);
   assert.match(app, /没有记录这门课的考试不会出现在这里/);
-  assert.match(app, /dataStatus: deriveDataStatus\(subjects\)/);
+  assert.match(app, /dataStatus: deriveDataStatus\(subjects,subjectSet\)/);
 });

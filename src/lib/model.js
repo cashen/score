@@ -1,4 +1,5 @@
 import { examScoreSummary } from "../../public/score-core-v090.js";
+import { normalizeSubjectSet, resolveExamScope } from "../../public/exam-scope.js";
 import {
   examComparisonCategory as semanticExamComparisonCategory,
   comparableRanking as semanticComparableRanking,
@@ -104,6 +105,7 @@ export function normalizeExam(input, existing = null) {
   const id = existing?.id || safeText(input.id, 80) || crypto.randomUUID();
   const subjects = {};
   for (const subject of SUBJECTS) subjects[subject] = normalizeSubject(input.subjects?.[subject] || {});
+  const subjectSet=input.subjectSet!==undefined?normalizeSubjectSet(input.subjectSet):Array.isArray(existing?.subjectSet)?normalizeSubjectSet(existing.subjectSet):null;
   const date = safeText(input.date, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) throw Object.assign(new Error("考试日期无效"), { code: "invalid_exam_date", field: "date" });
   const type = EXAM_TYPES.has(input.type) ? input.type : "other";
@@ -122,6 +124,7 @@ export function normalizeExam(input, existing = null) {
     name: safeText(input.name, 80) || "未命名考试",
     date,
     type,
+    ...(subjectSet?{subjectSet}:{}),
     status: ["normal", "good", "poor", "absent", "partial"].includes(input.status) ? input.status : "normal",
     context: {
       grade: safeText(input.context?.grade, 30),
@@ -189,12 +192,14 @@ export function publicProjection(student, exams, fields) {
     },
     exams: []
   };
-  for (const exam of exams) {
+  for (const exam of exams.filter((item) => item && !item.deletedAt)) {
+    const scope = resolveExamScope(exam);
     const projected = {
       id: exam.id,
       name: exam.name,
       date: exam.date,
-      type: exam.type
+      type: exam.type,
+      subjectSet: scope.subjects
     };
     if (fields.examStatus || fields.status) projected.status = exam.status || "normal";
     if (fields.comparisonContext || fields.comparison) projected.comparison = exam.comparison ? { series: exam.comparison.series || null, level: exam.comparison.level || null } : null;
@@ -206,7 +211,7 @@ export function publicProjection(student, exams, fields) {
     if (fields.overallRank) projected.overallRankings = exam.overall?.rankings || [];
     if (fields.subjectScores || fields.subjectRanks) {
       projected.subjects = {};
-      for (const subject of SUBJECTS) {
+      for (const subject of resolveExamScope(exam).subjects) {
         const source = exam.subjects?.[subject] || {};
         projected.subjects[subject] = {};
         if (fields.subjectScores) {

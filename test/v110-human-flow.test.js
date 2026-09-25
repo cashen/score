@@ -22,8 +22,8 @@ test("private navigation state is URL-restorable", () => {
 });
 
 test("editing preserves context and detail comparisons follow chronological direction", () => {
-  assert.match(app, /const returnContext = \{/);
-  assert.match(app, /dispatchViewAction\(state, \{\s*type: "view\/tab", tab: returnContext\.tab/);
+  assert.match(app, /captureViewContext\(state\)/);
+  assert.match(app, /restoreViewContext\(state/);
   assert.match(app, /coreFindComparableExam\(state\.exams, exam\)/);
   assert.doesNotMatch(app, /state\.tab = wasNew \? "overview" : "exams"/);
 });

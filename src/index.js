@@ -144,7 +144,7 @@ async function loadExams(env, studentId, { latestOnly = false } = {}) {
 }
 
 function examSummary(exam) {
-  return { id: exam.id, name: exam.name, date: exam.date, type: exam.type, status: exam.status, revision: exam.revision, createdAt: exam.createdAt || null, updatedAt: exam.updatedAt };
+  return { id: exam.id, name: exam.name, date: exam.date, type: exam.type, subjectSet: Array.isArray(exam.subjectSet) ? exam.subjectSet : null, status: exam.status, revision: exam.revision, createdAt: exam.createdAt || null, updatedAt: exam.updatedAt };
 }
 
 function assertRevision(body, existing) {

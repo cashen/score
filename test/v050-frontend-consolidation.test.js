@@ -135,3 +135,21 @@ test("coordinate visual hierarchy is restrained and equal-weight", () => {
   assert.match(cssFlat, /rgba\(31,\s*41,\s*46,\s*\.34\)/);
   assert.match(cssFlat, /@media \(max-width: 760px\).*\.coordinate-row > span \+ span::before\s*\{\s*display:\s*none/);
 });
+
+test("exam scope is a domain fact, not a single/all mode split", () => {
+  expectAll(app, ["subjectSet", "本次考试考哪些科？", "全部科目", "subjectKeysForDisplay", "resolveExamScope"]);
+  assert.doesNotMatch(app, /singleMode|allMode/);
+});
+test("successful save closes the editor and restores context", () => {
+  const section = app.slice(app.indexOf("async function saveExam"), app.indexOf("async function deleteExam"));
+  assert.match(section, /captureViewContext\(state\)/);
+  assert.match(section, /closeDialog\(\);\s*await loadStudentData\(\);/);
+  assert.match(section, /restoreViewContext\(state/);
+  assert.match(section, /catch \(error\)/);
+  assert.ok(app.includes('input[name="subjectSet"]'));
+  assert.ok(cssFlat.includes("100dvh"));
+});
+test("deleted exams are absent from the normal exam list", () => {
+  const section = app.slice(app.indexOf("function renderExamList"), app.indexOf("function shareFieldControls"));
+  assert.doesNotMatch(section, /trash-section|最近删除|trash-list/);
+});
