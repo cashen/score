@@ -19,18 +19,17 @@ function normalizedComparison(exam) {
 
 export function comparisonEligibility(latest, previous) {
   if (!latest || !previous) return { status: "baseline", reason: "还没有第二次可以直接比较的考试" };
-  const unavailable = exam => exam?.status && exam.status !== "normal";
-  if (unavailable(latest)) return { status: "not_comparable", reason: "这次考试有特殊情况，暂不直接比较" };
-  if (unavailable(previous)) return { status: "not_comparable", reason: "对比的考试有特殊情况，暂不直接比较" };
   if (examComparisonCategory(latest) !== examComparisonCategory(previous)) {
     return { status: "not_comparable", reason: "考试类别不同，暂不直接比较" };
   }
   const a = normalizedComparison(latest);
   const b = normalizedComparison(previous);
-  if (a.series !== b.series) return { status: "not_comparable", reason: "考试系列不同，暂不直接比较" };
-  if (a.level !== b.level) return { status: "not_comparable", reason: "考试范围不同，暂不直接比较" };
-  if (!a.series || !a.level) return { status: "comparable", reason: "考试类别相同，但比较范围信息不完整" };
-  return { status: "comparable", reason: "按" + a.level + "范围比较" };
+  const sameSeries = Boolean(a.series && b.series && a.series === b.series);
+  const sameLevel = Boolean(a.level && b.level && a.level === b.level);
+  if (sameSeries && sameLevel) return { status: "comparable", strength: "strong", reason: "同一考试系列和范围" };
+  if (sameLevel) return { status: "comparable", strength: "standard", reason: "考试类别相同，比较范围相同" };
+  if (a.level || b.level) return { status: "comparable", strength: "limited", reason: "考试类别相同，但比较范围信息不同或不完整" };
+  return { status: "comparable", strength: "standard", reason: "考试类别相同" };
 }
 
 export const comparisonCategory = examComparisonCategory;
@@ -108,6 +107,8 @@ function overallScore(exam) {
 export function metricBetween(latest, previous, key = null, metric = "auto") {
   if (!latest || !previous) return null;
   if (comparisonEligibility(latest, previous).status !== "comparable") return null;
+  if ((latest.attendance === "absent" || latest.status === "absent") && (!key || !subjectRecordState(latest, key).hasAny)) return null;
+  if ((previous.attendance === "absent" || previous.status === "absent") && (!key || !subjectRecordState(previous, key).hasAny)) return null;
 
   const schoolCurrent = key ? subjectRankingState(latest, key, "school") : overallRankingState(latest, "school");
   const schoolPrevious = key ? subjectRankingState(previous, key, "school") : overallRankingState(previous, "school");
