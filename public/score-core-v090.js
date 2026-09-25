@@ -30,7 +30,7 @@ export function scoreSummaryText(summary) {
   if (summary.kind === "absent") return "本场缺考";
   if (summary.kind === "official") return `学校公布总分 ${number(summary.value)} 分`;
   if (summary.kind === "calculated_complete") return summary.expectedSubjects === 1 ? `${summary.label} ${number(summary.value)} 分` : summary.expectedSubjects === 6 ? `六科合计 ${number(summary.value)} 分` : `本次 ${summary.expectedSubjects} 科合计 ${number(summary.value)} 分`;
-  if (summary.kind === "calculated_partial") return summary.expectedSubjects === 6 ? `${summary.recordedSubjects}/6 科小计 ${number(summary.subtotal)} 分` : `已录 ${summary.recordedSubjects}/${summary.expectedSubjects} 科`;
+  if (summary.kind === "calculated_partial") return summary.expectedSubjects === 6 ? `已录 ${summary.recordedSubjects}/6 科，小计 ${number(summary.subtotal)} 分` : `已录 ${summary.recordedSubjects}/${summary.expectedSubjects} 科`;
   return "成绩待补";
 }
 
