@@ -114,7 +114,7 @@ export async function handleFamilyMembers(request, env, session) {
   const password = assertPassword(body.password);
   const role = managedRole(body.role);
   const uKey = await usernameKey(username);
-  if (await env.SCORE_KV.get(uKey)) return errorJson("该账号已存在", 409, "username_exists");
+  if (await getJson(env, uKey)) return errorJson("该账号已存在", 409, "username_exists");
 
   const memberId = id("mem");
   const iterations = Math.max(10000, Math.min(500000, Number(env.PASSWORD_ITERATIONS) || 20000));
