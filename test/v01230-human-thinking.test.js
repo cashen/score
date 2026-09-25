@@ -35,7 +35,7 @@ test("share behavior distinguishes single live, trajectory live, and snapshot", 
 test("app source does not expose the old misleading live-share claim", () => {
   const app = readFileSync(new URL("../public/app.js", import.meta.url), "utf8");
   assert.match(app, /shareBehaviorLabel/);
-  assert.match(app, /这场考试会随记录更新，但以后新增的考试不会加入/);
+  assert.match(app, /shareBehaviorLabel\(\{ scope, mode \}\)/);
   assert.doesNotMatch(app, /item\.mode === "snapshot" \? "固定当前内容" : "以后新增的考试也会显示"/);
   assert.match(app, /没有记录这门课的考试不会出现在这里/);
 });
