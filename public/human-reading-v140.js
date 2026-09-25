@@ -22,7 +22,8 @@ export function resolveDisplayMetric(exam, key = null, requested = "auto") {
 
 export function recordCompleteness(exam) {
   const score = examScoreSummary(exam);
-  const missingSubjects = SUBJECTS.filter(([key]) => subjectScore(exam?.subjects?.[key]) == null).map(([, label]) => label);
+  const absent = score.kind === "absent";
+  const missingSubjects = absent ? [] : SUBJECTS.filter(([key]) => subjectScore(exam?.subjects?.[key]) == null).map(([, label]) => label);
   const schoolRank = rankingState(exam?.overall?.rankings || exam?.overallRankings, "school");
   const classRank = rankingState(exam?.overall?.rankings || exam?.overallRankings, "class");
   return {
@@ -33,13 +34,15 @@ export function recordCompleteness(exam) {
     hasAnyTotal: score.value != null,
     hasSchoolRank: schoolRank.rank != null,
     hasClassRank: classRank.rank != null,
-    isSubjectComplete: missingSubjects.length === 0,
+    absent,
+    isSubjectComplete: absent || missingSubjects.length === 0,
     score
   };
 }
 
 export function recordSaveSummary(exam) {
   const state = recordCompleteness(exam);
+  if (state.absent) return { line: "本场缺考", nextAction: "记录下一场考试" };
   const pieces = ["已记 " + state.subjectCount + "/" + state.subjectTotal + " 科"];
   if (state.officialTotal) pieces.push("学校公布总分已记");
   else if (state.isSubjectComplete) pieces.push("六科合计已记录 · 学校公布总分待补");
