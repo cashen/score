@@ -1,4 +1,4 @@
-import { examScoreSummary, subjectScore } from "./score-core-v090.js";
+import { examScoreSummary, subjectScore, scoreConsistency } from "./score-core-v090.js";
 import { resolveExamScope, subjectLabel } from "./exam-scope.js";
 import { rankingState } from "./record-semantics-v120.js";
 
@@ -14,10 +14,10 @@ const SUBJECTS = Object.freeze([
 export function resolveDisplayMetric(exam, key = null, requested = "auto") {
   if (requested !== "auto") return requested;
   const value = key ? subjectScore(exam?.subjects?.[key]) : examScoreSummary(exam).value;
-  if (value != null) return "score";
   const rankings = key ? exam?.subjects?.[key]?.rankings : (exam?.overall?.rankings || exam?.overallRankings);
   if (rankingState(rankings, "school").rank != null) return "schoolRank";
   if (rankingState(rankings, "class").rank != null) return "classRank";
+  if (value != null) return "score";
   return "score";
 }
 
@@ -48,12 +48,15 @@ export function recordSaveSummary(exam) {
   if (state.absent) return { line: "本场缺考", nextAction: "记录下一场考试" };
   const pieces = state.subjectTotal === 1 ? [state.missingSubjects.length ? state.subjects.map(subjectLabel).join("、") + "待补" : "已记 " + state.subjects.map(subjectLabel).join("、")] : ["已记 " + state.subjectCount + "/" + state.subjectTotal + " 科"];
   if (state.officialTotal) pieces.push("学校公布总分已记");
-  else if (state.isSubjectComplete && state.subjectTotal === 6) pieces.push("六科合计已记录 · 学校公布总分待补");
+  else if (state.isSubjectComplete && state.subjectTotal === 6) pieces.push("六科成绩已记全 · 学校公布总分待补");
   else if (state.isSubjectComplete) pieces.push("本次科目成绩已记全");
   else pieces.push("还有科目成绩待补");
+  const consistency = scoreConsistency(exam);
+  if (consistency.status === "mismatch") pieces.push("学校公布总分与各科合计相差 " + Math.abs(consistency.delta) + " 分，请核对");
   const positions = [state.hasSchoolRank ? "学校排名已记" : null, state.hasClassRank ? "班级排名已记" : null].filter(Boolean);
   if (positions.length) pieces.push(positions.join("、"));
-  return { line: pieces.join(" · "), nextAction: state.missingSubjects.length || (state.subjectTotal === 6 && !state.officialTotal) ? "继续补这场考试" : "记录下一场考试" };
+  const needsMore = state.missingSubjects.length || (state.subjectTotal === 6 && !state.officialTotal);
+  return { line: pieces.join(" · "), nextAction: needsMore ? "继续补这场考试" : "记录下一场考试" };
 }
 
 export function shareBehaviorLabel({ scope = "single", mode = "live" } = {}) {
