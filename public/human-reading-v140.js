@@ -42,7 +42,7 @@ export function recordSaveSummary(exam) {
   const state = recordCompleteness(exam);
   const pieces = ["已记 " + state.subjectCount + "/" + state.subjectTotal + " 科"];
   if (state.officialTotal) pieces.push("学校公布总分已记");
-  else if (state.hasAnyTotal && state.isSubjectComplete) pieces.push("总分按六科合计");
+  else if (state.isSubjectComplete) pieces.push("六科合计已记录 · 学校公布总分待补");
   else pieces.push("学校公布总分待补");
   const positions = [state.hasSchoolRank ? "学校排名已记" : null, state.hasClassRank ? "班级排名已记" : null].filter(Boolean);
   if (positions.length) pieces.push(positions.join("、"));
