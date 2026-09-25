@@ -11,13 +11,13 @@
     "save-state-reading",
     "share-behavior-copy",
     "version-contract-sync",
-    "pr-ready"
-  ],
-  "pending": [
+    "pr-ready",
     "pr-head-ci",
     "browser-regression",
     "merge",
-    "main-ci",
+    "main-ci"
+  ],
+  "pending": [
     "production-attestation"
   ],
   "rule": "Only passing submitted code counts as complete; merge only the exact final PR head."
