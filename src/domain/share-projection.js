@@ -1,6 +1,4 @@
-/** Canonical share-domain boundary. The projection remains allow-list based. */
+/** Canonical share-domain boundary. */
 import { publicProjection } from "../lib/model.js";
-
 export { publicProjection };
-
-export const SHARE_DOMAIN_VERSION = "0.13.0";
+export const SHARE_DOMAIN_VERSION = "0.13.1";
