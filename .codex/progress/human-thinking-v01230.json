@@ -1,23 +1,25 @@
 {
-  "task": "human-thinking-v01230",
+  "task": "architecture-consolidation-v01300",
   "repository": "cashen/score",
-  "branch": "feat/human-thinking-v01230",
-  "baseSha": "ea325c98ae7f461cb4419720387974cfebb395d7",
-  "version": "0.12.30.0",
-  "principle": "student-parent-teacher are audit perspectives only; one product, one entrance, one data model, no role-specific UI",
+  "baseSha": "4ab56cf57978195245c57528e2fe2134372f3656",
+  "version": "0.13.0.0",
+  "principle": "one product, one entrance, one data model; student-parent-teacher are audit perspectives only",
   "completed": [
-    "human-reading-semantic-helper",
-    "default-metric-alignment",
-    "save-state-reading",
-    "share-behavior-copy",
+    "architecture-baseline",
+    "canonical-domain-facade",
+    "app-domain-routing",
+    "auto-metric-alignment-contract",
     "version-contract-sync",
-    "pr-ready",
-    "pr-head-ci",
-    "browser-regression",
-    "merge",
-    "main-ci"
+    "architecture-regression-test"
   ],
   "pending": [
+    "application-actions",
+    "selectors-extraction",
+    "exam-aggregate-consolidation",
+    "share-projection-consolidation",
+    "repository-layer",
+    "ui-css-consolidation",
+    "browser-regression",
     "production-attestation"
   ],
   "rule": "Only passing submitted code counts as complete; merge only the exact final PR head."
