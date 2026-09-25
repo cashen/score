@@ -1,6 +1,7 @@
 import { sha256, hashPassword } from "./lib/crypto.js";
 import { assertPassword, assertUsername, normalizeUsername, safeText } from "./lib/model.js";
 import { errorJson, json, readJson } from "./lib/http.js";
+import { getJson, putJson } from "./repositories/kv.js";
 
 const MAX_FAMILY_MEMBERS = 12;
 const MAX_FAMILY_STUDENTS = 12;
@@ -11,14 +12,6 @@ function now() {
 
 function id(prefix) {
   return `${prefix}_${crypto.randomUUID().replace(/-/g, "")}`;
-}
-
-async function getJson(env, key) {
-  return env.SCORE_KV.get(key, "json");
-}
-
-async function putJson(env, key, value) {
-  await env.SCORE_KV.put(key, JSON.stringify(value));
 }
 
 async function usernameKey(username) {
