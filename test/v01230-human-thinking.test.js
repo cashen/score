@@ -26,6 +26,14 @@ test("six subjects complete but official total missing is a distinct state", () 
   assert.match(recordSaveSummary(e).line, /学校公布总分待补/);
 });
 
+test("absent exams are not presented as six missing subjects", () => {
+  const e = exam({ status: "absent" });
+  assert.equal(recordCompleteness(e).absent, true);
+  assert.deepEqual(recordCompleteness(e).missingSubjects, []);
+  assert.equal(recordSaveSummary(e).line, "本场缺考");
+  assert.equal(recordSaveSummary(e).nextAction, "记录下一场考试");
+});
+
 test("share behavior distinguishes single live, trajectory live, and snapshot", () => {
   assert.equal(shareBehaviorLabel({ scope: "single", mode: "live" }), "这场考试会随记录更新，但以后新增的考试不会加入");
   assert.equal(shareBehaviorLabel({ scope: "trajectory", mode: "live" }), "历次成绩会持续更新，以后新增的考试也会显示");
@@ -38,4 +46,5 @@ test("app source does not expose the old misleading live-share claim", () => {
   assert.match(app, /shareBehaviorLabel\(\{ scope, mode \}\)/);
   assert.doesNotMatch(app, /item\.mode === "snapshot" \? "固定当前内容" : "以后新增的考试也会显示"/);
   assert.match(app, /没有记录这门课的考试不会出现在这里/);
+  assert.match(app, /dataStatus: deriveDataStatus\(subjects\)/);
 });
