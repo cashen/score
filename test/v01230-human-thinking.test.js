@@ -37,7 +37,7 @@ test("absent exams are not presented as six missing subjects", () => {
 test("share behavior distinguishes single live, trajectory live, and snapshot", () => {
   assert.equal(shareBehaviorLabel({ scope: "single", mode: "live" }), "这场考试会随记录更新，但以后新增的考试不会加入");
   assert.equal(shareBehaviorLabel({ scope: "trajectory", mode: "live" }), "历次成绩会持续更新，以后新增的考试也会显示");
-  assert.equal(shareBehaviorLabel({ scope: "trajectory", mode: "snapshot" }), "创建时固定的内容");
+  assert.equal(shareBehaviorLabel({ scope: "trajectory", mode: "snapshot" }), "固定当前内容");
 });
 
 test("app source does not expose the old misleading live-share claim", () => {
