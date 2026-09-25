@@ -1,13 +1,40 @@
 import "./draft.js";
 import { brandMark } from "./brand-logo-b.js";
-import { comparisonCategory as coreComparisonCategory, comparisonReason as coreComparisonReason, comparisonEligibility as coreComparisonEligibility, comparableSet as coreComparableSet, comparableRanking as coreComparableRanking, findComparableExam as coreFindComparableExam, findComparableExamForSubject as coreFindComparableExamForSubject, metricBetween as coreMetricBetween, latestExam as coreLatestExam, sortExamsChronologically, subjectRecordState, percentile as corePercentile } from "./record-semantics-v120.js";
-import { examScoreSummary, examCompleteness, scoreSummaryText, subjectScore } from "./score-core-v090.js";
-import { changeDrivers, subjectObservationExams } from "./trajectory-analysis-v010.js";
+import {
+  comparisonCategory as coreComparisonCategory,
+  comparisonReason as coreComparisonReason,
+  comparisonEligibility as coreComparisonEligibility,
+  comparableSet as coreComparableSet,
+  comparableRanking as coreComparableRanking,
+  findComparableExam as coreFindComparableExam,
+  findComparableExamForSubject as coreFindComparableExamForSubject,
+  latestExam as coreLatestExam,
+  sortExamsChronologically,
+  subjectRecordState,
+  percentile as corePercentile,
+  examScoreSummary,
+  examCompleteness,
+  scoreSummaryText,
+  subjectScore,
+  changeDrivers,
+  subjectObservationExams,
+  formatComparisonState,
+  formatComparisonSummary,
+  formatExamScore,
+  formatMissingSubjects,
+  formatRanking,
+  scoreDeltaParts,
+  shouldShowScoreDelta,
+  scoreChangeSentence,
+  scoreChangeDetail,
+  resolveDisplayMetric,
+  recordCompleteness,
+  recordSaveSummary,
+  shareBehaviorLabel,
+  metricBetween as canonicalMetricBetween
+} from "./domain-v001.js";
 import { shareUrlFor, shareFileName } from "./share-delivery-v092.js";
 import { deliverShareImage } from "./share-image-v092.js";
-import { formatComparisonState, formatComparisonSummary, formatExamScore, formatMissingSubjects, formatRanking } from "./product-language-v001.js";
-import { scoreDeltaParts, shouldShowScoreDelta, scoreChangeSentence, scoreChangeDetail } from "./record-reading-v130.js";
-import { resolveDisplayMetric, recordCompleteness, recordSaveSummary, shareBehaviorLabel } from "./human-reading-v140.js";
 
 const PRODUCT_NAME = "我的高三";
 const PRODUCT_TAGLINE = "看见这次成绩，也看见前后的变化";
@@ -233,7 +260,7 @@ function humanComparisonState(result, historyCount = 0) {
 }
 
 function metricBetween(latest, previous, key = null, metric = "auto") {
-  return coreMetricBetween(latest, previous, key, metric);
+  return canonicalMetricBetween(latest, previous, key, metric);
 }
 
 function directionText(metric) {
