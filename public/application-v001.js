@@ -6,6 +6,18 @@ const DEFAULT_STATE = Object.freeze({
 
 export function createAppState() { return { ...DEFAULT_STATE, familyMembers: [], invitations: [], exams: [], trash: [], shares: [] }; }
 
+export function captureViewContext(state) {
+  return { tab: state?.tab || "overview", trajectoryView: state?.trajectoryView || "total", subjectKey: state?.subjectKey || null, subjectMetric: state?.subjectMetric || "auto", selectedExamId: state?.selectedExamId || null };
+}
+export function restoreViewContext(state, context = {}) {
+  state.tab = context.tab || "overview";
+  state.trajectoryView = context.trajectoryView || "total";
+  state.subjectKey = context.subjectKey || null;
+  state.subjectMetric = context.subjectMetric || "auto";
+  state.selectedExamId = context.selectedExamId || null;
+  return state;
+}
+
 export function selectCurrentExam(state) {
   return state?.selectedExamId ? (state.exams || []).find((exam) => exam.id === state.selectedExamId) || null : null;
 }
@@ -53,4 +65,4 @@ export function dispatchViewAction(state, action = {}) {
   }
 }
 
-export const APPLICATION_ARCHITECTURE_VERSION = "0.13.0";
+export const APPLICATION_ARCHITECTURE_VERSION = "0.13.1";
