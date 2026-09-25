@@ -110,7 +110,8 @@ export function normalizeExam(input, existing = null) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) throw Object.assign(new Error("考试日期无效"), { code: "invalid_exam_date", field: "date" });
   const type = EXAM_TYPES.has(input.type) ? input.type : "other";
   const officialScore = numberOrNull(input.overall?.officialScore, 0, 2000);
-  const recordedScores = SUBJECTS.map(key => subjects[key].finalScore ?? subjects[key].rawScore).filter(score => score != null);
+  const scoreSubjects = subjectSet?.length ? subjectSet : SUBJECTS;
+  const recordedScores = scoreSubjects.map(key => subjects[key].finalScore ?? subjects[key].rawScore).filter(score => score != null);
   const calculatedScore = recordedScores.length ? recordedScores.reduce((sum, score) => sum + score, 0) : null;
   const comparison = input.comparison === undefined ? (existing?.comparison || null) : normalizeComparison(input.comparison);
   const reflectionInput = input.reflection === undefined ? existing?.reflection : input.reflection;

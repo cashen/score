@@ -768,8 +768,10 @@ function rankingFromForm(form, prefix, scope, label) {
 
 function deriveDataStatus(subjects,subjectSet=SUBJECTS.map(([key])=>key)){return subjectSet.every(key=>scoreOf(subjects[key])!=null)?"complete":"partial";}
 
-function validateExamEntry(subjects, form) {
+function validateExamEntry(subjects, form, subjectSet = SUBJECTS.map(([key]) => key)) {
+  const selected = new Set(subjectSet);
   for (const [key, label] of SUBJECTS) {
+    if (!selected.has(key)) continue;
     const full = subjects[key].fullScore;
     if (subjects[key].rawScore != null && full != null && subjects[key].rawScore > full) return `${label}原始分不能高于 ${full} 分`;
     if (subjects[key].finalScore != null && full != null && subjects[key].finalScore > full) return `${label}赋分后不能高于 ${full} 分`;
@@ -824,7 +826,7 @@ async function saveExam(event) {
     reflection: { studentNote: value(form, "reflectionStudentNote"), nextTry: value(form, "reflectionNextTry") },
     expectedRevision: state.editingExam?.revision
   };
-  const validationMessage = validateExamEntry(subjects, form);
+  const validationMessage = validateExamEntry(subjects, form, subjectSet);
   if (validationMessage) {
     formElement.querySelector("#exam-form-error").innerHTML = `<div class="error-box">${esc(validationMessage)}</div>`;
     return;
