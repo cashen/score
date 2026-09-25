@@ -27,14 +27,14 @@ test("multi-exam trajectory keeps baseline, recent window and stability separate
   assert.equal(result.baseline.display, "105 分");
   assert.equal(result.current.display, "122 分");
   assert.equal(result.longDirection, "forward");
-  assert.equal(result.stability.label, "比较稳定");
+  assert.equal(result.stability.label, "波动较大");
 });
 
 test("auto metric follows the displayed score when score data is present", () => {
   const exams = [
-    withMath(exam("e1", "2026-03-01"), 20),
-    withMath(exam("e2", "2026-04-01"), 18),
-    withMath(exam("e3", "2026-05-01"), 17, 100, null)
+    withMath(exam("e1", "2026-03-01"), 20, 100, 100),
+    withMath(exam("e2", "2026-04-01"), 18, 100, 102),
+    withMath(exam("e3", "2026-05-01"), 17, 100, 104)
   ];
   assert.equal(chooseTrajectoryMetric(exams, "math"), "score");
 });
