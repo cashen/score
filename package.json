@@ -1,11 +1,11 @@
 {
   "name": "score-track",
-  "version": "0.12.30.0",
+  "version": "0.13.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "check": "node --check scripts/security-scan.mjs && node --check src/index.js && node --check src/v020.js && node --check src/v020-gateway.js && node --check src/family.js && node --check src/onboarding.js && node --check src/sharing-v2.js && node --check src/security-gate.js && node --check src/one-time-gate.js && node --check src/lib/crypto.js && node --check src/lib/model.js && node --check src/lib/http.js && node --check public/router-v2.js && node --check public/app.js && node --check public/draft.js && node --check public/onboarding-v050.js && node --check public/brand-logo-b.js && node --check public/score-core-v090.js && node --check public/share-delivery-v092.js && node --check public/share-image-v092.js && node --check public/coordinate-insight-v100.js && node --check public/record-semantics-v120.js && node --check public/trajectory-analysis-v010.js && node --check public/product-language-v001.js && node --check public/record-reading-v130.js && node --check public/human-reading-v140.js",
+    "check": "node --check scripts/security-scan.mjs && node --check src/index.js && node --check src/v020.js && node --check src/v020-gateway.js && node --check src/family.js && node --check src/onboarding.js && node --check src/sharing-v2.js && node --check src/security-gate.js && node --check src/one-time-gate.js && node --check src/lib/crypto.js && node --check src/lib/model.js && node --check src/lib/http.js && node --check public/router-v2.js && node --check public/app.js && node --check public/domain-v001.js && node --check public/draft.js && node --check public/onboarding-v050.js && node --check public/brand-logo-b.js && node --check public/score-core-v090.js && node --check public/share-delivery-v092.js && node --check public/share-image-v092.js && node --check public/coordinate-insight-v100.js && node --check public/record-semantics-v120.js && node --check public/trajectory-analysis-v010.js && node --check public/product-language-v001.js && node --check public/record-reading-v130.js && node --check public/human-reading-v140.js",
     "security:scan": "node scripts/security-scan.mjs",
     "verify": "npm run security:scan && npm run check && npm test",
     "dev": "npx --yes wrangler@4.135.0 dev",
