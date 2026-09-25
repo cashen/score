@@ -14,6 +14,7 @@ test("release version stays synchronized across package and Worker contracts", (
   assert.equal(lock.packages[""].version, pkg.version);
   const versionPattern = new RegExp(`^APP_VERSION\\s*=\\s*"${pkg.version.replaceAll(".", "\\\\.")}"\\s*$`, "m");
   assert.match(wrangler, versionPattern);
+});
 
 test("recovery-code reset consumes its one-time claim after the member mutation", () => {
   const start = onboarding.indexOf('async function handleRecoveryCodeReset');
