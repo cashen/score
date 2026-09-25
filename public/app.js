@@ -33,7 +33,7 @@ import {
   shareBehaviorLabel,
   metricBetween as canonicalMetricBetween
 } from "./domain-v001.js";
-import { createAppState, dispatchViewAction, selectCurrentExam } from "./application-v001.js";
+import { createAppState, dispatchViewAction } from "./application-v001.js";
 import { shareUrlFor, shareFileName } from "./share-delivery-v092.js";
 import { deliverShareImage } from "./share-image-v092.js";
 
@@ -846,11 +846,14 @@ async function saveExam(event) {
     closeDialog();
     await loadStudentData();
     const savedExam = savedResult?.exam || (savedExamId ? state.exams.find((item) => item.id === savedExamId) : state.exams.find((item) => item.id === savedResult?.exam?.id));
-    state.tab = returnContext.tab;
-    state.trajectoryView = returnContext.trajectoryView;
-    state.subjectKey = returnContext.subjectKey;
-    state.subjectMetric = returnContext.subjectMetric;
-    state.selectedExamId = returnContext.selectedExamId && state.exams.some((item) => item.id === returnContext.selectedExamId) ? returnContext.selectedExamId : null;
+    dispatchViewAction(state, {
+      type: "view/overview",
+      view: returnContext.trajectoryView,
+      subjectKey: returnContext.subjectKey,
+      metric: returnContext.subjectMetric,
+      examId: returnContext.selectedExamId && state.exams.some((item) => item.id === returnContext.selectedExamId) ? returnContext.selectedExamId : null
+    });
+    dispatchViewAction(state, { type: "view/tab", tab: returnContext.tab });
     writePrivateNavigation({ replace: true });
     const saveSummary = savedExam ? recordSaveSummary(savedExam) : null;
     state.notice = saveSummary ? `考试已保存 · ${saveSummary.line}` : "考试已保存";
@@ -1217,7 +1220,7 @@ function bindDashboard() {
   document.querySelector("#student-select")?.addEventListener("change", async (event) => {
     state.student = state.me.students.find((student) => student.id === event.target.value) || state.me.students[0];
     await loadStudentData();
-    if (state.selectedExamId && !state.exams.some((item) => item.id === state.selectedExamId)) state.selectedExamId = null;
+    if (state.selectedExamId && !state.exams.some((item) => item.id === state.selectedExamId)) dispatchViewAction(state, { type: "view/clear-exam" });
     if (state.tab === "sharing") await loadShares();
     writePrivateNavigation({ replace: true });
     renderDashboard();
