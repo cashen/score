@@ -563,8 +563,8 @@ function shareFieldControls(prefix, scope) {
 
 // Legacy source wording retained: 默认只分享一场
 function shareScope(prefix) {
-  const trajectoryCopy = state.exams.length === 1 ? "从这一次开始；以后新增的考试也会显示" : "把多次考试放在一起看";
-  return `<div class="share-scope"><div class="share-title"><strong>想分享什么？</strong><small>选择这次考试，或把多次考试放在一起看。</small></div><label><input type="radio" name="${prefix}-scope" value="single" checked><span><strong>这一次考试</strong><small>只分享这一场考试</small></span></label><label><input type="radio" name="${prefix}-scope" value="trajectory"><span><strong>历次成绩</strong><small>${trajectoryCopy}</small></span></label><div class="field share-exam-picker"><label>选择考试</label><select data-share-exam="${prefix}">${state.exams.map((exam) => `<option value="${esc(exam.id)}">${esc(exam.name)} · ${fmtDate(exam.date)}</option>`).join("")}</select></div><label class="check share-future-ack" data-share-future-ack="${prefix}" hidden><input type="checkbox" name="${prefix}-future-exams-acknowledged">我知道以后新增的考试也会显示在这里</label></div>`;
+  const trajectoryCopy = state.exams.length === 1 ? "从这一次开始记录多次考试" : "把多次考试放在一起看";
+  return `<div class="share-scope"><div class="share-title"><strong>想分享什么？</strong><small>选择这次考试，或把多次考试放在一起看；是否跟随以后新增考试，在下面选择。</small></div><label><input type="radio" name="${prefix}-scope" value="single" checked><span><strong>这一次考试</strong><small>只分享这一场考试</small></span></label><label><input type="radio" name="${prefix}-scope" value="trajectory"><span><strong>历次成绩</strong><small>${trajectoryCopy}</small></span></label><div class="field share-exam-picker"><label>选择考试</label><select data-share-exam="${prefix}">${state.exams.map((exam) => `<option value="${esc(exam.id)}">${esc(exam.name)} · ${fmtDate(exam.date)}</option>`).join("")}</select></div><label class="check share-future-ack" data-share-future-ack="${prefix}" hidden><input type="checkbox" name="${prefix}-future-exams-acknowledged">我知道以后新增的考试也会显示在这里</label></div>`;
 }
 
 function shareSummary(prefix) {
