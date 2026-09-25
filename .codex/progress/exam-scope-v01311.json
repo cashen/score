@@ -1,0 +1,8 @@
+{
+  "version":"0.13.1.1",
+  "status":"implementation",
+  "branch":"fix/exam-scope-calculated-total-v01311",
+  "base":"main",
+  "tasks":["scoped calculated total","scoped editor validation","regression tests","duplicate mobile CSS cleanup","release version contract"],
+  "mergeGate":["npm run verify","Chromium","WebKit","exact tested PR head","main SHA","production version/buildSha attestation"]
+}
