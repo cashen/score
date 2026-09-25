@@ -7,6 +7,7 @@ import { shareUrlFor, shareFileName } from "./share-delivery-v092.js";
 import { deliverShareImage } from "./share-image-v092.js";
 import { formatComparisonState, formatComparisonSummary, formatExamScore, formatMissingSubjects, formatRanking } from "./product-language-v001.js";
 import { scoreDeltaParts, shouldShowScoreDelta, scoreChangeSentence, scoreChangeDetail } from "./record-reading-v130.js";
+import { resolveDisplayMetric, recordCompleteness, recordSaveSummary, shareBehaviorLabel } from "./human-reading-v140.js";
 
 const PRODUCT_NAME = "我的高三";
 const PRODUCT_TAGLINE = "看见这次成绩，也看见前后的变化";
@@ -399,9 +400,10 @@ function renderSubjectComparison() {
   const subjectExams = subjectObservationExams(sortExamsChronologically(state.exams), key);
   const current = subjectExams[0] || null;
   const currentState = subjectRecordState(current, key);
-  const comparison = coreFindComparableExamForSubject(subjectExams, current, key, metric);
+  const effectiveMetric = current ? resolveDisplayMetric(current, key, metric) : metric;
+  const comparison = coreFindComparableExamForSubject(subjectExams, current, key, effectiveMetric);
   const change = comparison.status === "comparable" ? comparison.metric : null;
-  const recentValue = currentState.hasAny ? subjectMetricValue(current, key, metric) : null;
+  const recentValue = currentState.hasAny ? subjectMetricValue(current, key, effectiveMetric) : null;
   const comparisonText = change
     ? `和 ${fmtDate(comparison.reference.date)} 相比`
     : humanComparisonState(comparison, subjectExams.length);
@@ -496,16 +498,17 @@ function renderOverview() {
   }
   const comparison = comparisonState();
   const previous = comparison.status === "comparable" ? comparison.previous : null;
-  const overallMetric = metricBetween(exam, previous);
+  const overallMetric = previous ? metricBetween(exam, previous, null, resolveDisplayMetric(exam, null, "auto")) : null;
   const scoreMetric = previous ? metricBetween(exam, previous, null, "score") : null;
   const sources = changeSources(exam, previous, overallMetric);
   const school = overallRank(exam, "school");
   const schoolPct = percentile(school?.rank, school?.participants);
-  const completeness = examCompleteness(exam);
-  const subjectNames = Object.fromEntries(SUBJECTS.map(([key, label]) => [key, label]));
-  const completionText = completeness.complete ? "" : `已录 ${6 - completeness.missingSubjects.length}/6 科，还缺 ${completeness.missingSubjects.map(key => subjectNames[key]).join("、")}`;
-  const primaryLabel = completeness.complete ? "记录下一次考试" : "继续补充这次考试";
-  const primaryAction = completeness.complete ? "new-exam" : "continue-exam";
+  const humanState = recordCompleteness(exam);
+  const completionText = humanState.missingSubjects.length
+    ? `已录 ${humanState.subjectCount}/${humanState.subjectTotal} 科，还缺 ${humanState.missingSubjects.join("、")}`
+    : (!humanState.officialTotal ? "六科已记全；学校公布总分待补" : "这次考试的六科成绩已记全");
+  const primaryLabel = humanState.missingSubjects.length || !humanState.officialTotal ? "继续补充这次考试" : "记录下一次考试";
+  const primaryAction = humanState.missingSubjects.length || !humanState.officialTotal ? "continue-exam" : "new-exam";
   const comparisonSummary = formatComparisonSummary({
     hasHistory: state.exams.length > 1,
     comparable: Boolean(previous),
@@ -560,8 +563,8 @@ function shareFieldControls(prefix, scope) {
 
 // Legacy source wording retained: 默认只分享一场
 function shareScope(prefix) {
-  const trajectoryCopy = state.exams.length === 1 ? "从这一次开始；以后新增的考试也会显示" : "把多次考试放在一起看";
-  return `<div class="share-scope"><div class="share-title"><strong>想分享什么？</strong><small>先选范围；可以选择只分享这一次，或让以后新增的考试也显示。</small></div><label><input type="radio" name="${prefix}-scope" value="single" checked><span><strong>这一次考试</strong><small>只分享这一场考试</small></span></label><label><input type="radio" name="${prefix}-scope" value="trajectory"><span><strong>历次成绩</strong><small>${trajectoryCopy}</small></span></label><div class="field share-exam-picker"><label>选择考试</label><select data-share-exam="${prefix}">${state.exams.map((exam) => `<option value="${esc(exam.id)}">${esc(exam.name)} · ${fmtDate(exam.date)}</option>`).join("")}</select></div><label class="check share-future-ack" data-share-future-ack="${prefix}" hidden><input type="checkbox" name="${prefix}-future-exams-acknowledged">我知道以后新增的考试也会显示在这里</label></div>`;
+  const trajectoryCopy = state.exams.length === 1 ? "从这一次开始记录多次考试" : "把多次考试放在一起看";
+  return `<div class="share-scope"><div class="share-title"><strong>想分享什么？</strong><small>选择这次考试，或把多次考试放在一起看；是否跟随以后新增考试，在下面选择。</small></div><label><input type="radio" name="${prefix}-scope" value="single" checked><span><strong>这一次考试</strong><small>只分享这一场考试</small></span></label><label><input type="radio" name="${prefix}-scope" value="trajectory"><span><strong>历次成绩</strong><small>${trajectoryCopy}</small></span></label><div class="field share-exam-picker"><label>选择考试</label><select data-share-exam="${prefix}">${state.exams.map((exam) => `<option value="${esc(exam.id)}">${esc(exam.name)} · ${fmtDate(exam.date)}</option>`).join("")}</select></div><label class="check share-future-ack" data-share-future-ack="${prefix}" hidden><input type="checkbox" name="${prefix}-future-exams-acknowledged">我知道以后新增的考试也会显示在这里</label></div>`;
 }
 
 function shareSummary(prefix) {
@@ -572,18 +575,19 @@ function renderShareList() {
   if (!state.shares.length) return `<div class="empty compact">当前没有外部分享。</div>`;
   return state.shares.map((item) => {
     const url = item.kind === "public" ? shareUrlFor(location.origin, item) : "";
-    return `<div class="share-item"><div><div><strong>${item.kind === "secret" ? "分享链接" : "公开链接"}</strong><span class="badge">${item.mode === "snapshot" ? "固定当前内容" : "以后新增的考试也会显示"}</span>${item.scope !== "trajectory" ? `<span class="badge">单次${item.examName ? ` · ${esc(item.examName)}` : ""}</span>` : `<span class="badge">历次成绩</span>`}</div>${url ? `<div class="share-url" title="完整分享地址">${esc(url)}</div>` : ""}<small>创建于 ${esc(item.createdAt?.slice(0, 10) || "")}${item.expiresAt ? ` · ${esc(item.expiresAt.slice(0, 10))} 自动失效` : ""}${item.kind === "secret" ? " · 出于安全考虑，这个地址不会再次显示；创建时复制的链接仍可继续使用。" : ""}</small><div class="share-item-actions">${url ? `<button class="btn btn-outline btn-small" data-action="copy-share" data-url="${esc(url)}">复制地址</button><a class="btn btn-outline btn-small" href="${esc(url)}" target="_blank" rel="noopener noreferrer">打开分享页</a>` : ""}<button class="btn btn-outline btn-small" data-action="share-image" data-kind="${item.kind}" data-locator="${esc(item.locator)}" data-scope="${esc(item.scope)}">生成分享图</button></div></div><button class="btn btn-danger btn-small" data-action="revoke-share" data-kind="${item.kind}" data-locator="${esc(item.locator)}">撤销</button></div>`;
+    const behavior = shareBehaviorLabel(item);
+    return `<div class="share-item"><div><div><strong>${item.kind === "secret" ? "分享链接" : "公开链接"}</strong><span class="badge">${esc(behavior)}</span>${item.scope !== "trajectory" ? `<span class="badge">单次${item.examName ? ` · ${esc(item.examName)}` : ""}</span>` : `<span class="badge">历次成绩</span>`}</div>${url ? `<div class="share-url" title="完整分享地址">${esc(url)}</div>` : ""}<small>创建于 ${esc(item.createdAt?.slice(0, 10) || "")}${item.expiresAt ? ` · ${esc(item.expiresAt.slice(0, 10))} 自动失效` : ""}${item.kind === "secret" ? " · 出于安全考虑，这个地址不会再次显示；创建时复制的链接仍可继续使用。" : ""}</small><div class="share-item-actions">${url ? `<button class="btn btn-outline btn-small" data-action="copy-share" data-url="${esc(url)}">复制地址</button><a class="btn btn-outline btn-small" href="${esc(url)}" target="_blank" rel="noopener noreferrer">打开分享页</a>` : ""}<button class="btn btn-outline btn-small" data-action="share-image" data-kind="${item.kind}" data-locator="${esc(item.locator)}" data-scope="${esc(item.scope)}">生成分享图</button></div></div><button class="btn btn-danger btn-small" data-action="revoke-share" data-kind="${item.kind}" data-locator="${esc(item.locator)}">撤销</button></div>`;
   }).join("");
 }
 
 function renderShareResult() {
   const result = state.shareResult;
   if (!result?.url) return "";
-  return `<section class="share-result" aria-labelledby="share-result-title"><div><div class="section-label">刚刚生成</div><h2 id="share-result-title">链接已准备好</h2><p>复制后可以发给家人，也可以打开分享页确认内容。</p></div><div class="share-url" title="完整分享地址">${esc(result.url)}</div><div class="share-result-actions"><button class="btn btn-primary" data-action="copy-share" data-url="${esc(result.url)}">复制完整地址</button><a class="btn btn-outline" href="${esc(result.url)}" target="_blank" rel="noopener noreferrer">打开分享页</a><button class="btn btn-outline" data-action="share-image" data-kind="${esc(result.item?.kind || "public")}" data-locator="${esc(result.item?.locator || "")}" data-token="${esc(result.token || "")}" data-scope="${esc(result.item?.scope || "single")}">生成完整分享页图</button></div><small class="muted">${result.item?.kind === "secret" ? "此随机地址只在本次显示；刷新后不会再次回显。" : "这是完整地址，不需要手动补齐 /p/。"}</small></section>`;
+  return `<section class="share-result" aria-labelledby="share-result-title"><div><div class="section-label">刚刚生成</div><h2 id="share-result-title">链接已准备好</h2><p>复制后可以发给家人，也可以打开分享页确认内容。</p></div><div class="share-url" title="完整分享地址">${esc(result.url)}</div><div class="share-result-actions"><button class="btn btn-primary" data-action="copy-share" data-url="${esc(result.url)}">复制完整地址</button><a class="btn btn-outline" href="${esc(result.url)}" target="_blank" rel="noopener noreferrer">打开分享页</a><button class="btn btn-outline" data-action="share-image" data-kind="${esc(result.item?.kind || "public")}" data-locator="${esc(result.item?.locator || "")}" data-token="${esc(result.token || "")}" data-scope="${esc(result.item?.scope || "single")}">生成完整分享页图</button></div><small class="muted">${esc(shareBehaviorLabel(result.item || {}))}。${result.item?.kind === "secret" ? "此随机地址只在本次显示；刷新后不会再次回显。" : "这是完整地址，不需要手动补齐 /p/。"}</small></section>`;
 }
 
 function renderSharing() {
-  return `<section><div class="page-heading"><div><h1>分享</h1><p>默认只在家庭内可见。生成链接前，先确认别人会看到什么。</p></div></div>${renderShareResult()}<div class="share-layout"><article class="section-surface share-card" data-share-card="secret"><h2>分享链接</h2><p>只有拿到这个随机地址的人才能查看。需要时可以随时撤销。</p>${shareScope("secret")}${shareSummary("secret")}<details class="advanced"><summary>修改分享内容与自动失效</summary><div class="advanced-body"><div class="field"><label>更新方式</label><select id="secret-mode"><option value="live">以后新增的考试也会显示</option><option value="snapshot">固定当前内容</option></select></div><div class="field"><label>自动失效（可选）</label><input id="secret-expiry" type="date"></div>${shareFieldControls("secret", state.exams.length >= 2 ? "trajectory" : "single")}</div></details><button class="btn btn-primary btn-block" data-action="create-secret">生成并复制链接</button></article><details class="public-advanced"><summary><span><strong>公开链接（高级）</strong><small>任何拿到这个地址的人都可以查看。不会主动进入搜索，但这不等于私密。</small></span><span aria-hidden="true">＋</span></summary><article class="section-surface share-card" data-share-card="public">${shareScope("public")}${shareSummary("public")}<div class="field"><label>公开地址</label><div class="slug-field"><span>/p/</span><input id="public-slug" minlength="3" maxlength="50" autocapitalize="none" spellcheck="false" placeholder="例如 wang-2027"></div><small>3–50 位字母、数字或短横线。</small></div><details class="advanced"><summary>修改分享内容</summary><div class="advanced-body"><div class="field"><label>更新方式</label><select id="public-mode"><option value="live">以后新增的考试也会显示</option><option value="snapshot">固定当前内容</option></select></div>${shareFieldControls("public", state.exams.length >= 2 ? "trajectory" : "single")}</div></details><button class="btn btn-primary btn-block" data-action="create-public">创建公开链接</button></article></details><section class="reading-section current-shares"><div class="section-head-simple"><div><div class="section-label">当前分享</div><h2>已经创建的外部地址</h2></div></div><div>${renderShareList()}</div></section></div></section>`;
+  return `<section><div class="page-heading"><div><h1>分享</h1><p>默认只在家庭内可见。生成链接前，先确认别人会看到什么。</p></div></div>${renderShareResult()}<div class="share-layout"><article class="section-surface share-card" data-share-card="secret"><h2>分享链接</h2><p>只有拿到这个随机地址的人才能查看。需要时可以随时撤销。</p>${shareScope("secret")}${shareSummary("secret")}<details class="advanced"><summary>修改分享内容与自动失效</summary><div class="advanced-body"><div class="field"><label>更新方式</label><select id="secret-mode"><option value="live">会随记录更新</option><option value="snapshot">固定当前内容</option></select></div><div class="field"><label>自动失效（可选）</label><input id="secret-expiry" type="date"></div>${shareFieldControls("secret", state.exams.length >= 2 ? "trajectory" : "single")}</div></details><button class="btn btn-primary btn-block" data-action="create-secret">生成并复制链接</button></article><details class="public-advanced"><summary><span><strong>公开链接（高级）</strong><small>任何拿到这个地址的人都可以查看。不会主动进入搜索，但这不等于私密。</small></span><span aria-hidden="true">＋</span></summary><article class="section-surface share-card" data-share-card="public">${shareScope("public")}${shareSummary("public")}<div class="field"><label>公开地址</label><div class="slug-field"><span>/p/</span><input id="public-slug" minlength="3" maxlength="50" autocapitalize="none" spellcheck="false" placeholder="例如 wang-2027"></div><small>3–50 位字母、数字或短横线。</small></div><details class="advanced"><summary>修改分享内容</summary><div class="advanced-body"><div class="field"><label>更新方式</label><select id="public-mode"><option value="live">会随记录更新</option><option value="snapshot">固定创建时内容</option></select></div>${shareFieldControls("public", state.exams.length >= 2 ? "trajectory" : "single")}</div></details><button class="btn btn-primary btn-block" data-action="create-public">创建公开链接</button></article></details><section class="reading-section current-shares"><div class="section-head-simple"><div><div class="section-label">当前分享</div><h2>已经创建的外部地址</h2></div></div><div>${renderShareList()}</div></section></div></section>`;
 }
 
 function memberRow(member) {
@@ -664,14 +668,15 @@ function examDialog(exam = null) {
     } catch {}
   }
   const sections = [...form.querySelectorAll(".exam-section")];
-  let step = exam && examCompleteness(exam).missingSubjects.length ? 2 : 0;
+  const entryState = exam ? recordCompleteness(exam) : null;
+  let step = exam && entryState?.missingSubjects.length ? 2 : exam && !entryState?.officialTotal ? 1 : 0;
   const stepper = document.createElement("div");
   stepper.className = "entry-stepper";
   stepper.innerHTML = ["考试信息", "总分与位置", "六科明细"].map((label, index) => `<span data-entry-step="${index}">${index + 1}. ${label}</span>`).join("");
   form.querySelector(".dialog-head")?.after(stepper);
   const navigator = document.createElement("div");
   navigator.className = "entry-navigation";
-  navigator.innerHTML = `<button type="button" class="btn btn-outline btn-small" data-entry-back>上一步</button><span data-entry-hint>${exam && step === 2 ? "继续补充尚未拿到的科目；已有内容不会改变。" : "先填考试名称和日期，不知道的数据可以留空。"}</span><button type="button" class="btn btn-outline btn-small" data-entry-next>下一步</button>`;
+  navigator.innerHTML = `<button type="button" class="btn btn-outline btn-small" data-entry-back>上一步</button><span data-entry-hint>${exam && step === 2 ? "继续补充尚未拿到的科目；已有内容不会改变。" : exam && step === 1 ? "学校公布总分还没记；拿到后可以在这里补上。" : "先填考试名称和日期，不知道的数据可以留空。"}</span><button type="button" class="btn btn-outline btn-small" data-entry-next>下一步</button>`;
   form.querySelector(".dialog-actions")?.before(navigator);
   const renderStep = () => {
     sections.forEach((section, index) => { section.hidden = index !== step; });
@@ -744,9 +749,9 @@ function rankingFromForm(form, prefix, scope, label) {
   return { scope, label, rank, participants, basis: "final_score" };
 }
 
-function deriveDataStatus(subjects, officialScore) {
+function deriveDataStatus(subjects) {
   const six = SUBJECTS.every(([key]) => scoreOf(subjects[key]) != null);
-  return six && officialScore != null ? "complete" : "partial";
+  return six ? "complete" : "partial";
 }
 
 function validateExamEntry(subjects, form) {
@@ -801,7 +806,7 @@ async function saveExam(event) {
     date: value(form, "date"),
     type: value(form, "type"),
     status: value(form, "status") || "normal",
-    dataStatus: deriveDataStatus(subjects, officialScore),
+    dataStatus: deriveDataStatus(subjects),
     comparison: { series: value(form, "comparisonSeries"), level: value(form, "comparisonLevel") },
     overall: { officialScore, rankings: overallRankings.filter(Boolean) },
     subjects,
@@ -817,19 +822,23 @@ async function saveExam(event) {
   try { localStorage.setItem("score-entry-preferences", JSON.stringify({ type: payload.type })); } catch {}
   button.disabled = true;
   button.textContent = "正在保存…";
+  const savedExamId = state.editingExam?.id || null;
   try {
-    if (state.editingExam) await api(`/api/students/${state.student.id}/exams/${state.editingExam.id}`, { method: "PUT", body: JSON.stringify(payload) });
-    else await api(`/api/students/${state.student.id}/exams`, { method: "POST", body: JSON.stringify(payload) });
+    const savedResult = state.editingExam
+      ? await api(`/api/students/${state.student.id}/exams/${state.editingExam.id}`, { method: "PUT", body: JSON.stringify(payload) })
+      : await api(`/api/students/${state.student.id}/exams`, { method: "POST", body: JSON.stringify(payload) });
     formElement.dispatchEvent(new CustomEvent("score:save-succeeded", { bubbles: true }));
     closeDialog();
     await loadStudentData();
+    const savedExam = savedResult?.exam || (savedExamId ? state.exams.find((item) => item.id === savedExamId) : state.exams.find((item) => item.id === savedResult?.exam?.id));
     state.tab = returnContext.tab;
     state.trajectoryView = returnContext.trajectoryView;
     state.subjectKey = returnContext.subjectKey;
     state.subjectMetric = returnContext.subjectMetric;
     state.selectedExamId = returnContext.selectedExamId && state.exams.some((item) => item.id === returnContext.selectedExamId) ? returnContext.selectedExamId : null;
     writePrivateNavigation({ replace: true });
-    state.notice = "考试已保存";
+    const saveSummary = savedExam ? recordSaveSummary(savedExam) : null;
+    state.notice = saveSummary ? `考试已保存 · ${saveSummary.line}` : "考试已保存";
     state.noticeTone = "success";
     renderDashboard();
   } catch (error) {
@@ -881,7 +890,7 @@ function syncShareCard(prefix) {
       ["displayName", "孩子名字 / 称呼"], ["graduationYear", "毕业年份"], ["school", "学校"], ["className", "班级"],
       ["overallScore", "总分"], ["overallRank", "总体排名"], ["subjectScores", "六科成绩"], ["subjectRanks", "六科排名"], ["examStatus", "考试情况"], ["comparisonContext", "比较范围"]
     ].filter(([key]) => document.querySelector(`[name='${prefix}-${key}']`)?.checked).map(([, label]) => label);
-    const futureCopy = scope === "trajectory" && mode === "live" ? "；以后新增的考试也会显示在这里" : mode === "snapshot" ? "；创建后内容不再变化" : "";
+    const futureCopy = `；${shareBehaviorLabel({ scope, mode })}`;
     const included = [scope === "trajectory" ? "历次成绩" : "这一次考试", "考试名称和日期", ...checked];
     summary.innerHTML = `<div><strong>将分享</strong><span>${esc([...new Set(included)].join("、"))}${esc(futureCopy)}</span></div><div><strong>不会分享</strong><span>个人回看、家庭备注、登录账号、家庭成员和安全信息</span></div>`;
   }
@@ -1354,18 +1363,18 @@ function publicViewNavV080(active = "total", subject = null) {
 
 function publicBaselineV081(view, exams, share = {}) {
   if (!Array.isArray(exams) || exams.length !== 1) return "";
-  const future = share.includesFutureExams
-    ? "以后新增的考试也会显示在这里。"
-    : "这是创建分享时固定的内容，之后不会变化。";
-  return `<aside class="public-baseline-note" aria-label="记录状态"><span class="public-baseline-mark" aria-hidden="true"></span><div><strong>目前的记录</strong><p>现在只记录到这一场考试。${future}</p></div></aside>`;
+  const behavior = shareBehaviorLabel(share);
+  const scopeText = share.scope === "trajectory" ? "目前记录到这里" : "这次考试";
+  return `<aside class="public-baseline-note" aria-label="记录状态"><span class="public-baseline-mark" aria-hidden="true"></span><div><strong>目前的记录</strong><small>${scopeText}</small><p>${share.scope === "trajectory" ? "现在只记录到这一场考试。" : "分享只包含这一场考试。"}${behavior}。</p></div></aside>`;
 }
 
 function publicComparisonNote(exams, key = null, share = {}) {
   if (share.fields?.history !== true || exams.length < 2) return "";
   const ordered = sortExamsChronologically(exams);
   const current = ordered[0] || null;
+  const effectiveMetric = key && current ? resolveDisplayMetric(current, key, "auto") : (!key && current ? resolveDisplayMetric(current, null, "auto") : "score");
   const comparison = key
-    ? coreFindComparableExamForSubject(subjectObservationExams(ordered, key), current, key, "auto")
+    ? coreFindComparableExamForSubject(subjectObservationExams(ordered, key), current, key, effectiveMetric)
     : coreFindComparableExam(ordered, current);
   const previous = comparison.status === "comparable" ? comparison.reference : null;
   const summary = formatComparisonSummary({
@@ -1378,7 +1387,7 @@ function publicComparisonNote(exams, key = null, share = {}) {
   if (!previous) {
     return `<aside class="public-comparison-note"><div class="section-label">和以前相比</div><strong>${esc(summary.title)}</strong>${summary.detail ? `<p>${esc(summary.detail)}</p>` : ""}</aside>`;
   }
-  const metric = key ? comparison.metric : metricBetween(current, previous);
+  const metric = key ? comparison.metric : metricBetween(current, previous, null, resolveDisplayMetric(current, null, "auto"));
   return `<aside class="public-comparison-note"><div class="section-label">和以前相比</div><strong>${esc(directionText(metric))}</strong><p>${esc(summary.detail)}</p></aside>`;
 }
 
@@ -1393,9 +1402,10 @@ function publicSubjectComparisonV080(exams, key, share = {}) {
   const label = SUBJECTS.find(([subject]) => subject === key)?.[1] || "单科";
   const subjectExams = subjectObservationExams(ordered, key);
   const current = subjectExams[0] || null;
-  const comparison = coreFindComparableExamForSubject(subjectExams, current, key, "auto");
+  const effectiveMetric = current ? resolveDisplayMetric(current, key, "auto") : "score";
+  const comparison = coreFindComparableExamForSubject(subjectExams, current, key, effectiveMetric);
   const change = comparison.status === "comparable" ? comparison.metric : null;
-  const currentValue = current ? subjectMetricValue(current, key, "auto") : "";
+  const currentValue = current ? subjectMetricValue(current, key, effectiveMetric) : "";
   const compareText = change
     ? `和 ${fmtDate(comparison.reference.date)} 相比`
     : formatComparisonSummary({
@@ -1474,7 +1484,7 @@ function renderPublicV080(result) {
   const coordinate = latest ? [result.share.fields?.overallRank !== true ? null : school?.rank != null ? `校内第 ${school.rank} 名` : null, result.share.fields?.overallRank !== true ? null : clazz?.rank != null ? `班级第 ${clazz.rank} 名` : null, result.share.fields?.overallScore !== true ? null : totalText].filter(Boolean) : [];
   const coordinateText = coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>成绩与排名未分享</span>`;
   const meta = [data.student?.graduationYear ? `${data.student.graduationYear}届` : null, data.student?.schoolLabel, data.student?.className].filter(Boolean).map(esc).join(" · ");
-  const total = `<section class="public-coordinate"><div class="public-mode">${result.share.mode === "snapshot" ? "固定当前内容" : result.share.scope === "trajectory" ? "历次成绩 · 以后新增的考试也会显示" : "以后新增的考试也会显示"}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinateText}</div>${publicBaselineV081("total", exams, result.share)}${publicComparisonNote(exams, null, result.share)}${result.share.fields?.overallScore === true && exams.length > 1 ? (() => { const previousResult = coreFindComparableExam(exams, latest); const previous = previousResult.status === "comparable" ? previousResult.reference : null; const metric = previous ? metricBetween(latest, previous, null, "score") : null; return metric && shouldShowScoreDelta(metric) ? `<div class="public-score-change"><strong>${esc(scoreChangeSentence(metric))}</strong><small>${esc(scoreChangeDetail(metric))}</small></div>` : ""; })() : ""}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share, exams)}</div>${publicHistory(exams, result.share)}` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
+  const total = `<section class="public-coordinate"><div class="public-mode">${esc(shareBehaviorLabel(result.share))}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinateText}</div>${publicBaselineV081("total", exams, result.share)}${publicComparisonNote(exams, null, result.share)}${result.share.fields?.overallScore === true && exams.length > 1 ? (() => { const previousResult = coreFindComparableExam(exams, latest); const previous = previousResult.status === "comparable" ? previousResult.reference : null; const metric = previous ? metricBetween(latest, previous, null, "score") : null; return metric && shouldShowScoreDelta(metric) ? `<div class="public-score-change"><strong>${esc(scoreChangeSentence(metric))}</strong><small>${esc(scoreChangeDetail(metric))}</small></div>` : ""; })() : ""}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share, exams)}</div>${publicHistory(exams, result.share)}` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
   const body = view === "subject" ? publicSubjectComparisonV080(exams, subject, result.share) : view === "timeline" ? publicTimelineV080(exams, selectedExamId, result.share) : total;
   app.innerHTML = `<main class="public-shell ink-share" data-share-view="${view}" data-exam-count="${exams.length}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span><i class="ink-share-flourish" aria-hidden="true"></i></div><div class="privacy-note">这是家庭主动分享的内容，请不要随意转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">需要时可以随时撤销分享</footer>`;
 }

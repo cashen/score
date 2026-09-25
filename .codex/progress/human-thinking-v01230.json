@@ -1,0 +1,24 @@
+{
+  "task": "human-thinking-v01230",
+  "repository": "cashen/score",
+  "branch": "feat/human-thinking-v01230",
+  "baseSha": "ea325c98ae7f461cb4419720387974cfebb395d7",
+  "version": "0.12.30.0",
+  "principle": "student-parent-teacher are audit perspectives only; one product, one entrance, one data model, no role-specific UI",
+  "completed": [
+    "human-reading-semantic-helper",
+    "default-metric-alignment",
+    "save-state-reading",
+    "share-behavior-copy",
+    "version-contract-sync",
+    "pr-ready"
+  ],
+  "pending": [
+    "pr-head-ci",
+    "browser-regression",
+    "merge",
+    "main-ci",
+    "production-attestation"
+  ],
+  "rule": "Only passing submitted code counts as complete; merge only the exact final PR head."
+}
