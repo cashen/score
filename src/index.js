@@ -111,7 +111,6 @@ async function requireStudent(env, member, studentId, write = false) {
 
 async function loadExamIndex(env, studentId) {
   const legacy = (await getJson(env, `exam-index:${studentId}`)) || { studentId, items: [], updatedAt: null };
-  if (typeof env.SCORE_KV.list !== "function") return legacy;
   try {
     const listed = await listKeys(env, { prefix: `exam-summary:${studentId}:`, limit: MAX_EXAMS });
     const summaries = await Promise.all((listed?.keys || []).map((key) => getJson(env, key.name)));
@@ -309,7 +308,7 @@ async function handleLogoutAll(request, env, session) {
 
 async function handleLogout(request, env, session) {
   requireCsrf(request, session);
-  if (session.payload.jti) await env.SCORE_KV.delete(await sessionStorageKey(session.payload.jti));
+  if (session.payload.jti) await deleteKey(env, await sessionStorageKey(session.payload.jti));
   return json({ ok: true }, 200, { "set-cookie": clearSessionCookie() });
 }
 
