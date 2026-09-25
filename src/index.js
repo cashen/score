@@ -342,12 +342,37 @@ async function handleExamCreate(request, env, session, studentId) {
   const student = await requireStudent(env, session.member, studentId, true);
   if (student.archivedAt) return errorJson("该孩子资料已归档，恢复后才能继续录入", 409, "student_archived");
   const body = await readJson(request);
-  const input = { ...body, context: { schoolLabel: student.schoolLabel, classLabel: student.className, grade: student.grade, ...body.context } };
-  const exam = normalizeExam(input);
-  await putJson(env, `exam:${studentId}:${exam.id}`, exam);
-  const index = await loadExamIndex(env, studentId);
-  await saveExamIndex(env, studentId, [examSummary(exam), ...index.items.filter((item) => item.id !== exam.id)]);
-  return json({ exam }, 201);
+  const clientRequestId = safeText(body.clientRequestId, 80);
+  if (clientRequestId && !/^[A-Za-z0-9_-]{12,80}$/.test(clientRequestId)) {
+    return errorJson("保存请求标识无效，请重新保存", 400, "invalid_client_request_id");
+  }
+  const requestKey = clientRequestId ? `exam-create-request:${studentId}:${clientRequestId}` : null;
+  if (requestKey) {
+    const previous = await getJson(env, requestKey);
+    if (previous?.examId) {
+      const existing = await getJson(env, `exam:${studentId}:${previous.examId}`);
+      if (existing && !existing.deletedAt) return json({ exam: existing, idempotent: true }, 200);
+    }
+  }
+  const claimLocator = requestKey || `exam-create:${crypto.randomUUID()}`;
+  const claimId = clientRequestId ? await claimOneTime(env, "exam-create", claimLocator) : null;
+  if (clientRequestId && !claimId) return errorJson("这场考试正在保存，请稍后查看结果", 409, "exam_create_in_progress");
+  try {
+    const input = { ...body, context: { schoolLabel: student.schoolLabel, classLabel: student.className, grade: student.grade, ...body.context } };
+    const exam = normalizeExam(input);
+    await putJson(env, `exam:${studentId}:${exam.id}`, exam);
+    const index = await loadExamIndex(env, studentId);
+    await saveExamIndex(env, studentId, [examSummary(exam), ...index.items.filter((item) => item.id !== exam.id)]);
+    if (requestKey) await putJson(env, requestKey, { examId: exam.id, createdAt: now() }, { expirationTtl: 7 * 24 * 60 * 60 });
+    if (claimId) {
+      const consumed = await consumeOneTime(env, "exam-create", claimLocator, claimId);
+      if (!consumed) throw Object.assign(new Error("保存结果无法确认，请重新打开考试列表核对"), { status: 500, code: "exam_create_consume_failed" });
+    }
+    return json({ exam, idempotent: false }, 201);
+  } catch (error) {
+    if (claimId) await releaseOneTime(env, "exam-create", claimLocator, claimId);
+    throw error;
+  }
 }
 
 async function handleExamUpdate(request, env, session, studentId, examId) {
