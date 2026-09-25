@@ -5,9 +5,8 @@ import { changeDrivers, subjectObservationExams } from "./trajectory-analysis-v0
 import { formatComparisonState, formatComparisonSummary, formatExamScore, formatMissingSubjects, formatRanking, formatShareMode } from "./product-language-v001.js";
 import { scoreDeltaParts, shouldShowScoreDelta, scoreChangeSentence, scoreChangeDetail } from "./record-reading-v130.js";
 import { resolveDisplayMetric, recordCompleteness, recordSaveSummary, shareBehaviorLabel } from "./human-reading-v140.js";
-import { resolveExamScope, normalizeSubjectSet, subjectKeysForDisplay, subjectLabel, subjectLabels, examScopeLabel, examScoreLabel, EXAM_SCOPE_VERSION } from "./exam-scope.js";
 
-export { SUBJECT_KEYS, comparisonCategory, comparisonReason, comparisonEligibility, comparableSet, comparableRanking, findComparableExam, findComparableExamForSubject, latestExam, percentile, rankingState, sortExamsChronologically, subjectRecordState, examScoreSummary, examCompleteness, scoreSummaryText, subjectScore, changeDrivers, subjectObservationExams, formatComparisonState, formatComparisonSummary, formatExamScore, formatMissingSubjects, formatRanking, formatShareMode, scoreDeltaParts, shouldShowScoreDelta, scoreChangeSentence, scoreChangeDetail, resolveDisplayMetric, recordCompleteness, recordSaveSummary, shareBehaviorLabel, resolveExamScope, normalizeSubjectSet, subjectKeysForDisplay, subjectLabel, subjectLabels, examScopeLabel, examScoreLabel };
+export { SUBJECT_KEYS, comparisonCategory, comparisonReason, comparisonEligibility, comparableSet, comparableRanking, findComparableExam, findComparableExamForSubject, latestExam, percentile, rankingState, sortExamsChronologically, subjectRecordState, examScoreSummary, examCompleteness, scoreSummaryText, subjectScore, changeDrivers, subjectObservationExams, formatComparisonState, formatComparisonSummary, formatExamScore, formatMissingSubjects, formatRanking, formatShareMode, scoreDeltaParts, shouldShowScoreDelta, scoreChangeSentence, scoreChangeDetail, resolveDisplayMetric, recordCompleteness, recordSaveSummary, shareBehaviorLabel };
 
 // One comparison rule for the whole application: auto comparison follows the metric actually displayed.
 export function metricBetween(latest, previous, key = null, metric = "auto") {
@@ -15,4 +14,4 @@ export function metricBetween(latest, previous, key = null, metric = "auto") {
   return coreMetricBetween(latest, previous, key, resolved);
 }
 
-export const DOMAIN_ARCHITECTURE_VERSION = EXAM_SCOPE_VERSION;
+export const DOMAIN_ARCHITECTURE_VERSION = "0.13.0";

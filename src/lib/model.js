@@ -192,12 +192,14 @@ export function publicProjection(student, exams, fields) {
     },
     exams: []
   };
-  for (const exam of exams) {
+  for (const exam of exams.filter((item) => item && !item.deletedAt)) {
+    const scope = resolveExamScope(exam);
     const projected = {
       id: exam.id,
       name: exam.name,
       date: exam.date,
-      type: exam.type
+      type: exam.type,
+      subjectSet: scope.subjects
     };
     if (fields.examStatus || fields.status) projected.status = exam.status || "normal";
     if (fields.comparisonContext || fields.comparison) projected.comparison = exam.comparison ? { series: exam.comparison.series || null, level: exam.comparison.level || null } : null;
@@ -209,7 +211,7 @@ export function publicProjection(student, exams, fields) {
     if (fields.overallRank) projected.overallRankings = exam.overall?.rankings || [];
     if (fields.subjectScores || fields.subjectRanks) {
       projected.subjects = {};
-      for (const subject of SUBJECTS) {
+      for (const subject of resolveExamScope(exam).subjects) {
         const source = exam.subjects?.[subject] || {};
         projected.subjects[subject] = {};
         if (fields.subjectScores) {

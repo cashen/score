@@ -1,22 +1,25 @@
 {
-  "task": "exam-scope-lifecycle-v01310",
+  "task": "architecture-consolidation-v01300",
   "repository": "cashen/score",
-  "baseSha": "a2efee74bba801104836e6ba7680f496c697a50c",
-  "version": "0.13.1.0",
-  "principle": "one exam, one domain fact, one application flow; subject count changes content, not business mode; deleted exams stay out of normal reading",
+  "baseSha": "4ab56cf57978195245c57528e2fe2134372f3656",
+  "version": "0.13.0.0",
+  "principle": "one product, one entrance, one data model; student-parent-teacher are audit perspectives only",
   "completed": [
-    "exam-scope-domain",
-    "subject-scoped-score-semantics",
-    "unified-exam-editor",
-    "mobile-save-close-contract",
-    "deleted-exam-normal-path-filter",
-    "share-projection-scope",
-    "architecture-regression-contracts"
+    "architecture-baseline",
+    "canonical-domain-facade",
+    "app-domain-routing",
+    "auto-metric-alignment-contract",
+    "version-contract-sync",
+    "architecture-regression-test"
   ],
   "pending": [
-    "ci",
+    "application-actions",
+    "selectors-extraction",
+    "exam-aggregate-consolidation",
+    "share-projection-consolidation",
+    "repository-layer",
+    "ui-css-consolidation",
     "browser-regression",
-    "main-merge",
     "production-attestation"
   ],
   "rule": "Only passing submitted code counts as complete; merge only the exact final PR head."
