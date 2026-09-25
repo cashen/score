@@ -1,5 +1,6 @@
 import { randomToken, sha256, tokenHash } from "./lib/crypto.js";
-import { normalizePublicSlug, normalizeShareFields, publicProjection } from "./lib/model.js";
+import { normalizePublicSlug, normalizeShareFields } from "./lib/model.js";
+import { publicProjection } from "./domain/share-projection.js";
 import { errorJson, json, readJson } from "./lib/http.js";
 import { enforceRateLimit } from "./lib/rate-limit.js";
 import { getJson, putJson } from "./repositories/kv.js";
