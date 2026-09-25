@@ -53,7 +53,7 @@ export function recordSaveSummary(exam) {
 }
 
 export function shareBehaviorLabel({ scope = "single", mode = "live" } = {}) {
-  if (mode === "snapshot") return "创建时固定的内容";
+  if (mode === "snapshot") return "固定当前内容";
   if (scope === "trajectory") return "历次成绩会持续更新，以后新增的考试也会显示";
   return "这场考试会随记录更新，但以后新增的考试不会加入";
 }
