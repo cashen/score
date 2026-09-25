@@ -3,8 +3,8 @@ export async function getJson(env, key) {
   return env.SCORE_KV.get(key, "json");
 }
 
-export async function putJson(env, key, value) {
-  await env.SCORE_KV.put(key, JSON.stringify(value));
+export async function putJson(env, key, value, options) {
+  await env.SCORE_KV.put(key, JSON.stringify(value), options);
 }
 
 export async function deleteKey(env, key) {
