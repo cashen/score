@@ -1,12 +1,12 @@
-import { examScoreSummary } from "../../public/score-core-v090.js";
-import { normalizeSubjectSet, resolveExamScope } from "../../public/exam-scope.js";
+import { examScoreSummary } from "../domain/score.js";
+import { normalizeSubjectSet, resolveExamScope } from "../domain/exam.js";
 import {
   examComparisonCategory as semanticExamComparisonCategory,
   comparableRanking as semanticComparableRanking,
   percentile as semanticPercentile,
   sortExamsChronologically,
   compareExamsChronologically
-} from "../../public/record-semantics-v120.js";
+} from "../domain/comparison.js";
 
 export const SUBJECTS = ["chinese", "math", "english", "physics", "chemistry", "biology"];
 export const ROLES = new Set(["owner", "editor", "viewer"]);
@@ -78,6 +78,8 @@ export function normalizeRankings(rankings) {
     return {
       scope: safeText(item?.scope, 32) || "school",
       label: safeText(item?.label, 60),
+      labelSnapshot: safeText(item?.labelSnapshot, 60) || safeText(item?.label, 60),
+      contextId: safeText(item?.contextId, 140),
       rank,
       participants,
       basis: safeText(item?.basis, 24) || "final_score"
@@ -134,7 +136,13 @@ export function normalizeExam(input, existing = null) {
   const contextInput = input.context === undefined
     ? existing?.context
     : Object.assign({}, existing?.context || {}, input.context || {});
-  const attendance = input.attendance === "absent" || input.status === "absent" ? "absent" : "present";
+  const attendance = input.attendance !== undefined
+    ? (input.attendance === "absent" || input.status === "absent" ? "absent" : "present")
+    : existing?.attendance || (existing?.status === "absent" ? "absent" : "present");
+  const condition = input.condition !== undefined
+    ? (input.condition === "special" ? "special" : "normal")
+    : ["good", "poor"].includes(input.status) ? "special"
+    : existing?.condition || (["good", "poor"].includes(existing?.status) ? "special" : "normal");
   return {
     schemaVersion: 1,
     id,
@@ -143,6 +151,7 @@ export function normalizeExam(input, existing = null) {
     type,
     ...(subjectSet ? { subjectSet } : {}),
     attendance,
+    condition,
     status: ["normal", "good", "poor", "absent", "partial"].includes(input.status) ? input.status : "normal",
     context: {
       grade: safeText(contextInput?.grade, 30),
@@ -220,7 +229,11 @@ export function publicProjection(student, exams, fields) {
       type: exam.type,
       subjectSet: scope.subjects
     };
-    if (fields.examStatus || fields.status) projected.status = exam.status || "normal";
+    if (fields.examStatus || fields.status) {
+      projected.status = exam.status || "normal";
+      projected.attendance = exam.attendance || (exam.status === "absent" ? "absent" : "present");
+      projected.condition = exam.condition || (["good", "poor"].includes(exam.status) ? "special" : "normal");
+    }
     if (fields.comparisonContext || fields.comparison) projected.comparison = exam.comparison ? { series: exam.comparison.series || null, level: exam.comparison.level || null } : null;
     if (fields.overallScore) {
       const summary = examScoreSummary(exam);

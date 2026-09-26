@@ -21,6 +21,7 @@ test("overview keeps current exam before comparison, score list and history", ()
   assert.ok(overview.indexOf("subjects-section") < overview.indexOf("renderDeepTrajectory()"));
   assert.doesNotMatch(overview, /renderTrajectoryReading\(/);
   assert.doesNotMatch(overview, /多次考试怎么看|先看同一种比较方式/);
+  assert.match(overview, /comparisonStrengthLabel\(comparison\)/);
 });
 
 test("empty subject-change analysis is not rendered as a placeholder block", () => {

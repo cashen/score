@@ -9,8 +9,8 @@ const index = await readFile(new URL("../public/index.html", import.meta.url), "
 test("core senior-year tasks remain available in v0.5", () => {
   assert.match(app, /data-tab="overview">成绩/);
   assert.match(app, /data-tab="exams">考试/);
-  assert.match(app, /data-tab="sharing">分享/);
-  assert.match(app, /data-tab="family">家庭/);
+  assert.ok(app.includes('data-tab="sharing">分享'));
+  assert.ok(app.includes('data-tab="family">家庭'));
   assert.match(app, /data-action="new-exam"/);
   assert.match(app, /data-action="export"/);
 });

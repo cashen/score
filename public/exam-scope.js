@@ -1,5 +1,5 @@
 // Canonical exam scope semantics.
-export const EXAM_SCOPE_VERSION = "0.13.2";
+export const EXAM_SCOPE_VERSION = "0.13.4";
 export const SUBJECT_KEYS = Object.freeze(["chinese","math","english","physics","chemistry","biology"]);
 const LABELS = Object.freeze({chinese:"语文",math:"数学",english:"英语",physics:"物理",chemistry:"化学",biology:"生物"});
 const valid = key => SUBJECT_KEYS.includes(key);

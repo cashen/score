@@ -81,7 +81,7 @@ Family
 分享还分：
 
 - `live`：按当前数据实时投影。
-- `snapshot`：创建时冻结服务端投影。
+- `snapshot`：创建时冻结服务端投影；产品界面默认优先提供这一方式。
 
 分享范围明确区分：
 
@@ -89,3 +89,20 @@ Family
 - `trajectory`：展示多次考试，用相对位置变化作为主要观察线索。
 
 公开数据使用 allow-list projection；新字段默认不公开。家庭内部 `notes` 没有任何对外分享开关。
+
+
+## v0.13.4 dependency direction and product contracts
+
+本版本开始，服务端 canonical domain 不再从 `public/*` 读取业务语义。考试范围、分数语义、比较语义分别位于 `src/domain/exam.js`、`src/domain/score.js`、`src/domain/comparison.js`；`src/lib/model.js` 只负责模型归一化与投影组合。
+
+公开分享页面的关键导航文案统一由 `public/product-contract.js` 定义，浏览器回归测试直接引用同一契约，避免实现、测试和用户可见文案逐渐漂移。
+
+依赖方向固定为：
+
+```text
+server application → src/domain → repositories
+browser application → public/domain + presentation contracts
+share API → explicit projection → browser
+```
+
+新业务规则不得继续增加新的带历史版本号 helper。兼容模块可以保留，但新语义必须进入 canonical domain 或明确的 presentation contract。

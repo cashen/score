@@ -7,9 +7,9 @@ const semantics = await readFile(new URL("../public/record-semantics-v120.js", i
 
 test("trajectory has parallel total, subject and timeline views", () => {
   assert.match(app, /data-trajectory-view=/);
-  assert.match(app, /总成绩/);
-  assert.match(app, /单科对比/);
-  assert.match(app, /时间轴/);
+  assert.match(app, /总览/);
+  assert.match(app, /单科/);
+  assert.match(app, /历次考试/);
   assert.match(app, /function renderSubjectComparison\(/);
   assert.match(app, /function renderTimelineView\(/);
 });
