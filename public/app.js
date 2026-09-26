@@ -1446,7 +1446,7 @@ function publicSubjectComparisonV080(exams, key, share = {}) {
   const effectiveMetric = current ? resolveDisplayMetric(current, key, "auto") : "score";
   const comparison = coreFindComparableExamForSubject(subjectExams, current, key, effectiveMetric);
   const change = comparison.status === "comparable" ? comparison.metric : null;
-  const currentValue = current ? subjectMetricValue(current, key, effectiveMetric) : "";
+  const currentValue = current ? subjectMetricValue(current, key, "score") || subjectMetricValue(current, key, effectiveMetric) : "";
   const compareText = change
     ? `和 ${fmtDate(comparison.reference.date)} 相比`
     : formatComparisonSummary({
@@ -1504,7 +1504,7 @@ function publicTimelineV080(exams, selectedExamId = null, share = {}) {
     const coordinateItems = publicOverallHistoryCoordinate(exam, share);
     const previousResult = share.fields?.overallScore === true && ordered.length > 1 ? coreFindComparableExam(ordered, exam) : null;
     const previous = previousResult?.status === "comparable" ? previousResult.reference : null;
-    const scoreMetric = previous ? metricBetween(exam, previous, null, "auto") : null;
+    const scoreMetric = previous ? metricBetween(exam, previous, null, "score") : null;
     return `<a class="history-row ${index === 0 ? "is-latest" : ""}" href="?view=timeline&exam=${encodeURIComponent(exam.id)}"><span><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最近一次考试" : ""}</small></span><div class="history-coordinate">${coordinateItems.map((item) => `<span>${esc(item)}</span>`).join("")}${renderScoreChange(scoreMetric)}</div><span class="row-chevron" aria-hidden="true">›</span></a>`;
   }).join("");
   return `<section class="public-reading-section public-timeline"><div class="section-label">时间轴</div><h2>每一次考试都可以打开</h2>${publicBaselineV081("timeline", ordered, share)}${selected ? publicExamDetailV080(selected, share, ordered) : ""}<div class="history-list">${rows || `<div class="empty compact">暂未分享考试数据。</div>`}</div><p class="muted">页面只显示你选择分享的内容。</p></section>`;
