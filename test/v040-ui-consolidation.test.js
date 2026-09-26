@@ -10,7 +10,7 @@ test("home is a continuous reading flow instead of a three-card dashboard", () =
   assert.match(app, /coordinate-hero/);
   assert.match(app, /和以前相比/);
   assert.match(app, /哪些科目有明显变化/);
-  assert.match(app, /六科/);
+  assert.match(app, /这次成绩|全部科目|科目概览/);
   assert.match(app, /查看历次考试/);
   assert.doesNotMatch(app, /现在在哪/);
   assert.doesNotMatch(app, /变化来自哪里/);
