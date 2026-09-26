@@ -15,7 +15,7 @@ test("draft cleanup requires an explicit successful server save event", () => {
 test("an incomplete latest exam becomes the single continue action", () => {
   assert.match(app, /继续补充这次考试/);
   assert.match(app, /data-action="\$\{primaryAction\}"/);
-  assert.match(app, /primaryAction = humanState\.missingSubjects\.length/);
+  assert.match(app, /const primaryLabel = needsMore/);
   assert.match(app, /"continue-exam"/);
   assert.match(app, /这次记录了 \$\{humanState\.subjectCount\} 科/);
   assert.match(app, /检查并保存/);
