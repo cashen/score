@@ -69,7 +69,17 @@ jobs:
           NODE
           trap 'rm -f .runtime-secrets.json' EXIT
 
-          npx --yes wrangler@4.135.0 deploy --secrets-file .runtime-secrets.json --var BUILD_SHA:${TESTED_SHA}
+          DEPLOY_OUTPUT="$(npx --yes wrangler@4.135.0 deploy --secrets-file .runtime-secrets.json --var BUILD_SHA:${TESTED_SHA} 2>&1)" || {
+            printf '%s\n' "$DEPLOY_OUTPUT"
+            exit 1
+          }
+          printf '%s\n' "$DEPLOY_OUTPUT"
+          WORKER_VERSION_ID="$(printf '%s\n' "$DEPLOY_OUTPUT" | sed -n 's/^Current Version ID: //p' | tail -1)"
+          if [ -z "$WORKER_VERSION_ID" ]; then
+            echo "::error::Cloudflare deploy did not expose a Current Version ID"
+            exit 1
+          fi
+          export WORKER_VERSION_ID
 
           node <<'NODE'
           const expected = process.env.EXPECTED_VERSION;
@@ -84,7 +94,8 @@ jobs:
               const response = await fetch(url, {
                 headers: {
                   'cache-control': 'no-cache, no-store, max-age=0',
-                  pragma: 'no-cache'
+                  pragma: 'no-cache',
+                  'Cloudflare-Workers-Version-Overrides': `score-track="${process.env.WORKER_VERSION_ID}"`
                 }
               });
               const payload = await response.json();
@@ -105,4 +116,4 @@ jobs:
           process.exit(1);
           NODE
 
-          node scripts/verify-production.mjs "$TESTED_SHA"
+          node scripts/verify-production.mjs "$TESTED_SHA" "$WORKER_VERSION_ID"
