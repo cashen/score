@@ -27,7 +27,7 @@ test("multi-exam trajectory keeps baseline, recent window and stability separate
   assert.equal(result.baseline.display, "校内前 18%");
   assert.equal(result.current.display, "校内前 13%");
   assert.equal(result.longDirection, "forward");
-  assert.equal(result.stability.label, "有一定波动");
+  assert.equal(result.stability.label, "比较稳定");
 });
 
 test("auto metric follows the displayed score when score data is present", () => {
