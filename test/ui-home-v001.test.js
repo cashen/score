@@ -57,6 +57,6 @@ test("homepage styles are responsive and touch-friendly", () => {
 
 test("release version is synchronized", () => {
   assert.equal(pkg.version, "0.14.1.1");
-  assert.match(wrangler, /^APP_VERSION\s*=\s*"0\.14\.1\.0"/m);
+  assert.match(wrangler, /^APP_VERSION\s*=\s*"0\.14\.1\.1"/m);
   assert.match(index, /ui-foundation-v001\.css/);
 });
