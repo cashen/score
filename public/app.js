@@ -609,7 +609,7 @@ function renderExamList() {
   const trashBlock = state.trash.length
     ? `<details class="advanced exam-trash"><summary>回收站（${state.trash.length}）</summary><div class="advanced-body"><p class="muted">已删除的考试不会出现在正常成绩、历次考试或分享中。</p><div class="exam-list">${state.trash.map((exam) => `<div class="exam-list-row"><div class="exam-list-title"><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · 已删除 ${esc(String(exam.deletedAt || "").slice(0, 10))}</small></div><button type="button" class="btn btn-outline btn-small" data-action="restore-exam" data-id="${esc(exam.id)}" data-revision="${esc(exam.revision)}">恢复</button></div>`).join("")}</div></div></details>`
     : `<details class="advanced exam-trash" data-trash-panel><summary>回收站</summary><div class="advanced-body"><p class="muted">正在加载已删除的考试。</p></div></details>`;
-  return `<section><div class="page-heading"><div><h1>考试</h1><p>每一场考试都是一个坐标，不用把不同难度的试卷机械横比。</p></div>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录考试</button>` : ""}</div>${rows ? `<div class="exam-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试。</p></div>`}${trashBlock}</section>`;
+  return `<section><div class="page-heading"><div><h1>考试</h1><p>这里保留每一场考试的原始记录；不同难度的试卷，不建议只看分数直接横比。</p></div>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录考试</button>` : ""}</div>${rows ? `<div class="exam-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试。</p></div>`}${trashBlock}</section>`;
 }
 
 function shareFieldControls(prefix, scope) {
@@ -639,7 +639,7 @@ function shareFieldControls(prefix, scope) {
 
 // Legacy source wording retained: 默认只分享一场
 function shareScope(prefix) {
-  const trajectoryCopy = state.exams.length === 1 ? "从这一次开始记录多次考试" : "把多次考试放在一起看";
+  const trajectoryCopy = "把已经记录的考试放在一起看";
   return `<div class="share-scope"><div class="share-title"><strong>想分享什么？</strong><small>选择这次考试，或把多次考试放在一起看；是否跟随以后新增考试，在下面选择。</small></div><label><input type="radio" name="${prefix}-scope" value="single" checked><span><strong>这一次考试</strong><small>只分享这一场考试</small></span></label><label><input type="radio" name="${prefix}-scope" value="trajectory"><span><strong>历次成绩</strong><small>${trajectoryCopy}</small></span></label><div class="field share-exam-picker"><label>选择考试</label><select data-share-exam="${prefix}">${state.exams.map((exam) => `<option value="${esc(exam.id)}">${esc(exam.name)} · ${fmtDate(exam.date)}</option>`).join("")}</select></div><label class="check share-future-ack" data-share-future-ack="${prefix}" hidden><input type="checkbox" name="${prefix}-future-exams-acknowledged">我知道以后新增的考试也会显示在这里</label></div>`;
 }
 

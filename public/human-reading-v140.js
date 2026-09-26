@@ -46,10 +46,13 @@ export function recordCompleteness(exam) {
 export function recordSaveSummary(exam) {
   const state = recordCompleteness(exam);
   if (state.absent) return { line: "本场缺考", nextAction: "记录下一场考试" };
-  const pieces = state.subjectTotal === 1 ? [state.missingSubjects.length ? state.subjects.map(subjectLabel).join("、") + "待补" : "已记 " + state.subjects.map(subjectLabel).join("、")] : ["已记 " + state.subjectCount + "/" + state.subjectTotal + " 科"];
+  const subjectNames = state.subjects.map(subjectLabel).join("、");
+  const pieces = state.subjectTotal === 1
+    ? [state.missingSubjects.length ? subjectNames + "待补" : subjectNames + "成绩已记录"]
+    : ["已记 " + state.subjectCount + "/" + state.subjectTotal + " 科"];
   if (state.officialTotal) pieces.push("学校公布总分已记");
   else if (state.isSubjectComplete && state.subjectTotal === 6) pieces.push("六科成绩已记全 · 学校公布总分待补");
-  else if (state.isSubjectComplete) pieces.push("本次科目成绩已记全");
+  else if (state.isSubjectComplete && state.subjectTotal > 1) pieces.push("本次科目成绩已记全");
   else pieces.push("还有科目成绩待补");
   const consistency = scoreConsistency(exam);
   if (consistency.status === "mismatch") pieces.push("学校公布总分与各科合计相差 " + Math.abs(consistency.delta) + " 分，请核对");

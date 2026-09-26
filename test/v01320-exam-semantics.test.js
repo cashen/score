@@ -189,3 +189,16 @@ test("share projection exposes optional exam situation fields only when allowed"
   assert.equal(data.exams[0].attendance, "present");
   assert.equal(data.exams[0].condition, "special");
 });
+
+
+test("single-subject save summaries do not repeat the same fact", async () => {
+  const { recordSaveSummary } = await import("../public/human-reading-v140.js");
+  const exam = normalizeExam({
+    name: "英语周测",
+    date: "2026-09-26",
+    type: "weekly",
+    subjectSet: ["english"],
+    subjects: { english: { rawScore: 103 } }
+  });
+  assert.equal(recordSaveSummary(exam).line, "英语成绩已记录");
+});
