@@ -732,31 +732,96 @@ function subjectEditor(exam, key, label, full, classLabel) {
   return `<article class="exam-subject-card" data-subject="${key}"><div class="exam-subject-head"><h4>${label}</h4><span>常用满分 ${full}</span></div><div class="subject-score-grid"><div class="field"><label>成绩</label><input name="${key}-raw" inputmode="decimal" value="${subject.rawScore ?? ""}"></div><div class="field converted-field" ${mode === "raw" ? "hidden" : ""}><label>赋分后</label><input name="${key}-final" inputmode="decimal" value="${subject.finalScore ?? ""}" ${mode === "raw" ? "disabled" : ""}></div></div><div class="subject-ranks">${rankInputs(`${key}-school`, school, "学校")}${rankInputs(`${key}-class`, clazz, classLabel || "班级")}</div><details class="subject-advanced"><summary>计分与满分</summary><div class="form-two"><div class="field"><label>计分方式</label><select name="${key}-mode" data-score-mode="${key}"><option value="raw" ${mode === "raw" ? "selected" : ""}>原始分</option><option value="raw_and_converted" ${mode === "raw_and_converted" ? "selected" : ""}>原始分 + 赋分</option><option value="converted" ${mode === "converted" ? "selected" : ""}>只记录赋分</option></select></div><div class="field"><label>满分</label><input name="${key}-full" inputmode="decimal" value="${subject.fullScore ?? full}"></div></div></details></article>`;
 }
 
+function subjectTemplateLabel(keys) {
+  return SUBJECTS.filter(([key]) => keys.includes(key)).map(([, label]) => label).join("、");
+}
+
 function examDialog(exam = null) {
+
   dispatchViewAction(state, { type: "view/exam-edit", exam });
   const school = overallRank(exam, "school");
   const clazz = overallRank(exam, "class");
   const joint = overallRank(exam, "joint");
   const historicalClassLabel = exam?.context?.classLabel || state.student?.className || "班级";
-  document.body.insertAdjacentHTML("beforeend", `<div class="dialog-backdrop" id="exam-dialog"><form class="dialog exam-dialog" id="exam-form"><div class="dialog-head"><div><h2>${exam ? "查看 / 编辑考试" : "记录一次考试"}</h2><p>按成绩单上的顺序填写；不知道的数据可以留空。</p></div><button type="button" class="btn btn-outline btn-small" data-close-dialog>关闭</button></div><section class="exam-section"><h3>这次是什么考试</h3><div class="exam-context-grid"><div class="field"><label>考试名称</label><input name="name" required value="${esc(exam?.name || "")}" placeholder="例如 高三二模"></div><div class="field"><label>日期</label><input name="date" type="date" required value="${esc(exam?.date || new Date().toISOString().slice(0, 10))}"></div><div class="field"><label>类型</label><select name="type">${Object.entries(EXAM_TYPES).map(([value, label]) => `<option value="${value}" ${exam?.type === value ? "selected" : ""}>${label}</option>`).join("")}</select></div></div></section><section class="exam-section"><h3>总分与排名</h3><div class="overall-entry"><div class="field"><label>学校公布总分</label><input name="officialScore" inputmode="decimal" value="${exam?.overall?.officialScore ?? ""}"></div><div class="overall-ranks">${rankInputs("overall-school", school, "学校")}${rankInputs("overall-class", clazz, historicalClassLabel)}<div class="rank-pair joint-rank" data-joint-rank ${exam?.type === "joint" ? "" : "hidden"}><span>联考</span><input name="overall-joint-rank" inputmode="numeric" placeholder="名次" value="${joint?.rank ?? ""}" ${exam?.type === "joint" ? "" : "disabled"}><span>/</span><input name="overall-joint-participants" inputmode="numeric" placeholder="人数可空" value="${joint?.participants ?? ""}" ${exam?.type === "joint" ? "" : "disabled"}><span>人</span></div></div></div><details class="advanced exam-more"><summary>更多考试信息（可选）</summary><div class="advanced-body"><div class="form-two"><div class="field"><label>考试范围</label><select name="comparisonLevel">${COMPARISON_LEVELS.map(([value, label]) => `<option value="${value}" ${exam?.comparison?.level === value ? "selected" : ""}>${label}</option>`).join("")}</select></div><div class="field"><label>属于同一个考试系列</label><input name="comparisonSeries" maxlength="60" value="${esc(exam?.comparison?.series || "")}" placeholder="例如 2027届三次模拟考试"></div></div><div class="field"><label>特殊情况</label><select name="status">${Object.entries(EXAM_STATUS_LABELS).map(([value, label]) => `<option value="${value}" ${(exam?.status || "normal") === value ? "selected" : ""}>${label}</option>`).join("")}</select><small>重新编辑时保留原来的考试状态；具体发生了什么，可写在下方“想记住的事”里。</small></div></div></details></section><section class="exam-section"><div class="section-head-simple"><div><h3>本次成绩与排名</h3><p>先成绩，再排名；总人数不知道就留空。</p></div></div><div class="exam-subject-cards">${SUBJECTS.map(([key, label, full]) => subjectEditor(exam, key, label, full, historicalClassLabel)).join("")}</div></section><div class="field exam-notes"><label>想记住的事（仅家庭内部）</label><textarea name="notes" placeholder="例如：数学圆锥曲线失分较多">${esc(exam?.notes || "")}</textarea></div><div class="draft-state" data-draft-state>${exam ? "修改后保存才会更新" : "草稿会自动保存在本机"}</div><div id="exam-form-error" role="alert"></div><div class="dialog-actions">${exam && canEdit() ? `<button type="button" class="btn btn-danger" data-action="delete-exam">删除</button>` : ""}<button type="button" class="btn btn-outline" data-close-dialog>取消</button>${canEdit() ? `<button class="btn btn-primary" type="submit">保存考试</button>` : ""}</div></form></div>`);
+  document.body.insertAdjacentHTML("beforeend", `<div class="dialog-backdrop" id="exam-dialog"><form class="dialog exam-dialog" id="exam-form"><div class="dialog-head"><div><h2>${exam ? "查看 / 编辑考试" : "记录一次考试"}</h2><p>按成绩单上的顺序填写；不知道的数据可以留空。</p></div><button type="button" class="btn btn-outline btn-small" data-close-dialog>关闭</button></div><section class="exam-section"><h3>这次是什么考试</h3><div class="exam-context-grid"><div class="field"><label>考试名称</label><input name="name" required value="${esc(exam?.name || "")}" placeholder="例如 高三二模"></div><div class="field"><label>日期</label><input name="date" type="date" required value="${esc(exam?.date || new Date().toISOString().slice(0, 10))}"></div><div class="field"><label>类型</label><select name="type">${Object.entries(EXAM_TYPES).map(([value, label]) => `<option value="${value}" ${exam?.type === value ? "selected" : ""}>${label}</option>`).join("")}</select></div></div></section><section class="exam-section"><h3>总分与排名</h3><div class="overall-entry"><div class="field"><label>学校公布总分</label><input name="officialScore" inputmode="decimal" value="${exam?.overall?.officialScore ?? ""}"></div><div class="overall-ranks">${rankInputs("overall-school", school, "学校")}${rankInputs("overall-class", clazz, historicalClassLabel)}<div class="rank-pair joint-rank" data-joint-rank ${exam?.type === "joint" ? "" : "hidden"}><span>联考</span><input name="overall-joint-rank" inputmode="numeric" placeholder="名次" value="${joint?.rank ?? ""}" ${exam?.type === "joint" ? "" : "disabled"}><span>/</span><input name="overall-joint-participants" inputmode="numeric" placeholder="人数可空" value="${joint?.participants ?? ""}" ${exam?.type === "joint" ? "" : "disabled"}><span>人</span></div></div></div><details class="advanced exam-more"><summary>更多考试信息（可选）</summary><div class="advanced-body"><div class="form-two"><div class="field"><label>考试范围</label><select name="comparisonLevel">${COMPARISON_LEVELS.map(([value, label]) => `<option value="${value}" ${exam?.comparison?.level === value ? "selected" : ""}>${label}</option>`).join("")}</select></div><div class="field"><label>属于同一个考试系列</label><input name="comparisonSeries" maxlength="60" value="${esc(exam?.comparison?.series || "")}" placeholder="例如 2027届三次模拟考试"></div></div><div class="field"><label>特殊情况</label><select name="status">${Object.entries(EXAM_STATUS_LABELS).map(([value, label]) => `<option value="${value}" ${(exam?.status || "normal") === value ? "selected" : ""}>${label}</option>`).join("")}</select><small>重新编辑时保留原来的考试状态；具体发生了什么，可写在下方“想记住的事”里。</small></div></div></details></section><section class="exam-section"><div class="section-head-simple"><div><h3>成绩</h3><p>先记成绩，排名放到下一步；拿不到的数据可以留空。</p></div></div><div class="exam-subject-cards">${SUBJECTS.map(([key, label, full]) => subjectEditor(exam, key, label, full, historicalClassLabel)).join("")}</div></section><div class="field exam-notes"><label>想记住的事（仅家庭内部）</label><textarea name="notes" placeholder="例如：数学圆锥曲线失分较多">${esc(exam?.notes || "")}</textarea></div><div class="draft-state" data-draft-state>${exam ? "修改后保存才会更新" : "草稿会自动保存在本机"}</div><div id="exam-form-error" role="alert"></div><div class="dialog-actions">${exam && canEdit() ? `<button type="button" class="btn btn-danger" data-action="delete-exam">删除</button>` : ""}<button type="button" class="btn btn-outline" data-close-dialog>取消</button>${canEdit() ? `<button class="btn btn-primary" type="submit">保存考试</button>` : ""}</div></form></div>`);
   const form = document.querySelector("#exam-form");
   let entryPreference = {};
-  if(!exam){try{entryPreference=JSON.parse(localStorage.getItem("score-entry-preferences")||"{}");if(entryPreference.type&&form.querySelector("[name='type']"))form.querySelector("[name='type']").value=entryPreference.type;}catch{}}
-  const editorScope=resolveExamScope(exam);
-  if(!exam){const preferred=entryPreference.subjectsByType?.[form.querySelector("[name='type']")?.value||"other"];if(Array.isArray(preferred)&&preferred.length)editorScope.subjects=preferred;}
+  if (!exam) {
+    try {
+      entryPreference = JSON.parse(localStorage.getItem("score-entry-preferences") || "{}");
+      if (entryPreference.type && form.querySelector("[name='type']")) form.querySelector("[name='type']").value = entryPreference.type;
+    } catch {}
+  }
+  const initialSubjects = exam ? subjectKeysForDisplay(exam) : [];
+  const editorScope = exam ? resolveExamScope(exam) : {
+    subjects: initialSubjects,
+    subjectCount: initialSubjects.length,
+    isSingle: initialSubjects.length === 1,
+    isFull: initialSubjects.length === 6
+  };
   const historicalContext = exam?.context || { schoolLabel: state.student?.schoolLabel || "", classLabel: state.student?.className || "", grade: state.student?.grade || "", semester: "" };
-  form.querySelector(".exam-context-grid")?.insertAdjacentHTML("afterend", `<details class="advanced exam-history-context"><summary>考试当时的信息</summary><div class="advanced-body"><div class="form-two"><div class="field"><label>学校</label><input name="contextSchoolLabel" maxlength="100" value="${esc(historicalContext.schoolLabel || "")}"></div><div class="field"><label>班级</label><input name="contextClassLabel" maxlength="60" value="${esc(historicalContext.classLabel || "")}"></div></div><div class="form-two"><div class="field"><label>年级</label><input name="contextGrade" maxlength="30" value="${esc(historicalContext.grade || "")}"></div><div class="field"><label>学期</label><input name="contextSemester" maxlength="20" value="${esc(historicalContext.semester || "")}"></div></div><p class="muted">这里记录的是这场考试发生时的信息，不会随着孩子当前资料变化。</p></div></details>`);
-  form.querySelector(".exam-context-grid")?.insertAdjacentHTML("afterend", `<h3 class="exam-scope-heading">本次考试考哪些科？</h3><div class="exam-subject-selector"><div class="exam-subject-actions"><button type="button" class="btn btn-outline btn-small" data-subject-select-all>全部科目</button><span data-subject-selection-summary></span></div><div class="exam-subject-options">${SUBJECTS.map(([key,label])=>`<label class="exam-subject-option"><input type="checkbox" name="subjectSet" value="${key}" ${editorScope.subjects.includes(key)?"checked":""}><span>${label}</span></label>`).join("")}</div><p class="exam-subject-help">只记录这次实际考到的科目。以后编辑时，取消已有科目会先提醒。</p></div>`);
+  const typeKey = form.querySelector("[name='type']")?.value || "other";
+  const savedSubjects = Array.isArray(entryPreference.subjectsByType?.[typeKey]) ? entryPreference.subjectsByType[typeKey] : [];
+  const previousExamSubjects = latestExam() ? subjectKeysForDisplay(latestExam()) : [];
+  form.insertAdjacentHTML("beforeend", `<section class="exam-subject-builder">
+    <div class="exam-subject-builder-head"><div><div class="section-label">成绩</div><h3>先记已经拿到的成绩</h3><p>其他科以后再补也可以，不需要一次填完。</p></div><span data-subject-selection-summary>还没有添加科目</span></div>
+    <div class="exam-quick-choices" ${exam ? "hidden" : ""}>
+      ${savedSubjects.length ? `<button type="button" class="entry-template-btn" data-subject-template="recent">上次同类：${esc(subjectTemplateLabel(savedSubjects))}</button>` : ""}
+      ${previousExamSubjects.length ? `<button type="button" class="entry-template-btn" data-subject-template="previous">按上一场：${esc(subjectTemplateLabel(previousExamSubjects))}</button>` : ""}
+      <button type="button" class="entry-template-btn" data-subject-template="track">物化生</button>
+      <button type="button" class="entry-template-btn" data-subject-template="language-math">语数英</button>
+      <button type="button" class="entry-template-btn" data-subject-template="six">六科</button>
+    </div>
+    <div class="exam-subject-add-row"><button type="button" class="btn btn-outline" data-open-subject-picker>＋ 添加第一科</button><span data-subject-inference></span></div>
+    <details class="exam-subject-picker"><summary>自己选择科目</summary><div class="exam-subject-options">${SUBJECTS.map(([key,label])=>`<label class="exam-subject-option"><input type="checkbox" name="subjectSet" value="${key}" ${editorScope.subjects.includes(key)?"checked":""}><span>${label}</span></label>`).join("")}</div><p class="exam-subject-help">只选择这次实际考到的科目；已经记录过的科目，编辑时取消会先提醒。</p></details>
+  </section>`);
   const statusField = form.querySelector("[name='status']")?.closest(".field");
   if (statusField) {
     const attendance = exam?.attendance === "absent" || exam?.status === "absent" ? "absent" : "present";
     const condition = exam?.condition === "special" || ["good", "poor"].includes(exam?.status) ? "special" : "normal";
     statusField.innerHTML = `<div class="form-two"><div class="field"><label>到场情况</label><select name="attendance"><option value="present" ${attendance === "present" ? "selected" : ""}>正常参加</option><option value="absent" ${attendance === "absent" ? "selected" : ""}>缺考</option></select></div><div class="field"><label>这次是否有特殊情况</label><select name="condition"><option value="normal" ${condition === "normal" ? "selected" : ""}>没有</option><option value="special" ${condition === "special" ? "selected" : ""}>有</option></select></div></div><small>“数据还没录全”由系统根据实际成绩自动判断，不再和到场情况混在一起。</small>`;
   }
-  const syncSubjectSelection=()=>{const selected=new Set([...form.querySelectorAll("input[name=\"subjectSet\"]:checked")].map(input=>input.value));form.querySelectorAll(".exam-subject-card").forEach(card=>{card.hidden=!selected.has(card.dataset.subject);});const summary=form.querySelector("[data-subject-selection-summary]");if(summary)summary.textContent=selected.size?"已选 "+selected.size+" 科："+SUBJECTS.filter(([key])=>selected.has(key)).map(([,label])=>label).join("、"):"至少选择一门科目";return [...selected];};
-  form.querySelector("[data-subject-select-all]")?.addEventListener("click",()=>{form.querySelectorAll("input[name=\"subjectSet\"]").forEach(input=>{input.checked=true;});syncSubjectSelection();});
+  const syncSubjectSelection=()=>{
+    const selected=new Set([...form.querySelectorAll("input[name=\"subjectSet\"]:checked")].map(input=>input.value));
+    form.querySelectorAll(".exam-subject-card").forEach(card=>{card.hidden=!selected.has(card.dataset.subject);});
+    form.querySelectorAll("input[name=\"subjectSet\"]").forEach(input=>input.closest(".exam-subject-option")?.classList.toggle("is-selected",selected.has(input.value)));
+    const summary=form.querySelector("[data-subject-selection-summary]");
+    const addButton=form.querySelector("[data-open-subject-picker]");
+    if(summary) summary.textContent=selected.size ? "已添加 "+selected.size+" 科："+SUBJECTS.filter(([key])=>selected.has(key)).map(([,label])=>label).join("、") : "还没有添加科目";
+    if(addButton) addButton.textContent=selected.size ? "＋ 添加另一科" : "＋ 添加第一科";
+    return [...selected];
+  };
+  const applySubjectTemplate=(keys)=>{
+    const unique=[...new Set(keys)].filter((key)=>SUBJECTS.some(([subject])=>subject===key));
+    form.querySelectorAll("input[name=\"subjectSet\"]").forEach(input=>{input.checked=unique.includes(input.value);});
+    syncSubjectSelection();
+    form.querySelector(".exam-subject-picker")?.removeAttribute("open");
+    const first=form.querySelector(".exam-subject-card:not([hidden]) input");
+    if(first) first.focus();
+  };
+  form.querySelectorAll("[data-subject-template]").forEach(button=>button.addEventListener("click",()=>{
+    const type=button.dataset.subjectTemplate;
+    const templates={track:["physics","chemistry","biology"],"language-math":["chinese","math","english"],six:SUBJECTS.map(([key])=>key),recent:savedSubjects,previous:previousExamSubjects};
+    applySubjectTemplate(templates[type]||[]);
+  }));
+  form.querySelector("[data-open-subject-picker]")?.addEventListener("click",()=>{
+    const picker=form.querySelector(".exam-subject-picker");
+    if(picker){picker.open=true;picker.querySelector("input:not(:checked)")?.focus();}
+  });
   form.querySelectorAll("input[name=\"subjectSet\"]").forEach(input=>input.addEventListener("change",syncSubjectSelection));
+  const inferenceTarget=form.querySelector("[data-subject-inference]");
+  const updateInference=()=>{
+    if(exam || form.querySelectorAll("input[name=\"subjectSet\"]:checked").length){if(inferenceTarget) inferenceTarget.innerHTML="";return;}
+    const name=String(form.querySelector("[name=\"name\"]")?.value || "");
+    const labels=[["chinese","语文"],["math","数学"],["english","英语"],["physics","物理"],["chemistry","化学"],["biology","生物"]];
+    const hits=labels.filter(([,label])=>name.includes(label)).map(([key])=>key);
+    if(!inferenceTarget) return;
+    inferenceTarget.innerHTML=hits.length ? "看起来可能是："+esc(subjectTemplateLabel(hits))+" <button type=\"button\" class=\"text-action\" data-add-inferred>添加</button>" : "";
+    inferenceTarget.querySelector("[data-add-inferred]")?.addEventListener("click",()=>applySubjectTemplate(hits));
+  };
+  form.querySelector("[name=\"name\"]")?.addEventListener("input",updateInference);
   syncSubjectSelection();
+  updateInference();
   form.querySelector(".exam-notes")?.insertAdjacentHTML("afterend", `<section class="reflection-entry"><h3>给自己的回看（仅家庭内部）</h3><div class="field"><label>我想补充一句</label><textarea name="reflectionStudentNote" maxlength="500" placeholder="这次最想记住的感受">${esc(exam?.reflection?.studentNote || "")}</textarea></div><div class="field"><label>下次想试试</label><textarea name="reflectionNextTry" maxlength="500" placeholder="一个具体、可做到的小尝试">${esc(exam?.reflection?.nextTry || "")}</textarea></div></section>`);
   if (exam) form.dataset.examId = exam.id;
   if (!exam) form.dataset.clientRequestId = crypto.randomUUID();
@@ -772,11 +837,14 @@ function examDialog(exam = null) {
   stepper.className = "entry-stepper";
   stepper.innerHTML = ["考试信息", "本次成绩", "位置与补充"].map((label, index) => `<span data-entry-step="${index}">${index + 1}. ${label}</span>`).join("");
   form.querySelector(".dialog-head")?.after(stepper);
+  const subjectBuilder = form.querySelector(".exam-subject-builder");
+  if (subjectBuilder) stepper.after(subjectBuilder);
   const navigator = document.createElement("div");
   navigator.className = "entry-navigation";
   navigator.innerHTML = `<button type="button" class="btn btn-outline btn-small" data-entry-back>上一步</button><span data-entry-hint>${exam && step === 1 ? "继续补充尚未拿到的科目；已有内容不会改变。" : exam && step === 2 ? "总分、排名和考试当时的信息可以在这里补上。" : "先填考试名称、日期和本次科目；不知道的数据可以留空。"}</span><button type="button" class="btn btn-outline btn-small" data-entry-next>下一步</button>`;
   form.querySelector(".dialog-actions")?.before(navigator);
   const renderStep = () => {
+    syncSubjectSelection();
     sections.forEach((section, index) => { section.hidden = index !== step; });
     stepper.querySelectorAll("[data-entry-step]").forEach((node, index) => node.classList.toggle("is-active", index === step));
     navigator.querySelector("[data-entry-back]").disabled = step === 0;
@@ -795,6 +863,7 @@ function examDialog(exam = null) {
   form.querySelectorAll("[data-score-mode]").forEach((select) => select.addEventListener("change", () => syncSubjectMode(form, select.dataset.scoreMode)));
   form.querySelectorAll("[data-score-mode]").forEach((select) => syncSubjectMode(form, select.dataset.scoreMode));
   form.addEventListener("score:draft-restored", () => {
+    syncSubjectSelection();
     form.querySelectorAll("[data-score-mode]").forEach((select) => syncSubjectMode(form, select.dataset.scoreMode));
     const draftState = form.querySelector("[data-draft-state]");
     if (draftState) draftState.textContent = "已恢复上次未保存的内容";

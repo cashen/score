@@ -137,7 +137,7 @@ test("coordinate visual hierarchy is restrained and equal-weight", () => {
 });
 
 test("exam scope is a domain fact, not a single/all mode split", () => {
-  expectAll(app, ["subjectSet", "本次考试考哪些科？", "全部科目", "subjectKeysForDisplay", "resolveExamScope"]);
+  expectAll(app, ["subjectSet", "先记已经拿到的成绩", "自己选择科目", "subjectKeysForDisplay", "resolveExamScope"]);
   assert.doesNotMatch(app, /singleMode|allMode/);
 });
 test("successful save closes the editor and restores context", () => {
