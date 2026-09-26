@@ -11,12 +11,12 @@ test("exam entry is rendered directly without legacy humanizer assets", () => {
   assert.match(app, /function examDialog\(/);
   assert.match(app, /这次是什么考试/);
   assert.match(app, /总分与排名/);
-  assert.match(app, /本次成绩与排名/);
+  assert.match(app, /<h3>成绩<\/h3>/);
   assert.match(app, /entry-stepper/);
   assert.match(app, /["考试信息", "本次成绩", "位置与补充"]/);
   assert.match(app, /考试当时的信息/);
   assert.match(app, /data-action='undo-delete'/);
-  assert.match(app, /取消记录已有数据的科目/);
+  assert.match(app, /取消已有科目/);
 });
 
 test("direct exam renderer preserves score and rank payload fields", () => {
@@ -38,4 +38,20 @@ test("subject entry reflows instead of using a horizontal matrix", () => {
   assert.match(app, /rank-pair/);
   assert.match(css, /\.exam-subject-cards\s*\{[^}]*grid-template-columns:\s*repeat\(2/s);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.exam-subject-cards[^}]*grid-template-columns:\s*1fr/);
+});
+
+
+test("v0.13.5 score-card entry hides single/multi mode and adds subjects progressively", () => {
+  assert.match(app, /exam-subject-builder/);
+  assert.match(app, /data-open-subject-picker/);
+  assert.match(app, /添加第一科/);
+  assert.match(app, /添加另一科/);
+  assert.match(app, /data-subject-template="previous"/);
+  assert.match(app, /data-subject-template="recent"/);
+  assert.match(app, /看起来可能是：/);
+  assert.doesNotMatch(app, /单科模式/);
+  assert.doesNotMatch(app, /多科模式/);
+  assert.match(css, /\.exam-subject-builder/);
+  assert.match(css, /\.exam-quick-choices/);
+  assert.match(css, /@media\(max-width:520px\)/);
 });
