@@ -763,7 +763,7 @@ function examDialog(exam = null) {
   const typeKey = form.querySelector("[name='type']")?.value || "other";
   const savedSubjects = Array.isArray(entryPreference.subjectsByType?.[typeKey]) ? entryPreference.subjectsByType[typeKey] : [];
   const previousExamSubjects = latestExam() ? subjectKeysForDisplay(latestExam()) : [];
-  form.querySelector(".exam-subject-cards")?.insertAdjacentHTML("beforebegin", `<section class="exam-subject-builder">
+  form.querySelector(".exam-context-grid")?.insertAdjacentHTML("afterend", `<section class="exam-subject-builder">
     <div class="exam-subject-builder-head"><div><div class="section-label">成绩</div><h3>先记已经拿到的成绩</h3><p>其他科以后再补也可以，不需要一次填完。</p></div><span data-subject-selection-summary>还没有添加科目</span></div>
     <div class="exam-quick-choices" ${exam ? "hidden" : ""}>
       ${savedSubjects.length ? `<button type="button" class="entry-template-btn" data-subject-template="recent">上次同类：${esc(subjectTemplateLabel(savedSubjects))}</button>` : ""}

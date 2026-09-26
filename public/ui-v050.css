@@ -621,7 +621,7 @@ summary:focus-visible,
 .entry-template-btn{min-height:40px;padding:8px 11px;border:1px solid var(--v50-line);border-radius:999px;background:var(--v50-surface);color:var(--v50-text);font:inherit;font-size:13px;cursor:pointer}
 .entry-template-btn:hover{background:var(--v50-surface-soft)}
 .exam-subject-add-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
-.exam-subject-add-row .btn{min-height:44px}
+.exam-subject-add-row .btn{min-height:46px}
 .exam-subject-add-row [data-subject-inference]{color:var(--v50-muted);font-size:13px;line-height:1.5}
 .text-action{padding:0;border:0;background:none;color:var(--v50-accent);font:inherit;font-weight:700;cursor:pointer}
 .exam-subject-picker{margin-top:10px;border-top:1px solid var(--v50-line)}
