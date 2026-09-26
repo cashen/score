@@ -69,16 +69,23 @@ function isExamForm(form) {
 function serialize(form) {
   return {
     savedAt: new Date().toISOString(),
-    values: [...new FormData(form).entries()]
+    values: [...form.elements].filter((field) => field?.name).map((field) => ({
+      name: field.name,
+      value: field.value,
+      type: field.type || "",
+      checked: typeof field.checked === "boolean" ? field.checked : null
+    }))
   };
 }
 
 function apply(form, draft) {
   if (!draft?.values?.length) return false;
-  for (const [name, value] of draft.values) {
+  for (const item of draft.values) {
+    const [name, value, type = "", checked = null] = Array.isArray(item) ? item : [item?.name, item?.value, item?.type, item?.checked];
     const field = form.elements.namedItem(name);
     if (!field || typeof field.value === "undefined") continue;
     field.value = value;
+    if (typeof field.checked === "boolean" && (type === "checkbox" || type === "radio") && checked !== null) field.checked = Boolean(checked);
   }
   setDraftState(form, `已恢复上次未保存的内容 · ${new Date(draft.savedAt).toLocaleString()}`);
   form.dataset.draftRestored = "1";
