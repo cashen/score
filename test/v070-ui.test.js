@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 const index = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
 const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
 const css = await readFile(new URL("../public/ui-v070.css", import.meta.url), "utf8");
+const foundation = await readFile(new URL("../public/css/ui-foundation-v001.css", import.meta.url), "utf8");
 const plan = await readFile(new URL("../docs/plan/ui-v070-apple-human.md", import.meta.url), "utf8");
 
 test("v0.7 UI source remains in the consolidated runtime bundle", () => {
@@ -13,10 +14,10 @@ test("v0.7 UI source remains in the consolidated runtime bundle", () => {
 });
 
 test("privacy signal is calm and rendered in the app source", () => {
-  assert.match(app, /privacy-pill/);
+  assert.match(app, /privacy-note-lite/);
   assert.match(app, /仅家庭可见/);
-  assert.match(css, /\.privacy-pill\s*\{/);
-  assert.doesNotMatch(css, /privacy-pill[^}]*background:\s*var\(--v70-danger/);
+  assert.match(foundation, /\.privacy-note-lite\s*\{/);
+  assert.doesNotMatch(foundation, /privacy-note-lite[^}]*background:\s*var\(--v70-danger/);
 });
 
 test("v0.7 foundation protects touch, focus and user motion preferences", () => {
@@ -36,7 +37,7 @@ test("plan keeps the UI refresh bounded to existing product contracts", () => {
 
 test("overview has one clear next action without changing comparison semantics", () => {
   assert.match(app, /function humanChangeSummary\(/);
-  assert.match(app, /class="overview-actions"/);
+  assert.match(app, /class="home-actions"/);
   assert.match(app, /data-primary-action="record-next"/);
   assert.match(app, /记录下一次考试/);
   assert.match(app, /id="deep-trajectory"/);

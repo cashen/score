@@ -5,21 +5,23 @@ import { readFile } from "node:fs/promises";
 const index = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
 const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
 const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "utf8");
+const foundation = await readFile(new URL("../public/css/ui-foundation-v001.css", import.meta.url), "utf8");
 
 test("home is a continuous reading flow instead of a three-card dashboard", () => {
-  assert.match(app, /coordinate-hero/);
-  assert.match(app, /和以前相比/);
-  assert.match(app, /哪些科目有明显变化/);
+  assert.match(app, /home-page/);
+  assert.match(app, /home-latest/);
+  assert.match(app, /最近变化/);
   assert.match(app, /这次成绩|全部科目|科目概览/);
   assert.match(app, /查看历次考试/);
   assert.doesNotMatch(app, /现在在哪/);
   assert.doesNotMatch(app, /变化来自哪里/);
 });
 
-test("visual system uses one hero, sections and rows", () => {
-  assert.match(css, /\.coordinate-hero,/);
-  assert.match(css, /\.reading-section,/);
-  assert.match(css, /\.subject-row/);
+test("visual system uses one latest surface, calm change layer and rows", () => {
+  assert.match(foundation, /\.home-latest/);
+  assert.match(foundation, /\.home-change/);
+  assert.match(foundation, /\.home-subjects/);
+  assert.match(foundation, /\.subject-row|\.home-subjects \.subject-row/);
   assert.match(css, /\.exam-list-row/);
   assert.match(css, /\.member-row/);
 });
