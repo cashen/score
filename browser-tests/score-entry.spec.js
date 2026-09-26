@@ -81,7 +81,7 @@ test("score-card entry supports previous-exam template, common presets, and savi
     }]
   };
   await mockPrivateApp(page, state);
-  await page.goto("/");
+  await page.goto("/?view=timeline");
   await page.locator("[data-action=\"new-exam\"]").first().click();
   await expect(page.locator('[data-subject-template="previous"]')).toBeVisible();
   await page.locator('[data-subject-template="previous"]').click();

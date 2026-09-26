@@ -1,5 +1,5 @@
 {
-  "version": "0.13.5.0",
+  "version": "0.13.5.1",
   "title": "Score-card Entry / Human Recording Flow",
   "status": "implementation",
   "branch": "feat/v01350-score-entry-card",
@@ -23,5 +23,5 @@
     "main SHA",
     "production appVersion/buildSha attestation"
   ],
-  "latestRevision": "0.13.5.0"
+  "latestRevision": "0.13.5.1"
 }

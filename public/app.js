@@ -812,7 +812,7 @@ function examDialog(exam = null) {
   const inferenceTarget=form.querySelector("[data-subject-inference]");
   const updateInference=()=>{
     if(exam || form.querySelectorAll("input[name=\"subjectSet\"]:checked").length){if(inferenceTarget) inferenceTarget.innerHTML="";return;}
-    const name=String(value(form,"name")||"");
+    const name=String(form.querySelector("[name=\"name\"]")?.value || "");
     const labels=[["chinese","语文"],["math","数学"],["english","英语"],["physics","物理"],["chemistry","化学"],["biology","生物"]];
     const hits=labels.filter(([,label])=>name.includes(label)).map(([key])=>key);
     if(!inferenceTarget) return;
