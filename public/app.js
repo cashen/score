@@ -844,6 +844,7 @@ function examDialog(exam = null) {
   navigator.innerHTML = `<button type="button" class="btn btn-outline btn-small" data-entry-back>上一步</button><span data-entry-hint>${exam && step === 1 ? "继续补充尚未拿到的科目；已有内容不会改变。" : exam && step === 2 ? "总分、排名和考试当时的信息可以在这里补上。" : "先填考试名称、日期和本次科目；不知道的数据可以留空。"}</span><button type="button" class="btn btn-outline btn-small" data-entry-next>下一步</button>`;
   form.querySelector(".dialog-actions")?.before(navigator);
   const renderStep = () => {
+    syncSubjectSelection();
     sections.forEach((section, index) => { section.hidden = index !== step; });
     stepper.querySelectorAll("[data-entry-step]").forEach((node, index) => node.classList.toggle("is-active", index === step));
     navigator.querySelector("[data-entry-back]").disabled = step === 0;
@@ -862,6 +863,7 @@ function examDialog(exam = null) {
   form.querySelectorAll("[data-score-mode]").forEach((select) => select.addEventListener("change", () => syncSubjectMode(form, select.dataset.scoreMode)));
   form.querySelectorAll("[data-score-mode]").forEach((select) => syncSubjectMode(form, select.dataset.scoreMode));
   form.addEventListener("score:draft-restored", () => {
+    syncSubjectSelection();
     form.querySelectorAll("[data-score-mode]").forEach((select) => syncSubjectMode(form, select.dataset.scoreMode));
     const draftState = form.querySelector("[data-draft-state]");
     if (draftState) draftState.textContent = "已恢复上次未保存的内容";
