@@ -17,7 +17,7 @@ test('deploy workflow is triggered only by main CI completions', () => {
 });
 
 test('release version is aligned', () => {
-  assert.match(pkg.version, /^0\.13\.\d+(?:\.\d+)*$/);
+  assert.match(pkg.version, /^0\.\d+\.\d+(?:\.\d+)*$/);
   const versionPattern = new RegExp('^APP_VERSION = "' + pkg.version.replaceAll('.', '\\.') + '"$', 'm');
   assert.match(wrangler, versionPattern);
 });

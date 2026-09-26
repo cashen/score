@@ -1,0 +1,57 @@
+{
+  "project": "cashen/score",
+  "release": "0.14.0.0",
+  "branch": "ui/foundation-v001",
+  "base": {
+    "branch": "main",
+    "sha": "b000ce9afebb97719948e49b538deeafc3f8d54b"
+  },
+  "status": "implementation",
+  "principle": "全站统一为安静、可靠、没有成绩审判感的 UI 基础层；先地基，后页面。",
+  "stages": {
+    "S0": {
+      "name": "live baseline",
+      "status": "completed"
+    },
+    "S1": {
+      "name": "UI foundation",
+      "status": "in_progress",
+      "scope": [
+        "design tokens",
+        "typography",
+        "surfaces",
+        "controls",
+        "focus",
+        "touch targets",
+        "motion/contrast preferences"
+      ]
+    },
+    "S2": {
+      "name": "Homepage",
+      "status": "planned"
+    },
+    "S3": {
+      "name": "Exam entry",
+      "status": "planned"
+    },
+    "S4": {
+      "name": "Reading and sharing",
+      "status": "planned"
+    },
+    "S5": {
+      "name": "Settings/family",
+      "status": "planned"
+    },
+    "S6": {
+      "name": "cleanup and regression",
+      "status": "planned"
+    }
+  },
+  "compatibility": [
+    "Schema 1",
+    "Workers KV",
+    "Share v2",
+    "existing data",
+    "existing APIs"
+  ]
+}
