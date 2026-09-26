@@ -17,9 +17,10 @@ function expectAll(source, values) {
   for (const value of values) assert.ok(source.includes(value), `missing contract: ${value}`);
 }
 
-test("production entry is a single versioned CSS bundle", () => {
-  expectAll(index, ["/css/app-v094.css", "/router-v2.js"]);
-  assert.equal((index.match(/<link rel="stylesheet"/g) || []).length, 1);
+test("production entry uses the legacy bundle plus the final foundation layer", () => {
+  expectAll(index, ["/css/app-v094.css", "/css/ui-foundation-v001.css", "/router-v2.js"]);
+  assert.equal((index.match(/<link rel="stylesheet"/g) || []).length, 2);
+  assert.ok(index.indexOf("/css/app-v094.css") < index.indexOf("/css/ui-foundation-v001.css"));
   for (const asset of [
     "brand-v021.js",
     "exam-humanize.js",

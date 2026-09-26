@@ -13,7 +13,7 @@ test("runtime stylesheets have one legacy bundle plus one final foundation layer
 
   for (const legacy of ["styles.css", "onboarding-v050.css", "ui-v050.css", "ui-v070.css", "ui-v080.css", "ui-v081-share-ink.css", "brand-logo-b.css", "ui-v092-share-delivery.css"]) {
     const escaped = legacy.replace(/[.-]/g, "\\$&");
-    assert.doesNotMatch(index, new RegExp("href=\\\\"/" + escaped + "\\\\""));
+    assert.doesNotMatch(index, new RegExp('href="/' + escaped + '"'));
     await access(new URL("../public/" + legacy, import.meta.url));
   }
 });

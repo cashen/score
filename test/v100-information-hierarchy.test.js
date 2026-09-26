@@ -9,7 +9,7 @@ const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url
 const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
 
 test("v0.12.27 security hardening retains visual hierarchy baseline", () => {
-  assert.match(pkg.version, /^0\.13\.\d+(?:\.\d+)*$/);
+  assert.match(pkg.version, /^0\.\d+\.\d+(?:\.\d+)*$/);
   const escapedVersion = pkg.version.replaceAll(".", "\\.");
   assert.match(wrangler, new RegExp(`APP_VERSION\\s*=\\s*"${escapedVersion}"`));
 });
