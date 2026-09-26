@@ -1,5 +1,5 @@
 {
-  "version": "0.13.3.0",
+  "version": "0.13.3.1",
   "title": "Human Efficiency & Data Trust",
   "status": "implementation",
   "branch": "refactor/human-efficiency-v01330",
@@ -27,5 +27,6 @@
     "exact PR head",
     "main SHA",
     "production appVersion/buildSha attestation"
-  ]
+  ],
+  "latestRevision": "0.13.3.1"
 }

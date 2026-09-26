@@ -152,7 +152,7 @@ test("subject view uses the latest actual subject record", async ({ page }) => {
 test("empty share remains navigable without a fabricated baseline", async ({ page }) => {
   await fixture(page, 0);
   await page.goto("/share/fixture");
-  for (const view of ["总成绩", "单科", "时间轴"]) {
+  for (const view of ["这次成绩", "单科", "历次考试"]) {
     await page.getByRole("link", { name: view, exact: true }).click();
     await expect(page.locator(".public-baseline-note")).toHaveCount(0);
     await expect(page.locator(".public-shell")).toContainText(/暂未分享考试数据|还没有可分享/);
