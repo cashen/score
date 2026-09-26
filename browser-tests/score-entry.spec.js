@@ -54,7 +54,7 @@ test("score-card entry starts with no forced six-subject selection and adds a de
 
   await page.locator('input[name="name"]').fill("英语月考");
   await expect(page.locator("[data-subject-inference]")).toContainText("看起来可能是：英语");
-  await page.getByRole("button", { name: "添加" }).click();
+  await page.locator("[data-add-inferred]").click();
 
   await expect(page.locator('input[name="subjectSet"]:checked')).toHaveCount(1);
   await page.getByRole("button", { name: "下一步" }).click();
@@ -88,8 +88,9 @@ test("score-card entry supports previous-exam template, common presets, and savi
   await expect(page.locator('input[name="subjectSet"]:checked')).toHaveCount(3);
   await page.getByRole("button", { name: "下一步" }).click();
   await expect(page.locator('.exam-subject-card:not([hidden])')).toHaveCount(3);
-
+  await page.getByRole("button", { name: "上一步" }).click();
   await page.locator('input[name="name"]').fill("9月27日月考");
+  await page.getByRole("button", { name: "下一步" }).click();
   await page.locator('input[name="physics-raw"]').fill("82");
   await page.locator('input[name="chemistry-raw"]').fill("91");
   await page.locator('input[name="biology-raw"]').fill("88");

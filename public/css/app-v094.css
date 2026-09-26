@@ -2087,3 +2087,31 @@ summary:focus-visible,
     margin-left: 0;
   }
 }
+
+
+/* v0.13.5 score-card entry */
+.exam-subject-builder{margin-bottom:14px;padding:14px;border:1px solid var(--v50-line);border-radius:14px;background:var(--v50-surface-soft)}
+.exam-subject-builder-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.exam-subject-builder-head h3{margin:3px 0 0;font-size:18px}
+.exam-subject-builder-head p{margin:5px 0 0;color:var(--v50-muted);font-size:13px;line-height:1.5}
+.exam-subject-builder-head>span{flex:none;color:var(--v50-muted);font-size:12px;white-space:nowrap}
+.exam-quick-choices{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.entry-template-btn{min-height:40px;padding:8px 11px;border:1px solid var(--v50-line);border-radius:999px;background:var(--v50-surface);color:var(--v50-text);font:inherit;font-size:13px;cursor:pointer}
+.entry-template-btn:hover{background:var(--v50-surface-soft)}
+.exam-subject-add-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.exam-subject-add-row .btn{min-height:48px;height:48px}
+.exam-subject-add-row [data-subject-inference]{color:var(--v50-muted);font-size:13px;line-height:1.5}
+.text-action{padding:0;border:0;background:none;color:var(--v50-accent);font:inherit;font-weight:700;cursor:pointer}
+.exam-subject-picker{margin-top:10px;border-top:1px solid var(--v50-line)}
+.exam-subject-picker>summary{padding:10px 2px 2px;color:var(--v50-muted);font-size:13px;cursor:pointer;list-style:none}
+.exam-subject-picker>summary::-webkit-details-marker{display:none}
+.exam-subject-picker[open]>summary{color:var(--v50-text);font-weight:700}
+.exam-subject-option.is-selected{border-color:#b7cec5;background:var(--v50-position)}
+.exam-subject-cards>.exam-subject-card[hidden]{display:none}
+@media(max-width:520px){
+ .exam-subject-builder{padding:13px}
+ .exam-subject-builder-head{display:grid;gap:6px}
+ .exam-subject-builder-head>span{white-space:normal}
+ .exam-quick-choices{display:grid;grid-template-columns:1fr 1fr}
+ .entry-template-btn{text-align:left}
+}
