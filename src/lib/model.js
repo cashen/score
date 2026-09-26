@@ -103,40 +103,58 @@ export function normalizeComparison(value = {}) {
 
 export function normalizeExam(input, existing = null) {
   const id = existing?.id || safeText(input.id, 80) || crypto.randomUUID();
+  const subjectSet = input.subjectSet !== undefined
+    ? normalizeSubjectSet(input.subjectSet)
+    : Array.isArray(existing?.subjectSet) ? normalizeSubjectSet(existing.subjectSet) : null;
+  const activeSubjects = subjectSet?.length ? subjectSet : SUBJECTS;
   const subjects = {};
-  for (const subject of SUBJECTS) subjects[subject] = normalizeSubject(input.subjects?.[subject] || {});
-  const subjectSet=input.subjectSet!==undefined?normalizeSubjectSet(input.subjectSet):Array.isArray(existing?.subjectSet)?normalizeSubjectSet(existing.subjectSet):null;
+  for (const subject of activeSubjects) subjects[subject] = normalizeSubject(input.subjects?.[subject] || {});
   const date = safeText(input.date, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) throw Object.assign(new Error("考试日期无效"), { code: "invalid_exam_date", field: "date" });
   const type = EXAM_TYPES.has(input.type) ? input.type : "other";
   const officialScore = numberOrNull(input.overall?.officialScore, 0, 2000);
-  const scoreSubjects = subjectSet?.length ? subjectSet : SUBJECTS;
+  const scoreSubjects = activeSubjects;
   const recordedScores = scoreSubjects.map(key => subjects[key].finalScore ?? subjects[key].rawScore).filter(score => score != null);
   const calculatedScore = recordedScores.length ? recordedScores.reduce((sum, score) => sum + score, 0) : null;
+  const calculatedComplete = recordedScores.length === scoreSubjects.length;
+  const scoreConsistency = officialScore == null || calculatedScore == null || !calculatedComplete
+    ? { status: "not_checked", officialScore, calculatedScore, delta: null }
+    : {
+        status: Math.abs(officialScore - calculatedScore) < 0.05 ? "match" : "mismatch",
+        officialScore,
+        calculatedScore,
+        delta: Math.round((calculatedScore - officialScore) * 10) / 10
+      };
   const comparison = input.comparison === undefined ? (existing?.comparison || null) : normalizeComparison(input.comparison);
   const reflectionInput = input.reflection === undefined ? existing?.reflection : input.reflection;
   const reflection = reflectionInput && typeof reflectionInput === "object" ? {
     studentNote: safeText(reflectionInput.studentNote, 500),
     nextTry: safeText(reflectionInput.nextTry, 500)
   } : { studentNote: "", nextTry: "" };
+  const contextInput = input.context === undefined
+    ? existing?.context
+    : Object.assign({}, existing?.context || {}, input.context || {});
+  const attendance = input.attendance === "absent" || input.status === "absent" ? "absent" : "present";
   return {
     schemaVersion: 1,
     id,
     name: safeText(input.name, 80) || "未命名考试",
     date,
     type,
-    ...(subjectSet?{subjectSet}:{}),
+    ...(subjectSet ? { subjectSet } : {}),
+    attendance,
     status: ["normal", "good", "poor", "absent", "partial"].includes(input.status) ? input.status : "normal",
     context: {
-      grade: safeText(input.context?.grade, 30),
-      semester: safeText(input.context?.semester, 20),
-      classLabel: safeText(input.context?.classLabel, 60),
-      schoolLabel: safeText(input.context?.schoolLabel, 100)
+      grade: safeText(contextInput?.grade, 30),
+      semester: safeText(contextInput?.semester, 20),
+      classLabel: safeText(contextInput?.classLabel, 60),
+      schoolLabel: safeText(contextInput?.schoolLabel, 100)
     },
     comparison,
     overall: {
       officialScore,
       calculatedScore: calculatedScore == null ? null : Math.round(calculatedScore * 10) / 10,
+      scoreConsistency,
       rankings: normalizeRankings(input.overall?.rankings)
     },
     subjects,

@@ -15,7 +15,7 @@ test("mobile coordinate typography remains compact", () => {
   assert.match(css, /@media \(max-width: 380px\)[\s\S]*\.coordinate-row > span\s*\{\s*font-size:\s*19px/);
 });
 
-test("coordinate copy is semantic, not a ranking poster", () => {
-  assert.match(app, /compactRank\("校内"/);
-  assert.match(app, /compactRank\("班级"/);
+test("coordinate copy stays semantic and scope-aware", () => {
+  assert.match(app, /function coordinateItems\(exam\)/);
+  assert.match(app, /scoreSummaryText\(summary\)/);
 });

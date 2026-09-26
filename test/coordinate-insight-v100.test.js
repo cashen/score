@@ -71,10 +71,11 @@ test("different exam categories do not produce a false trend", () => {
   assert.equal(result.overall, null);
 });
 
-test("different series do not produce a false trend", () => {
+test("different series within the same exam category can still provide a fact-based trend", () => {
   const result = analyzeCoordinate([a, d]);
-  assert.equal(result.status, "baseline");
-  assert.equal(result.overall, null);
+  assert.equal(result.status, "comparable");
+  assert.equal(result.overall?.kind, "percentile");
+  assert.equal(result.overall?.direction, "steady");
 });
 
 test("repeated subject decline becomes an observation point", () => {

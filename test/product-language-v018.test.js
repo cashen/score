@@ -53,8 +53,8 @@ test("v0.12.21 user-facing language removes known internal/AI-style phrases", ()
   assert.equal(app.includes(">成绩</button>"), true);
 });
 
-test("v0.12.21 keeps precise total-score wording distinct from calculated subtotals", () => {
-  assert.equal(app.includes("六科合计 "), true);
-  assert.equal(app.includes("/6 科小计 "), true);
-  assert.equal(app.includes("总分未分享"), true);
+test("scope-aware score wording is centralized rather than hard-coded in the main renderer", () => {
+  assert.equal(app.includes("scoreSummaryText(summary)"), true);
+  assert.equal(app.includes("scoreSummaryText(latestSummary)"), true);
+  assert.equal(app.includes("本次实际记录的科目成绩与排名"), true);
 });

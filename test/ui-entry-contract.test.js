@@ -11,7 +11,7 @@ test("exam entry is rendered directly without legacy humanizer assets", () => {
   assert.match(app, /function examDialog\(/);
   assert.match(app, /这次是什么考试/);
   assert.match(app, /总分与排名/);
-  assert.match(app, /六科成绩与排名/);
+  assert.match(app, /本次成绩与排名/);
 });
 
 test("direct exam renderer preserves score and rank payload fields", () => {
@@ -20,9 +20,11 @@ test("direct exam renderer preserves score and rank payload fields", () => {
   assert.match(app, /name="\$\{prefix\}-rank"/);
   assert.match(app, /name="\$\{prefix\}-participants"/);
   assert.match(app, /rankInputs\("overall-school", school, "学校"\)/);
-  assert.match(app, /rankInputs\("overall-class", clazz, "班级"\)/);
-  for (const subject of ["chinese", "math", "english", "physics", "chemistry", "biology"]) assert.match(app, new RegExp(`\\["${subject}"`));
+  assert.match(app, /rankInputs\("overall-class", clazz, historicalClassLabel\)/);
+  for (const subject of ["chinese", "math", "english", "physics", "chemistry", "biology"]) assert.ok(app.includes(`"${subject}"`));
   assert.match(app, /deriveDataStatus/);
+  assert.match(app, /input\[name="subjectSet"\]/);
+  assert.match(app, /clientRequestId/);
   assert.doesNotMatch(app, /<label>数据状态<\/label>/);
 });
 

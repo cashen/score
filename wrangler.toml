@@ -17,8 +17,8 @@ id = "7341ae0c8a5b43e8a249f5429691b9d0"
 required = [ "SESSION_SECRET", "AUTH_PEPPER", "ADMIN_BOOTSTRAP_SECRET" ]
 
 [vars]
-# APP_VERSION = "0.13.1.1" is the current release runtime.
-APP_VERSION = "0.13.1.1"
+# APP_VERSION = "0.13.2.0" is the current release runtime.
+APP_VERSION = "0.13.2.0"
 SCHEMA_VERSION = "1"
 PASSWORD_ITERATIONS = "100000"
 BOOTSTRAP_ENABLED = "false"

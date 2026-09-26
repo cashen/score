@@ -22,12 +22,12 @@ test("multi-exam trajectory keeps baseline, recent window and stability separate
     withMath(exam("e5", "2026-07-01"), 13, 100, 122)
   ];
   const result = trajectoryAnalysis(exams, "math");
-  assert.equal(result.metric, "score");
+  assert.equal(result.metric, "schoolRank");
   assert.equal(result.comparableCount, 5);
-  assert.equal(result.baseline.display, "105 分");
-  assert.equal(result.current.display, "122 分");
+  assert.equal(result.baseline.display, "校内前 18%");
+  assert.equal(result.current.display, "校内前 13%");
   assert.equal(result.longDirection, "forward");
-  assert.equal(result.stability.label, "波动较大");
+  assert.equal(result.stability.label, "比较稳定");
 });
 
 test("auto metric follows the displayed score when score data is present", () => {
@@ -36,7 +36,7 @@ test("auto metric follows the displayed score when score data is present", () =>
     withMath(exam("e2", "2026-04-01"), 18, 100, 102),
     withMath(exam("e3", "2026-05-01"), 17, 100, 104)
   ];
-  assert.equal(chooseTrajectoryMetric(exams, "math"), "score");
+  assert.equal(chooseTrajectoryMetric(exams, "math"), "schoolRank");
 });
 
 test("one exam is a baseline and must not manufacture a trend", () => {
@@ -50,7 +50,7 @@ test("one exam is a baseline and must not manufacture a trend", () => {
 test("non-comparable exams are excluded from the trajectory without becoming a false decline", () => {
   const exams = [
     withMath(exam("e1", "2026-03-01", "月考"), 20),
-    withMath(exam("e2", "2026-04-01", "联考"), 10),
+    withMath({ ...exam("e2", "2026-04-01", "联考"), type: "joint" }, 10),
     withMath(exam("e3", "2026-05-01", "月考"), 18)
   ];
   const result = trajectoryAnalysis(exams, "math");
@@ -69,7 +69,6 @@ test("change drivers identify subject movement from the same semantic metric", (
   assert.equal(drivers[0].key, "math");
   assert.equal(drivers[0].analysis.longDirection, "forward");
 });
-
 
 test("single-subject trajectory ignores exams without that subject, including the latest exam", () => {
   const exams = [

@@ -65,4 +65,4 @@ export function dispatchViewAction(state, action = {}) {
   }
 }
 
-export const APPLICATION_ARCHITECTURE_VERSION = "0.13.1";
+export const APPLICATION_ARCHITECTURE_VERSION = "0.13.2";

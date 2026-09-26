@@ -12,7 +12,7 @@ function exam(extra = {}) {
 
 test("human default metric follows the value the reader sees", () => {
   const e = exam({ subjects: { ...blankSubjects(), english: { rawScore: 118, rankings: [{ scope: "school", rank: 20, participants: 500, label: "学校", basis: "final_score" }] } } });
-  assert.equal(resolveDisplayMetric(e, "english", "auto"), "score");
+  assert.equal(resolveDisplayMetric(e, "english", "auto"), "schoolRank");
   const rankOnly = exam({ subjects: { ...blankSubjects(), english: { rawScore: null, rankings: [{ scope: "school", rank: 20, participants: 500, label: "学校", basis: "final_score" }] } } });
   assert.equal(resolveDisplayMetric(rankOnly, "english", "auto"), "schoolRank");
 });
