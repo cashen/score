@@ -564,7 +564,7 @@ function renderOverview() {
 
   const exam = latestExam();
   if (!exam) {
-    return `<section class="home-page home-empty"><div class="home-empty-mark">${brandMark()}</div><div class="section-label">从一场考试开始</div><h1>把今天记下来，之后再看变化</h1><p>不用一次填完所有数据。先记录你手头有的成绩和排名，其余内容以后再补也可以。</p>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录第一场考试</button>` : `<p class="muted">当前账号只有查看权限。</p>`}</section>`;
+    return `<section class="home-page home-empty"><div class="home-empty-mark">${brandMark()}</div><div class="section-label">从一场考试开始</div><h1>把今天记下来，之后再看变化</h1><p>不用一次填完所有数据。先记录你手头有的成绩和排名，其余内容以后再补也可以。</p>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录第一次考试</button>` : `<p class="muted">当前账号只有查看权限。</p>`}</section>`;
   }
 
   const comparison = comparisonState();

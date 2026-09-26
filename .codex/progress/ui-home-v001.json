@@ -1,11 +1,11 @@
 {
   "project": "cashen/score",
-  "release": "0.14.1.0",
+  "release": "0.14.1.1",
   "branch": "ui/home-v001",
   "base": {
     "sha": "04a1a03091d8fdcca409f3b9d7ed32fd95c2c810"
   },
-  "status": "implementation",
+  "status": "verification",
   "stages": {
     "foundation": "completed",
     "homepage": "in_progress",
@@ -20,5 +20,6 @@
     "Share v2",
     "existing APIs"
   ],
-  "principle": "首页先回答现在在哪里、最近发生什么，再提供下一步；不把缺失数据包装成失败。"
+  "principle": "首页先回答现在在哪里、最近发生什么，再提供下一步；不把缺失数据包装成失败。",
+  "latestFix": "首页空状态 CTA 统一为“记录第一次考试”，避免已有浏览器回归点击不到入口。"
 }
