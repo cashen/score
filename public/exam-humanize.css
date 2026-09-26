@@ -239,3 +239,136 @@ html.exam-dialog-open { overflow: hidden; }
   .exam-subject-ranks .exam-rank-row { grid-template-columns: 1fr; }
   .exam-rank-label { padding-left: 2px; }
 }
+
+
+/* v0.14.2 exam entry — calm score-sheet treatment */
+.exam-dialog-human {
+  color: var(--ui-text);
+}
+.exam-dialog-human .dialog-head {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--ui-line-soft);
+}
+.exam-dialog-human .dialog-head h2 {
+  font-size: 22px;
+}
+.exam-dialog-subtitle {
+  color: var(--ui-text-tertiary);
+}
+.exam-dialog-human .exam-section {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top-color: var(--ui-line-soft);
+}
+.exam-dialog-human .exam-section-head h3,
+.exam-dialog-human .exam-subject-section > h3 {
+  font-size: 17px;
+  letter-spacing: -.01em;
+}
+.exam-dialog-human .exam-section-head p,
+.exam-dialog-human .exam-section-hint {
+  color: var(--ui-text-tertiary);
+}
+.exam-dialog-human .exam-context-grid,
+.exam-dialog-human .exam-overall-grid {
+  gap: 14px;
+}
+.exam-dialog-human .exam-control-label,
+.exam-dialog-human .exam-rank-label {
+  color: var(--ui-text-secondary);
+}
+.exam-dialog-human .exam-rank-row {
+  border: 0;
+  border-top: 1px solid var(--ui-line-soft);
+  border-radius: 0;
+  padding: 10px 2px;
+  background: transparent;
+}
+.exam-dialog-human .exam-rank-row:first-child {
+  border-top-color: transparent;
+}
+.exam-dialog-human .exam-rank-pair input {
+  background: var(--ui-surface);
+}
+.exam-dialog-human .exam-subject-cards {
+  gap: 0;
+  border-top: 1px solid var(--ui-line);
+}
+.exam-dialog-human .exam-subject-card {
+  padding: 18px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--ui-line-soft);
+  border-radius: 0;
+  background: transparent;
+}
+.exam-dialog-human .exam-subject-head {
+  margin-bottom: 10px;
+}
+.exam-dialog-human .exam-subject-head h4 {
+  font-size: 18px;
+}
+.exam-dialog-human .exam-subject-head span {
+  color: var(--ui-text-tertiary);
+}
+.exam-dialog-human .exam-subject-score-grid {
+  gap: 10px;
+}
+.exam-dialog-human .exam-control input,
+.exam-dialog-human .exam-control select {
+  background: var(--ui-surface-soft);
+  border-color: #cfd8d4;
+}
+.exam-dialog-human .exam-primary-score input {
+  background: var(--ui-surface);
+  font-size: 19px;
+}
+.exam-dialog-human .exam-subject-ranks {
+  margin-top: 14px;
+  padding-top: 8px;
+  border-top: 0;
+}
+.exam-dialog-human .exam-subject-ranks .exam-rank-row {
+  padding-block: 8px;
+}
+.exam-dialog-human .exam-notes {
+  margin-top: 18px !important;
+  padding-top: 16px;
+}
+.exam-dialog-human .exam-notes textarea {
+  background: var(--ui-surface-soft);
+}
+.exam-dialog-human .dialog-actions {
+  border-top-color: var(--ui-line);
+  box-shadow: 0 -8px 20px rgba(28, 45, 49, .035);
+}
+.exam-dialog-human .dialog-actions .btn-primary {
+  min-width: 150px;
+}
+@media (max-width: 820px) {
+  .exam-dialog-human .exam-subject-cards {
+    border-top: 1px solid var(--ui-line);
+  }
+}
+@media (max-width: 520px) {
+  .exam-dialog-human .dialog-head h2 {
+    font-size: 20px;
+  }
+  .exam-dialog-human .exam-section {
+    margin-top: 18px;
+    padding-top: 16px;
+  }
+  .exam-dialog-human .exam-subject-card {
+    padding-inline: 2px;
+  }
+  .exam-dialog-human .exam-primary-score input {
+    font-size: 18px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .exam-dialog-human *,
+  .exam-dialog-human *::before,
+  .exam-dialog-human *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
