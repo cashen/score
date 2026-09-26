@@ -1,0 +1,27 @@
+{
+  "version": "0.13.5.0",
+  "title": "Score-card Entry / Human Recording Flow",
+  "status": "implementation",
+  "branch": "feat/v01350-score-entry-card",
+  "base": "main@2908e51313a5fda87ead1c40e7e9efa9ee51d317",
+  "tasks": [
+    "remove forced single/multi mental model from exam entry",
+    "progressive add-subject score cards",
+    "previous exam and recent same-type templates",
+    "common subject presets",
+    "non-binding exam-name subject hint",
+    "checkbox-aware local drafts",
+    "mobile touch and no-horizontal-overflow",
+    "production version-id attestation fix",
+    "browser and domain regression coverage"
+  ],
+  "mergeGate": [
+    "npm run verify",
+    "Chromium 360/390/768/1280",
+    "WebKit 390",
+    "exact PR HEAD",
+    "main SHA",
+    "production appVersion/buildSha attestation"
+  ],
+  "latestRevision": "0.13.5.0"
+}

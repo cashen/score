@@ -37,3 +37,11 @@ test("release version is synchronized across package and Worker contracts", () =
   assert.match(wrangler, versionPattern);
   assert.match(changelog, new RegExp("^## " + packageJson.version.replaceAll(".", "\\.") + "$", "m"));
 });
+
+
+test("production verification is pinned to the exact deployed Worker version", () => {
+  assert.match(workflow, /Current Version ID/);
+  assert.match(workflow, /WORKER_VERSION_ID/);
+  assert.match(workflow, /Cloudflare-Workers-Version-Overrides/);
+  assert.match(workflow, /verify-production\.mjs "\$TESTED_SHA" "\$WORKER_VERSION_ID"/);
+});
