@@ -419,7 +419,7 @@ function renderSubjectComparison() {
   const effectiveMetric = current ? resolveDisplayMetric(current, key, metric) : metric;
   const comparison = coreFindComparableExamForSubject(subjectExams, current, key, effectiveMetric);
   const change = comparison.status === "comparable" ? comparison.metric : null;
-  const recentValue = currentState.hasAny ? subjectMetricValue(current, key, effectiveMetric) : null;
+  const recentValue = currentState.hasAny ? subjectMetricValue(current, key, "score") || subjectMetricValue(current, key, effectiveMetric) : null;
   const comparisonText = change
     ? `和 ${fmtDate(comparison.reference.date)} 相比`
     : humanComparisonState(comparison, subjectExams.length);
