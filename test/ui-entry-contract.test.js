@@ -16,7 +16,7 @@ test("exam entry is rendered directly without legacy humanizer assets", () => {
   assert.match(app, /["考试信息", "本次成绩", "位置与补充"]/);
   assert.match(app, /考试当时的信息/);
   assert.match(app, /data-action='undo-delete'/);
-  assert.match(app, /取消已有科目/);
+  assert.match(app, /编辑时取消会先提醒/);
 });
 
 test("direct exam renderer preserves score and rank payload fields", () => {
