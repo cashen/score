@@ -37,6 +37,7 @@ import {
 } from "./domain-v001.js";
 import { createAppState, dispatchViewAction, captureViewContext, restoreViewContext } from "./application-v001.js";
 import { shareUrlFor, shareFileName } from "./share-delivery-v092.js";
+import { PUBLIC_VIEW_LABELS, PUBLIC_SUBJECT_OVERVIEW_LABEL } from "./product-contract.js";
 import { deliverShareImage } from "./share-image-v092.js";
 
 const PRODUCT_NAME = "我的高三";
@@ -1478,7 +1479,7 @@ function publicOverallHistoryCoordinate(exam, share = {}) {
 
 function publicHistory(exams, share = {}) {
   if (share.fields?.history !== true || !Array.isArray(exams) || exams.length < 2) return "";
-  return `<section class="public-history"><div class="section-label">历次总成绩</div><h2>每一场考试都保留在这里</h2><div class="history-list">${exams.map((exam, index) => {
+  return `<section class="public-history"><div class="section-label">${PUBLIC_VIEW_LABELS.timeline}</div><h2>每一场考试都保留在这里</h2><div class="history-list">${exams.map((exam, index) => {
     const items = publicOverallHistoryCoordinate(exam, share);
     return `<a class="history-row ${index === 0 ? "is-latest" : ""}" href="?view=timeline&exam=${encodeURIComponent(exam.id)}"><span><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最近一次考试" : ""}</small></span><div class="history-coordinate">${items.map((item) => `<span>${esc(item)}</span>`).join("")}</div><span class="row-chevron" aria-hidden="true">›</span></a>`;
   }).join("")}</div><p class="muted">每一场只显示这场考试自己分享的成绩和排名。</p></section>`;
@@ -1486,7 +1487,7 @@ function publicHistory(exams, share = {}) {
 
 function publicViewNavV080(active = "total", subject = null) {
   const suffix = subject ? `&subject=${encodeURIComponent(subject)}` : "";
-  const items = [["total", "这次成绩", ""], ["subject", "单科", suffix], ["timeline", "历次考试", ""]];
+  const items = [["total", PUBLIC_VIEW_LABELS.total, ""], ["subject", PUBLIC_VIEW_LABELS.subject, suffix], ["timeline", PUBLIC_VIEW_LABELS.timeline, ""]];
   return `<nav class="public-view-nav" aria-label="分享视图">${items.map(([key, label, itemSuffix]) => `<a class="public-view-tab ${active === key ? "active" : ""}" href="?view=${key}${itemSuffix}" aria-current="${active === key ? "page" : "false"}">${label}</a>`).join("")}</nav>`;
 }
 
@@ -1526,7 +1527,7 @@ function publicSubjectComparisonV080(exams, key, share = {}) {
   const picker = `<div class="subject-picker public-subject-picker"><a class="subject-chip ${key == null ? "active" : ""}" href="?view=subject" aria-current="${key == null ? "page" : "false"}">全部科目</a>${SUBJECTS.map(([subject, label]) => `<a class="subject-chip ${subject === key ? "active" : ""}" href="?view=subject&subject=${encodeURIComponent(subject)}" aria-current="${subject === key ? "page" : "false"}">${label}</a>`).join("")}</div>`;
   if (key == null) {
     const latest = ordered[0] || null;
-    return `<section class="public-reading-section"><div class="section-label">单科</div><h2>科目概览</h2>${publicBaselineV081("subject", ordered, share)}${picker}${latest ? `<div class="subject-rows public-subjects">${publicSubjectRows(latest, share)}</div>` : `<p class="muted">还没有可分享的考试数据。</p>`}</section>`;
+    return `<section class="public-reading-section"><div class="section-label">${PUBLIC_VIEW_LABELS.subject}</div><h2>${PUBLIC_SUBJECT_OVERVIEW_LABEL}</h2>${publicBaselineV081("subject", ordered, share)}${picker}${latest ? `<div class="subject-rows public-subjects">${publicSubjectRows(latest, share)}</div>` : `<p class="muted">还没有可分享的考试数据。</p>`}</section>`;
   }
 
   const label = SUBJECTS.find(([subject]) => subject === key)?.[1] || "单科";

@@ -1,0 +1,27 @@
+{
+  "version": "0.13.4.0",
+  "title": "Full Product + Architecture Consolidation",
+  "status": "implementation",
+  "branch": "refactor/v01340-full-consolidation",
+  "base": "main@a2847bc65cdc84bfc275b10dc26496ff6bc29084",
+  "integratedFrom": "refactor/human-efficiency-v01330@a96f13b9c6b0d6eb5613b9d3bf1ac6a94318eafe",
+  "tasks": [
+    "human-efficiency baseline integrated",
+    "share browser product contract",
+    "server canonical domain boundary",
+    "scoped exam score semantics",
+    "comparison semantics parity",
+    "mobile save and draft regression retained",
+    "share/privacy regression retained",
+    "release and deployment contract"
+  ],
+  "mergeGate": [
+    "npm run verify",
+    "Chromium 360/390/768/1280",
+    "WebKit 390",
+    "exact PR head",
+    "main SHA",
+    "production appVersion/buildSha attestation"
+  ],
+  "latestRevision": "0.13.4.0"
+}

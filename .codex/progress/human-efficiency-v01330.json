@@ -1,7 +1,7 @@
 {
   "version": "0.13.3.1",
   "title": "Human Efficiency & Data Trust",
-  "status": "implementation",
+  "status": "superseded",
   "branch": "refactor/human-efficiency-v01330",
   "base": "main@a2847bc65cdc84bfc275b10dc26496ff6bc29084",
   "tasks": [
@@ -28,5 +28,6 @@
     "main SHA",
     "production appVersion/buildSha attestation"
   ],
-  "latestRevision": "0.13.3.1"
+  "latestRevision": "0.13.4.0",
+  "supersededBy": ".codex/progress/full-consolidation-v01340.json"
 }

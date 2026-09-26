@@ -1,12 +1,12 @@
-import { examScoreSummary } from "../../public/score-core-v090.js";
-import { normalizeSubjectSet, resolveExamScope } from "../../public/exam-scope.js";
+import { examScoreSummary } from "../domain/score.js";
+import { normalizeSubjectSet, resolveExamScope } from "../domain/exam.js";
 import {
   examComparisonCategory as semanticExamComparisonCategory,
   comparableRanking as semanticComparableRanking,
   percentile as semanticPercentile,
   sortExamsChronologically,
   compareExamsChronologically
-} from "../../public/record-semantics-v120.js";
+} from "../domain/comparison.js";
 
 export const SUBJECTS = ["chinese", "math", "english", "physics", "chemistry", "biology"];
 export const ROLES = new Set(["owner", "editor", "viewer"]);
