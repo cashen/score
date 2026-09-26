@@ -763,7 +763,7 @@ function examDialog(exam = null) {
   const typeKey = form.querySelector("[name='type']")?.value || "other";
   const savedSubjects = Array.isArray(entryPreference.subjectsByType?.[typeKey]) ? entryPreference.subjectsByType[typeKey] : [];
   const previousExamSubjects = latestExam() ? subjectKeysForDisplay(latestExam()) : [];
-  form.querySelector(".exam-context-grid")?.insertAdjacentHTML("afterend", `<section class="exam-subject-builder">
+  form.insertAdjacentHTML("beforeend", `<section class="exam-subject-builder">
     <div class="exam-subject-builder-head"><div><div class="section-label">成绩</div><h3>先记已经拿到的成绩</h3><p>其他科以后再补也可以，不需要一次填完。</p></div><span data-subject-selection-summary>还没有添加科目</span></div>
     <div class="exam-quick-choices" ${exam ? "hidden" : ""}>
       ${savedSubjects.length ? `<button type="button" class="entry-template-btn" data-subject-template="recent">上次同类：${esc(subjectTemplateLabel(savedSubjects))}</button>` : ""}
@@ -837,6 +837,8 @@ function examDialog(exam = null) {
   stepper.className = "entry-stepper";
   stepper.innerHTML = ["考试信息", "本次成绩", "位置与补充"].map((label, index) => `<span data-entry-step="${index}">${index + 1}. ${label}</span>`).join("");
   form.querySelector(".dialog-head")?.after(stepper);
+  const subjectBuilder = form.querySelector(".exam-subject-builder");
+  if (subjectBuilder) stepper.after(subjectBuilder);
   const navigator = document.createElement("div");
   navigator.className = "entry-navigation";
   navigator.innerHTML = `<button type="button" class="btn btn-outline btn-small" data-entry-back>上一步</button><span data-entry-hint>${exam && step === 1 ? "继续补充尚未拿到的科目；已有内容不会改变。" : exam && step === 2 ? "总分、排名和考试当时的信息可以在这里补上。" : "先填考试名称、日期和本次科目；不知道的数据可以留空。"}</span><button type="button" class="btn btn-outline btn-small" data-entry-next>下一步</button>`;
