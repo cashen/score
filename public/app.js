@@ -607,7 +607,7 @@ function renderExamList() {
     return `<div class="exam-list-row" data-action="edit-exam" data-id="${esc(exam.id)}" tabindex="0" role="button"><div class="exam-list-title"><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div><div class="exam-list-coordinate">${coordinates}${renderScoreChange(scoreMetric)}</div><span class="row-chevron" aria-hidden="true">›</span></div>`;
   }).join("");
   const trashBlock = state.trash.length
-    ? `<details class="advanced exam-trash"><summary>回收站（${state.trash.length}）</summary><div class="advanced-body"><p class="muted">已删除的考试不会出现在正常成绩、时间轴或分享中。</p><div class="exam-list">${state.trash.map((exam) => `<div class="exam-list-row"><div class="exam-list-title"><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · 已删除 ${esc(String(exam.deletedAt || "").slice(0, 10))}</small></div><button type="button" class="btn btn-outline btn-small" data-action="restore-exam" data-id="${esc(exam.id)}" data-revision="${esc(exam.revision)}">恢复</button></div>`).join("")}</div></div></details>`
+    ? `<details class="advanced exam-trash"><summary>回收站（${state.trash.length}）</summary><div class="advanced-body"><p class="muted">已删除的考试不会出现在正常成绩、历次考试或分享中。</p><div class="exam-list">${state.trash.map((exam) => `<div class="exam-list-row"><div class="exam-list-title"><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · 已删除 ${esc(String(exam.deletedAt || "").slice(0, 10))}</small></div><button type="button" class="btn btn-outline btn-small" data-action="restore-exam" data-id="${esc(exam.id)}" data-revision="${esc(exam.revision)}">恢复</button></div>`).join("")}</div></div></details>`
     : `<details class="advanced exam-trash" data-trash-panel><summary>回收站</summary><div class="advanced-body"><p class="muted">正在加载已删除的考试。</p></div></details>`;
   return `<section><div class="page-heading"><div><h1>考试</h1><p>每一场考试都是一个坐标，不用把不同难度的试卷机械横比。</p></div>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录考试</button>` : ""}</div>${rows ? `<div class="exam-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试。</p></div>`}${trashBlock}</section>`;
 }
@@ -631,8 +631,8 @@ function shareFieldControls(prefix, scope) {
     ["className", "班级"],
     ["overallScore", "总分"],
     ["overallRank", "总体排名"],
-    ["subjectScores", "六科成绩"],
-    ["subjectRanks", "六科排名"], ["examStatus", "考试情况"], ["comparisonContext", "比较范围"]
+    ["subjectScores", "各科成绩"],
+    ["subjectRanks", "各科排名"], ["examStatus", "考试情况"], ["comparisonContext", "比较范围"]
   ];
   return `<div class="check-grid">${fields.map(([key, label]) => `<label class="check"><input type="checkbox" name="${prefix}-${key}" ${defaults[key] ? "checked" : ""}>${label}</label>`).join("")}</div><input type="checkbox" name="${prefix}-history" ${defaults.history ? "checked" : ""} hidden>`;
 }
@@ -1600,7 +1600,7 @@ function publicTimelineV080(exams, selectedExamId = null, share = {}) {
     const scoreMetric = previous ? metricBetween(exam, previous, null, "score") : null;
     return `<a class="history-row ${index === 0 ? "is-latest" : ""}" href="?view=timeline&exam=${encodeURIComponent(exam.id)}"><span><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最近一次考试" : ""}</small></span><div class="history-coordinate">${coordinateItems.map((item) => `<span>${esc(item)}</span>`).join("")}${renderScoreChange(scoreMetric)}</div><span class="row-chevron" aria-hidden="true">›</span></a>`;
   }).join("");
-  return `<section class="public-reading-section public-timeline"><div class="section-label">时间轴</div><h2>每一次考试都可以打开</h2>${publicBaselineV081("timeline", ordered, share)}${selected ? publicExamDetailV080(selected, share, ordered) : ""}<div class="history-list">${rows || `<div class="empty compact">暂未分享考试数据。</div>`}</div><p class="muted">页面只显示你选择分享的内容。</p></section>`;
+  return `<section class="public-reading-section public-timeline"><div class="section-label">历次考试</div><h2>每一次考试都可以打开</h2>${publicBaselineV081("timeline", ordered, share)}${selected ? publicExamDetailV080(selected, share, ordered) : ""}<div class="history-list">${rows || `<div class="empty compact">暂未分享考试数据。</div>`}</div><p class="muted">页面只显示你选择分享的内容。</p></section>`;
 }
 function renderPublicV080(result) {
   const data = result.data || {};
