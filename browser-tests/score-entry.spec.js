@@ -57,6 +57,7 @@ test("score-card entry starts with no forced six-subject selection and adds a de
   await page.getByRole("button", { name: "添加" }).click();
 
   await expect(page.locator('input[name="subjectSet"]:checked')).toHaveCount(1);
+  await page.getByRole("button", { name: "下一步" }).click();
   await expect(page.locator('.exam-subject-card[data-subject="english"]')).toBeVisible();
   await expect(page.getByRole("button", { name: "＋ 添加另一科" })).toBeVisible();
   await expect(page.locator('.exam-subject-card:not([hidden])')).toHaveCount(1);
@@ -85,6 +86,7 @@ test("score-card entry supports previous-exam template, common presets, and savi
   await expect(page.locator('[data-subject-template="previous"]')).toBeVisible();
   await page.locator('[data-subject-template="previous"]').click();
   await expect(page.locator('input[name="subjectSet"]:checked')).toHaveCount(3);
+  await page.getByRole("button", { name: "下一步" }).click();
   await expect(page.locator('.exam-subject-card:not([hidden])')).toHaveCount(3);
 
   await page.locator('input[name="name"]').fill("9月27日月考");
@@ -106,7 +108,7 @@ test("score-card entry keeps touch targets usable on small screens", async ({ pa
   await mockPrivateApp(page, state);
   await page.setViewportSize({ width: 360, height: 800 });
   await page.goto("/");
-  await page.getByRole("button", { name: "记录一次考试" }).click();
+  await page.locator("[data-action=\"new-exam\"]").first().click();
   const button = page.getByRole("button", { name: "＋ 添加第一科" });
   const box = await button.boundingBox();
   expect(box?.height).toBeGreaterThanOrEqual(44);
