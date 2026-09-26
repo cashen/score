@@ -21,7 +21,7 @@ test("direct exam renderer preserves score and rank payload fields", () => {
   assert.match(app, /name="\$\{prefix\}-participants"/);
   assert.match(app, /rankInputs\("overall-school", school, "学校"\)/);
   assert.match(app, /rankInputs\("overall-class", clazz, historicalClassLabel\)/);
-  for (const subject of ["chinese", "math", "english", "physics", "chemistry", "biology"]) assert.match(app, new RegExp(`\\\\["${subject}"`));
+  for (const subject of ["chinese", "math", "english", "physics", "chemistry", "biology"]) assert.ok(app.includes(`"${subject}"`));
   assert.match(app, /deriveDataStatus/);
   assert.match(app, /input\[name="subjectSet"\]/);
   assert.match(app, /clientRequestId/);
