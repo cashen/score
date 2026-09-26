@@ -15,7 +15,8 @@ test("v0.12.27 security hardening retains visual hierarchy baseline", () => {
 });
 
 test("overview keeps current exam before comparison, score list and history", () => {
-  const overview = app.slice(app.indexOf("function renderOverview"), app.indexOf("function renderExamList"));
+  const renderOverviewSource = app.slice(app.indexOf("function renderOverview"), app.indexOf("function renderExamList"));
+  const overview = renderOverviewSource.slice(renderOverviewSource.indexOf('return `<section class="home-page"'));
   assert.ok(overview.indexOf("home-latest") < overview.indexOf("home-change"));
   assert.ok(overview.indexOf("home-change") < overview.indexOf("home-subjects"));
   assert.ok(overview.indexOf("home-subjects") < overview.indexOf("renderDeepTrajectory()"));
