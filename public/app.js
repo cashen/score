@@ -520,7 +520,9 @@ function renderOverview() {
   const school = overallRank(exam, "school");
   const schoolPct = percentile(school?.rank, school?.participants);
   const humanState = recordCompleteness(exam);
-  const completionText = recordSaveSummary(exam).line;
+  const completionText = humanState.missingSubjects.length
+    ? `已录 ${humanState.subjectCount}/${humanState.subjectTotal} 科，还缺 ${humanState.missingSubjects.join("、")}`
+    : recordSaveSummary(exam).line;
   const needsMore = humanState.missingSubjects.length || (humanState.subjectTotal === 6 && !humanState.officialTotal);
   const primaryLabel = needsMore ? "继续补充这次考试" : "记录下一次考试";
   const primaryAction = needsMore ? "continue-exam" : "new-exam";
