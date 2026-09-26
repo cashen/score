@@ -379,9 +379,8 @@ function identityMeta(student) {
 
 function trajectorySubnav(active = "total") {
   const items = [["total", "总览"], ["subject", "单科"], ["timeline", "历次考试"]];
-  return `<nav class="trajectory-subnav" aria-label="成绩视图">${items.map(([key, label]) => `<button type="button" class="trajectory-subtab ${active === key ? "active" : ""}" data-trajectory-view="${key}" aria-pressed="${active === key}">${label}</button>`).join("")}</nav>`;
+  return `<nav class="trajectory-subnav home-view-tabs" aria-label="成绩视图">${items.map(([key, label]) => `<button type="button" class="trajectory-subtab ${active === key ? "active" : ""}" data-trajectory-view="${key}" aria-pressed="${active === key}">${label}</button>`).join("")}</nav>`;
 }
-
 function validSubjectKey(value) {
   return SUBJECTS.some(([key]) => key === value) ? value : null;
 }
@@ -514,10 +513,11 @@ function renderTimelineView() {
   return `<section class="trajectory-view timeline-view"><div class="page-heading"><div><div class="section-label">历次考试</div><h1>每一次考试都在这里</h1><p>打开任意一场，查看这次考试的完整记录。</p></div>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录考试</button>` : ""}</div>${selected ? renderExamDetail(selected) : ""}${rows ? `<div class="history-list full-timeline-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试。</p></div>`}</section>`;
 }function renderHeader() {
   const students = state.me?.students || [];
-  const selector = students.length > 1 ? `<select id="student-select" aria-label="切换孩子">${students.map((student) => `<option value="${esc(student.id)}" ${state.student?.id === student.id ? "selected" : ""}>${esc(student.displayName)}</option>`).join("")}</select>` : "";
-  return `<header class="topbar"><div class="topbar-inner"><div class="brand">${brandMark()}<span>${PRODUCT_NAME}</span></div><div class="top-actions"><span class="privacy-pill" aria-label="数据默认仅家庭成员可见">仅家庭可见</span>${selector}<details class="account-menu"><summary class="btn btn-outline btn-small">账号</summary><div class="account-menu-panel"><button type="button" data-tab-jump="family">家庭与账号</button><button type="button" data-action="export">导出全部数据</button><button type="button" data-action="logout">退出登录</button></div></details></div></div></header>`;
+  const selector = students.length > 1
+    ? `<label class="student-picker"><span class="sr-only">切换孩子</span><select id="student-select" aria-label="切换孩子">${students.map((student) => `<option value="${esc(student.id)}" ${state.student?.id === student.id ? "selected" : ""}>${esc(student.displayName)}</option>`).join("")}</select></label>`
+    : "";
+  return `<header class="topbar home-topbar"><div class="topbar-inner"><div class="brand home-brand">${brandMark()}<span>${PRODUCT_NAME}</span></div><div class="top-actions"><span class="privacy-note-lite" aria-label="数据默认仅家庭成员可见">仅家庭可见</span>${selector}<details class="account-menu"><summary class="btn btn-outline btn-small home-account-trigger" aria-label="账户菜单">账号</summary><div class="account-menu-panel"><button type="button" data-tab-jump="family">家庭与账号</button><button type="button" data-action="export">导出全部数据</button><button type="button" data-action="logout">退出登录</button></div></details></div></div></header>`;
 }
-
 function renderSubjectRows(exam, previous = null) {
   if (!exam) return "";
   return SUBJECTS.filter(([key])=>subjectKeysForDisplay(exam).includes(key)).map(([key,label])=>{
@@ -561,10 +561,12 @@ function renderDeepTrajectory() {
 function renderOverview() {
   if (state.trajectoryView === "subject") return renderSubjectComparison();
   if (state.trajectoryView === "timeline") return renderTimelineView();
+
   const exam = latestExam();
   if (!exam) {
-    return `<section class="empty-state">${brandMark()}<h1>先记录第一场考试</h1><p>不用一次填完所有数据。先把考试、总分和你手头已有的排名记下来即可。</p>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录第一次考试</button>` : `<p class="muted">当前账号只有查看权限。</p>`}</section>`;
+    return `<section class="home-page home-empty"><div class="home-empty-mark">${brandMark()}</div><div class="section-label">从一场考试开始</div><h1>把今天记下来，之后再看变化</h1><p>不用一次填完所有数据。先记录你手头有的成绩和排名，其余内容以后再补也可以。</p>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录第一场考试</button>` : `<p class="muted">当前账号只有查看权限。</p>`}</section>`;
   }
+
   const comparison = comparisonState();
   const previous = comparison.status === "comparable" ? comparison.previous : null;
   const overallMetric = previous ? metricBetween(exam, previous, null, resolveDisplayMetric(exam, null, "auto")) : null;
@@ -574,11 +576,12 @@ function renderOverview() {
   const schoolPct = percentile(school?.rank, school?.participants);
   const humanState = recordCompleteness(exam);
   const completionText = humanState.missingSubjects.length
-    ? `已录 ${humanState.subjectCount}/${humanState.subjectTotal} 科，还缺 ${humanState.missingSubjects.join("、")}`
-    : recordSaveSummary(exam).line;
+    ? `这次记录了 ${humanState.subjectCount} 科；其他科目可以之后补上。`
+    : (humanState.subjectTotal === 6 && !humanState.officialTotal ? "六科成绩已经记下；学校总分公布后可以再补。" : "这次考试的记录已保存。");
   const needsMore = humanState.missingSubjects.length || (humanState.subjectTotal === 6 && !humanState.officialTotal);
   const primaryLabel = needsMore ? "继续补充这次考试" : "记录下一次考试";
   const primaryAction = needsMore ? "continue-exam" : "new-exam";
+
   const comparisonSummary = formatComparisonSummary({
     hasHistory: state.exams.length > 1,
     comparable: Boolean(previous),
@@ -589,17 +592,38 @@ function renderOverview() {
   const comparisonTitle = previous ? directionText(overallMetric) : comparisonSummary.title;
   const comparisonDetail = comparisonSummary.detail;
   const comparisonStrength = previous ? comparisonStrengthLabel(comparison) : "";
+
   const scoreSummary = examScoreSummary(exam);
   const consistency = exam?.overall?.scoreConsistency;
   const consistencyNote = consistency?.status === "mismatch"
     ? `学校公布${examScoreLabel(exam, scoreSummary)} ${fmtNumber(consistency.officialScore)} 分；按本次记录合计 ${fmtNumber(consistency.calculatedScore)} 分，相差 ${fmtNumber(Math.abs(consistency.delta))} 分，请核对。`
     : "";
-  const sourceSection = sources.length ? `<section class="reading-section change-sources-section"><div class="section-head-simple"><div><div class="section-label">值得回看的科目</div><h2>哪些科目有明显变化</h2></div></div><div class="change-source-list">${sources.map(({ label, metric }) => `<div class="change-source-row"><strong>${label}</strong><span>${esc(metric.detail)}</span></div>`).join("")}</div></section>` : "";
   const scoreText = formatExamScore(scoreSummary) || scoreSummaryText(scoreSummary);
-  const scoreContext = `<div class="current-score-reading ${scoreMetric ? "" : "single"}"><div><span class="section-label">${esc(examScoreLabel(exam,scoreSummary))}</span><strong>${esc(scoreText)}</strong></div>${scoreMetric && shouldShowScoreDelta(scoreMetric) ? `<div class="current-score-change">${renderScoreChange(scoreMetric)}<small>${esc(`和 ${fmtDate(previous.date)} 的${examScoreLabel(exam,scoreSummary)}相比`)}</small></div>` : ""}</div>`;
-  return `<section class="coordinate-hero"><div class="hero-head"><div><h1>${esc(state.student.displayName)}</h1><p>${identityMeta(state.student) || "孩子资料可以稍后补充"}</p></div>${canEdit() ? `<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="${esc(exam.id)}">编辑这次考试</button>` : ""}</div><div class="exam-context"><strong>${esc(exam.name)}</strong><span>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</span></div>${scoreContext}${coordinateRow(exam, "coordinate-row", false)}${consistencyNote ? `<p class="completion-note is-warn">${esc(consistencyNote)}</p>` : ""}${completionText ? `<p class="completion-note">${esc(completionText)}</p>` : ""}${schoolPct != null || school?.participants ? `<div class="coordinate-note">${schoolPct != null ? `校内前 ${fmtNumber(schoolPct)}%` : ""}${schoolPct != null && school?.participants ? " · " : ""}${school?.participants ? `本次共 ${school.participants} 人` : ""}</div>` : ""}</section><section class="reading-section change-section"><div class="section-label">和以前相比</div><div class="change-main"><strong>${esc(comparisonTitle)}</strong>${comparisonStrength ? `<span>${esc(comparisonStrength)}${comparisonDetail ? " · " : ""}${esc(comparisonDetail)}</span>` : comparisonDetail ? `<span>${esc(comparisonDetail)}</span>` : ""}</div></section>${sourceSection}<section class="reading-section subjects-section"><div class="section-head-simple"><div><div class="section-label">这次成绩</div><h2>${esc(examScopeLabel(exam))}成绩</h2></div></div><div class="subject-rows">${renderSubjectRows(exam, previous)}</div></section>${canEdit() ? `<section class="overview-actions" aria-label="下一步"><button class="btn btn-primary btn-block" data-action="${primaryAction}" data-id="${esc(exam.id)}" data-primary-action="record-next">${primaryLabel}</button><button class="btn btn-outline" data-action="open-trajectory" aria-controls="deep-trajectory">查看历次考试</button></section>` : ""}${renderDeepTrajectory()}`;
-}
 
+  const sourceSection = sources.length
+    ? `<section class="home-change-sources"><div class="section-label">可以继续回看</div><h2>哪些科目值得点进去看看</h2><div class="change-source-list">${sources.map(({ label, metric }) => `<div class="change-source-row"><strong>${label}</strong><span>${esc(metric.detail)}</span></div>`).join("")}</div></section>`
+    : "";
+
+  return `<section class="home-page">
+    <header class="home-welcome">
+      <div><div class="section-label">最近一次考试</div><h1>${esc(state.student.displayName)}</h1><p>${identityMeta(state.student) || "孩子资料可以稍后补充"}</p></div>
+      ${canEdit() ? `<button class="btn btn-outline btn-small" data-action="edit-exam" data-id="${esc(exam.id)}">编辑这次考试</button>` : ""}
+    </header>
+    <section class="home-latest">
+      <div class="home-latest-context"><div><strong>${esc(exam.name)}</strong><span>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</span></div></div>
+      <div class="home-latest-grid">
+        <div class="home-score-reading"><span class="section-label">${esc(examScoreLabel(exam, scoreSummary))}</span><strong>${esc(scoreText)}</strong>${scoreMetric && shouldShowScoreDelta(scoreMetric) ? `<div class="home-score-change">${renderScoreChange(scoreMetric)}<small>和 ${fmtDate(previous.date)} 的${esc(examScoreLabel(exam, scoreSummary))}相比</small></div>` : ""}</div>
+        <div class="home-position"><div class="section-label">这次的位置</div>${coordinateRow(exam, "home-coordinate-row")}${schoolPct != null || school?.participants ? `<div class="home-position-note">${schoolPct != null ? `校内前 ${fmtNumber(schoolPct)}%` : ""}${schoolPct != null && school?.participants ? " · " : ""}${school?.participants ? `本次共 ${school.participants} 人` : ""}</div>` : ""}</div>
+      </div>
+      <div class="home-completion"><span>${esc(completionText)}</span>${consistencyNote ? `<p class="completion-note is-warn">${esc(consistencyNote)}</p>` : ""}</div>
+    </section>
+    <section class="home-change" aria-label="最近变化" role="status"><div><div class="section-label">最近变化</div><strong>${esc(comparisonTitle)}</strong>${comparisonStrength ? `<span>${esc(comparisonStrength)}${comparisonDetail ? " · " : ""}${esc(comparisonDetail)}</span>` : comparisonDetail ? `<span>${esc(comparisonDetail)}</span>` : `<span>先多记录几场考试，再看看前后的变化。</span>`}</div></section>
+    ${sourceSection}
+    <section class="home-subjects"><div class="home-section-heading"><div><div class="section-label">这次成绩</div><h2>${esc(examScopeLabel(exam))}成绩</h2></div></div><div class="subject-rows">${renderSubjectRows(exam, previous)}</div></section>
+    ${canEdit() ? `<section class="home-actions" aria-label="下一步"><button class="btn btn-primary" data-action="${primaryAction}" data-id="${esc(exam.id)}" data-primary-action="record-next">${primaryLabel}</button><button class="btn btn-outline" data-action="open-trajectory" aria-controls="deep-trajectory">查看历次考试</button></section>` : ""}
+    ${renderDeepTrajectory()}
+  </section>`;
+}
 function renderExamList() {
   const rows = state.exams.map((exam) => {
     const previous = previousComparableExam(state.exams, exam);
@@ -697,10 +721,9 @@ function renderDashboard() {
   if (state.undoDelete && Date.now() >= new Date(state.undoDelete.undoUntil || 0).getTime()) state.undoDelete = null;
   const statusText = state.notice || (state.undoDelete ? "刚才删除的考试还可以撤销" : "");
   const undoButton = state.undoDelete ? `<button type="button" class="btn btn-outline btn-small" data-action="undo-delete">撤销删除</button>` : "";
-  app.innerHTML = `${renderHeader()}<main class="container"><nav class="tabs" aria-label="主导航"><button class="tab ${state.tab === "overview" ? "active" : ""}" data-tab="overview">成绩</button><button class="tab ${state.tab === "exams" ? "active" : ""}" data-tab="exams">考试</button><button class="tab ${state.tab === "sharing" ? "active" : ""}" data-tab="sharing">分享</button><button class="tab ${state.tab === "family" ? "active" : ""}" data-tab="family">家庭</button></nav><div class="status-region is-${state.noticeTone}" data-status-region role="status" aria-live="polite" ${statusText ? "" : "hidden"}>${esc(statusText)} ${undoButton}</div>${body}</main><footer class="footer">${PRODUCT_NAME} · 数据默认只对家庭成员可见 · ${esc(state.me?.appVersion || "")}</footer>`;
+  app.innerHTML = `${renderHeader()}<main class="container app-main"><nav class="tabs app-main-tabs" aria-label="主导航"><button class="tab ${state.tab === "overview" ? "active" : ""}" data-tab="overview">成绩</button><button class="tab ${state.tab === "exams" ? "active" : ""}" data-tab="exams">考试</button><button class="tab ${state.tab === "sharing" ? "active" : ""}" data-tab="sharing">分享</button><button class="tab ${state.tab === "family" ? "active" : ""}" data-tab="family">家庭</button></nav><div class="status-region is-${state.noticeTone}" data-status-region role="status" aria-live="polite" ${statusText ? "" : "hidden"}>${esc(statusText)} ${undoButton}</div>${body}</main><footer class="footer">${PRODUCT_NAME} · 数据默认只对家庭成员可见 · ${esc(state.me?.appVersion || "")}</footer>`;
   bindDashboard();
 }
-
 function renderLogin(error = "") {
   app.innerHTML = `<main class="login-shell"><section class="login-card">${brandMark()}<h1>${PRODUCT_NAME}</h1><p>${PRODUCT_TAGLINE}。</p>${error ? `<div class="error-box" role="alert">${esc(error)}</div>` : ""}<form id="login-form"><div class="field"><label>登录账号</label><input name="username" autocomplete="username" required></div><div class="field"><label>密码</label><input name="password" type="password" autocomplete="current-password" minlength="10" required></div><button class="btn btn-primary btn-block" type="submit">登录</button></form><div class="login-help"><a href="/forgot">忘记密码？使用恢复码</a></div><small class="login-privacy">数据默认只对家庭成员可见。</small></section></main>`;
   document.querySelector("#login-form")?.addEventListener("submit", async (event) => {

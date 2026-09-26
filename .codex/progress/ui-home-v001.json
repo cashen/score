@@ -1,0 +1,24 @@
+{
+  "project": "cashen/score",
+  "release": "0.14.1.0",
+  "branch": "ui/home-v001",
+  "base": {
+    "sha": "04a1a03091d8fdcca409f3b9d7ed32fd95c2c810"
+  },
+  "status": "implementation",
+  "stages": {
+    "foundation": "completed",
+    "homepage": "in_progress",
+    "examEntry": "planned",
+    "readingSharing": "planned",
+    "familySettings": "planned",
+    "cleanup": "planned"
+  },
+  "compatibility": [
+    "Schema 1",
+    "Workers KV",
+    "Share v2",
+    "existing APIs"
+  ],
+  "principle": "首页先回答现在在哪里、最近发生什么，再提供下一步；不把缺失数据包装成失败。"
+}
