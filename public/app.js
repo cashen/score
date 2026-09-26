@@ -547,7 +547,10 @@ function renderExamList() {
     const coordinates = coordinateItems(exam).map((item) => `<span>${esc(item)}</span>`).join("");
     return `<div class="exam-list-row" data-action="edit-exam" data-id="${esc(exam.id)}" tabindex="0" role="button"><div class="exam-list-title"><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div><div class="exam-list-coordinate">${coordinates}${renderScoreChange(scoreMetric)}</div><span class="row-chevron" aria-hidden="true">›</span></div>`;
   }).join("");
-  return `<section><div class="page-heading"><div><h1>考试</h1><p>每一场考试都是一个坐标，不用把不同难度的试卷机械横比。</p></div>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录考试</button>` : ""}</div>${rows ? `<div class="exam-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试。</p></div>`}</section>`;
+  const trashBlock = state.trash.length
+    ? `<details class="advanced exam-trash"><summary>回收站（${state.trash.length}）</summary><div class="advanced-body"><p class="muted">已删除的考试不会出现在正常成绩、时间轴或分享中。</p><div class="exam-list">${state.trash.map((exam) => `<div class="exam-list-row"><div class="exam-list-title"><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · 已删除 ${esc(String(exam.deletedAt || "").slice(0, 10))}</small></div><button type="button" class="btn btn-outline btn-small" data-action="restore-exam" data-id="${esc(exam.id)}" data-revision="${esc(exam.revision)}">恢复</button></div>`).join("")}</div></div></details>`
+    : `<details class="advanced exam-trash" data-trash-panel><summary>回收站</summary><div class="advanced-body"><p class="muted">正在加载已删除的考试。</p></div></details>`;
+  return `<section><div class="page-heading"><div><h1>考试</h1><p>每一场考试都是一个坐标，不用把不同难度的试卷机械横比。</p></div>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录考试</button>` : ""}</div>${rows ? `<div class="exam-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试。</p></div>`}${trashBlock}</section>`;
 }
 
 function shareFieldControls(prefix, scope) {
@@ -1112,7 +1115,15 @@ async function createRecoveryLink() {
 
 async function loadStudentData() {
   if (!state.student) return;
-  const result=await api(`/api/students/${state.student.id}/exams`); state.exams=sortExamsChronologically(result.exams||[]); state.trash=[];
+  const result = await api(`/api/students/${state.student.id}/exams`);
+  state.exams = sortExamsChronologically(result.exams || []);
+  state.trash = [];
+}
+
+async function loadExamTrash() {
+  if (!state.student) return;
+  const result = await api(`/api/students/${state.student.id}/exams/trash`);
+  state.trash = Array.isArray(result.exams) ? result.exams : [];
 }
 
 async function restoreExam(id, revision) {
@@ -1210,6 +1221,7 @@ function bindDashboard() {
     clearNotice();
     if (state.tab === "sharing") await loadShares();
     if (state.tab === "family") await loadFamilyData();
+    if (state.tab === "exams") await loadExamTrash();
     writePrivateNavigation();
     renderDashboard();
   }));
