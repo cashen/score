@@ -1,3 +1,10 @@
+## 0.14.0.0
+
+- 建立“我的高三”全站 UI Foundation：统一页面背景、表面、文字、间距、圆角、控件尺寸、焦点与显示偏好基础。
+- 移动端触控目标统一提高到至少 44px；支持 reduced motion、high contrast 与 forced colors。
+- UI Foundation 只作为现有运行时样式之后的最终视觉基线，不改变成绩、比较、家庭、分享、Schema 1、Workers KV 或 API。
+- 后续 UI 页面重构将沿用同一 Design System，减少历史 CSS 叠层继续扩张。
+
 ## 0.13.5.3
 
 - 将科目选择区提升为跨步骤常驻区：进入“本次成绩”后仍可添加下一科，不必返回考试信息步骤。

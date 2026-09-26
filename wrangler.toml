@@ -18,7 +18,7 @@ required = [ "SESSION_SECRET", "AUTH_PEPPER", "ADMIN_BOOTSTRAP_SECRET" ]
 
 [vars]
 # APP_VERSION is pinned to the release commit by the repository version contract.
-APP_VERSION = "0.13.5.3"
+APP_VERSION = "0.14.0.0"
 SCHEMA_VERSION = "1"
 PASSWORD_ITERATIONS = "100000"
 BOOTSTRAP_ENABLED = "false"

@@ -1,0 +1,165 @@
+/* 我的高三 v0.14.0.0 — shared UI foundation
+ * Loaded after app-v094.css as the final shared visual layer.
+ * Business behavior remains in the existing runtime modules.
+ */
+
+:root {
+  --ui-bg: #f6f7f5;
+  --ui-surface: #ffffff;
+  --ui-surface-soft: #fafbf9;
+  --ui-text: #1d272b;
+  --ui-text-secondary: #657177;
+  --ui-text-tertiary: #7b878c;
+  --ui-line: #dfe5e2;
+  --ui-line-soft: #e9eeeb;
+  --ui-accent: #2d6b5f;
+  --ui-accent-soft: #eaf2ef;
+  --ui-attention: #fbf7ed;
+  --ui-attention-text: #765314;
+  --ui-danger: #9d3030;
+  --ui-danger-soft: #fff1f1;
+
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-space-5: 20px;
+  --ui-space-6: 24px;
+  --ui-space-7: 32px;
+
+  --ui-radius-sm: 10px;
+  --ui-radius-md: 14px;
+  --ui-radius-lg: 18px;
+  --ui-radius-pill: 999px;
+
+  --ui-shadow-sm: 0 4px 14px rgba(28, 45, 49, .045);
+  --ui-shadow-md: 0 12px 30px rgba(28, 45, 49, .085);
+
+  --ui-control-height: 44px;
+  --ui-focus-ring: 0 0 0 3px rgba(45, 107, 95, .18);
+
+  /* Map legacy shared tokens onto the new vocabulary during migration. */
+  --bg: var(--ui-bg);
+  --surface: var(--ui-surface);
+  --surface-2: var(--ui-surface-soft);
+  --text: var(--ui-text);
+  --muted: var(--ui-text-secondary);
+  --line: var(--ui-line);
+  --accent: var(--ui-accent);
+  --accent-soft: var(--ui-accent-soft);
+  --warn: var(--ui-attention-text);
+  --warn-soft: var(--ui-attention);
+  --danger: var(--ui-danger);
+  --danger-soft: var(--ui-danger-soft);
+  --shadow: var(--ui-shadow-md);
+}
+
+html { background: var(--ui-bg); }
+
+body {
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  min-height: 100vh;
+  font-size: 16px;
+  line-height: 1.55;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  min-width: 0;
+  font: inherit;
+}
+
+button { color: inherit; }
+a { text-underline-offset: 2px; }
+
+:where(h1, h2, h3, h4, p) { overflow-wrap: anywhere; }
+:where(h1, h2, h3, h4) { color: var(--ui-text); line-height: 1.28; }
+:where(p) { color: var(--ui-text-secondary); }
+
+:where(input, select, textarea) {
+  min-height: var(--ui-control-height);
+  border: 1px solid #cfd8d4;
+  border-radius: 12px;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  padding: 10px 12px;
+  box-shadow: none;
+}
+:where(input, select, textarea)::placeholder { color: var(--ui-text-tertiary); opacity: 1; }
+:where(input, select, textarea):disabled { background: #f3f5f4; color: #7d888d; cursor: not-allowed; }
+:where(input[type="checkbox"], input[type="radio"]) { min-height: auto; }
+
+:where(input, select, textarea):focus-visible,
+:where(button, a, summary, [role="button"]):focus-visible {
+  outline: 3px solid var(--ui-accent-soft);
+  outline-offset: 2px;
+  box-shadow: var(--ui-focus-ring);
+}
+
+:where(.btn) {
+  min-height: var(--ui-control-height);
+  border-radius: 12px;
+  padding: 9px 15px;
+  box-shadow: none;
+}
+:where(.btn-primary) { background: var(--ui-accent); }
+:where(.btn-outline) { background: var(--ui-surface); border-color: var(--ui-line); }
+:where(.btn-danger) { background: var(--ui-danger-soft); border-color: #f0cccc; }
+:where(.btn-small) { min-height: var(--ui-control-height); padding: 8px 12px; }
+
+:where(.card, .reading-section, .section-surface, .public-history, .public-reading-section, .deep-trajectory, .share-card) {
+  border-radius: var(--ui-radius-md);
+}
+:where(.card) { border-color: var(--ui-line); box-shadow: var(--ui-shadow-sm); }
+
+:where(.tabs) { gap: 4px; padding: 4px; border-radius: 12px; background: #e9eeeb; }
+:where(.tab) { min-height: var(--ui-control-height); border-radius: 9px; padding: 8px 15px; color: var(--ui-text-secondary); }
+:where(.tab.active) { color: var(--ui-text); background: var(--ui-surface); box-shadow: 0 1px 4px rgba(28, 45, 49, .06); }
+
+:where(.status-region, .error-box, .notice-box) { border-radius: var(--ui-radius-sm); line-height: 1.55; }
+:where(.empty) { min-height: 120px; display: grid; place-items: center; align-content: center; gap: 6px; padding: var(--ui-space-6) var(--ui-space-4); color: var(--ui-text-secondary); }
+:where(.dialog-backdrop) { background: rgba(22, 31, 34, .38); }
+:where(.dialog) { border-radius: var(--ui-radius-lg) var(--ui-radius-lg) 0 0; box-shadow: var(--ui-shadow-md); }
+:where(.dialog-actions) { padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+:where(.footer, .privacy-note) { color: var(--ui-text-tertiary); line-height: 1.5; }
+
+@media (pointer: coarse) {
+  :where(button, a.btn, .tab, summary, [role="button"]) { min-height: var(--ui-control-height); }
+}
+
+@media (max-width: 520px) {
+  :root { --ui-control-height: 46px; }
+  :where(.card-pad) { padding: var(--ui-space-4); }
+  :where(.btn) { padding-inline: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --ui-line: #b8c3bf;
+    --ui-line-soft: #cbd4d0;
+    --ui-text-secondary: #4d5a60;
+  }
+  :where(input, select, textarea, .btn, .card, .reading-section, .public-reading-section, .dialog) { border-width: 2px; }
+}
+
+@media (forced-colors: active) {
+  :where(input, select, textarea, .btn, a, summary, [role="button"]) { forced-color-adjust: auto; }
+  :where(button, a, summary, [role="button"]):focus-visible { outline: 2px solid currentColor; box-shadow: none; }
+}
