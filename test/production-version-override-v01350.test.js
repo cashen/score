@@ -15,7 +15,8 @@ test("verifyProduction adds Cloudflare Worker version override to every request"
     if (path === "/api/health") {
       return new Response(JSON.stringify({ ok:true, appVersion:"0.13.5.0", buildSha, schemaVersion:1, storage:"workers-kv" }), {status:200,headers:{"content-type":"application/json"}});
     }
-    const filePath = path === "/" ? resolve(publicRoot,"index.html") : resolve(publicRoot,"."+path);
+    const filePath = path.startsWith("/api/") ? null : resolve(publicRoot,"index.html");
+    if (!filePath) return new Response("", { status: 404 });
     return new Response(await readFile(filePath),{status:200});
   };
   await verifyProduction({origin:"https://score-track.cashen.workers.dev",buildSha,version:"0.13.5.0",versionId,publicRoot,fetchFn});
