@@ -1,11 +1,11 @@
 {
   "project": "cashen/score",
-  "release": "0.14.2.0",
+  "release": "0.14.2.1",
   "branch": "ui/exam-entry-v001",
   "base": {
     "sha": "f61ff8c0da50f7e771509c59f082a32149131df2"
   },
-  "status": "implementation",
+  "status": "verification",
   "stages": {
     "foundation": "completed",
     "homepage": "completed",
@@ -20,5 +20,6 @@
     "Share v2",
     "existing APIs"
   ],
-  "principle": "考试录入像成绩单，不像后台配置；缺少数据允许自然留空。"
+  "principle": "考试录入像成绩单，不像后台配置；缺少数据允许自然留空。",
+  "latestFix": "同步历史首页 UI 测试的 release assertion。"
 }
