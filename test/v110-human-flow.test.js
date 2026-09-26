@@ -8,10 +8,13 @@ const sharing = await readFile(new URL("../src/sharing-v2.js", import.meta.url),
 const model = await readFile(new URL("../src/lib/model.js", import.meta.url), "utf8");
 
 test("subject is a focus, not a destructive filter", () => {
-  assert.match(app, /六科概览/);
+  assert.match(app, /全部科目/);
   assert.match(app, /data-subject-key=""/);
   assert.match(app, /const subject = validSubjectKey\(params\.get\("subject"\)\)/);
   assert.doesNotMatch(app, /params\.get\("subject"\)\) \? params\.get\("subject"\) : "chinese"/);
+  assert.ok(app.includes('["考试信息", "本次成绩", "位置与补充"]'));
+  assert.match(app, /考试当时的信息/);
+  assert.match(app, /data-action='undo-delete'/);
 });
 
 test("private navigation state is URL-restorable", () => {

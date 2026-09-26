@@ -4,11 +4,11 @@
 
 每场考试独立保存。重要字段：
 
-- `name`, `date`, `type`, `status`, `dataStatus`
-- `context`: 当时的年级/班级/学校快照，不能只引用“当前资料”
+- `name`, `date`, `type`, `status`, `attendance`, `condition`, `dataStatus`
+- `context`: 当时的年级/班级/学校/学期快照，不能只引用“当前资料”
 - `comparison`: 可选的考试系列/层级元数据；不改变 schemaVersion 1
 - `overall.officialScore`: 学校公布总分
-- `overall.calculatedScore`: 六科按 final/raw 计算出的合计，只用于核对
+- `overall.calculatedScore`: 按本次 `subjectSet` 的实际科目，用 final/raw 计算出的合计，只用于核对
 - `overall.rankings[]`: 任意排名口径数组
 - `subjects`: 语数英物化生
 - `notes`: 家庭内部备注
@@ -22,6 +22,8 @@
 {
   "scope": "school",
   "label": "校物理类",
+  "labelSnapshot": "校物理类",
+  "contextId": "school:某高中|grade:高三",
   "rank": 128,
   "participants": 1320,
   "basis": "final_score"

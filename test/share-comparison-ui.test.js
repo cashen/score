@@ -26,4 +26,7 @@ test("history states stay factual rather than gamified", () => {
   assert.match(app, /历次总成绩/);
   assert.match(app, /每一场只显示这场考试自己分享的成绩和排名/);
   assert.doesNotMatch(app, /排行榜/);
+  assert.match(app, /联考第/);
+  assert.match(app, /考试情况/);
+  assert.match(app, /比较范围/);
 });

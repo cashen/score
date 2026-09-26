@@ -1,6 +1,6 @@
 {
   "version": "0.13.2.0",
-  "status": "implementation",
+  "status": "complete",
   "branch": "refactor/exam-semantics-v01320",
   "base": "main@6d3af0c4631420cb6535d4dfa0684c39d211f5ca",
   "tasks": [
@@ -20,6 +20,13 @@
     "WebKit",
     "exact PR head",
     "main SHA",
-    "production appVersion/buildSha attestation"
-  ]
+    "production appVersion/buildSha attestation",
+    "status marked complete after production attestation"
+  ],
+  "mergedMain": "a2847bc65cdc84bfc275b10dc26496ff6bc29084",
+  "production": {
+    "appVersion": "0.13.2.0",
+    "buildSha": "a2847bc65cdc84bfc275b10dc26496ff6bc29084",
+    "status": "verified"
+  }
 }

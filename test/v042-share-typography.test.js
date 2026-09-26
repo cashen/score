@@ -16,6 +16,6 @@ test("mobile coordinate typography remains compact", () => {
 });
 
 test("coordinate copy stays semantic and scope-aware", () => {
-  assert.match(app, /function coordinateItems\(exam\)/);
+  assert.match(app, /function coordinateItems\(exam(?:,|\))/);
   assert.match(app, /scoreSummaryText\(summary\)/);
 });

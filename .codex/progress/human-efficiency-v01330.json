@@ -1,0 +1,31 @@
+{
+  "version": "0.13.3.0",
+  "title": "Human Efficiency & Data Trust",
+  "status": "implementation",
+  "branch": "refactor/human-efficiency-v01330",
+  "base": "main@a2847bc65cdc84bfc275b10dc26496ff6bc29084",
+  "tasks": [
+    "historical ranking population snapshot",
+    "historical exam context editor",
+    "attendance/condition separation",
+    "subject removal warning",
+    "human exam entry order",
+    "comparison strength language",
+    "dynamic subject/share wording",
+    "share status/context fields",
+    "snapshot-first sharing",
+    "immediate delete undo",
+    "trash refresh consistency",
+    "regression coverage",
+    "release contract",
+    "production attestation"
+  ],
+  "mergeGate": [
+    "npm run verify",
+    "Chromium 360/390/768/1280",
+    "WebKit 390",
+    "exact PR head",
+    "main SHA",
+    "production appVersion/buildSha attestation"
+  ]
+}

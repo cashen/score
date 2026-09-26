@@ -75,7 +75,7 @@ test("single record: total, six subjects, timeline and complete detail", async (
     await layout(page);
   }
   await info.attach("subject", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
-  await page.getByRole("link", { name: "时间轴", exact: true }).click();
+  await page.getByRole("link", { name: "历次考试", exact: true }).click();
   await expect(page.locator(".history-row")).toHaveCount(1);
   await page.locator(".history-row").click();
   await expect(page.locator(".public-exam-detail h2")).toHaveText(exam.name);
@@ -105,7 +105,7 @@ test("public multi-record deep links preserve each examination", async ({ page }
   expect(totalText).not.toContain("同口径");
   expect(totalText).not.toContain("可比考试");
   expect(totalText).not.toContain("最新记录");
-  await page.getByRole("link", { name: "总成绩", exact: true }).click();
+  await page.getByRole("link", { name: "这次成绩", exact: true }).click();
   await expect(page.getByText("比上一场高 15 分", { exact: true })).toBeVisible();
   await expect(page.locator(".public-history")).toBeVisible();
   await expect(page.locator(".public-history h2")).toHaveText("每一场考试都保留在这里");
@@ -166,7 +166,7 @@ test("historical total and timeline respect share-field omissions", async ({ pag
   await expect(page.locator(".public-history .history-row")).toHaveCount(2);
   await expect(page.locator(".public-history .history-row").first()).not.toContainText("585");
   await expect(page.locator(".public-history .history-row").first()).not.toContainText("123");
-  await page.getByRole("link", { name: "时间轴", exact: true }).click();
+  await page.getByRole("link", { name: "历次考试", exact: true }).click();
   await expect(page.locator(".history-row")).toHaveCount(2);
   for (const row of await page.locator(".history-row").all()) {
     await expect(row).not.toContainText("585");
@@ -182,7 +182,7 @@ test("whitelist omissions and snapshot semantics are respected", async ({ page }
   await page.goto("/share/fixture");
   await expect(page.getByText("固定当前内容", { exact: true })).toBeVisible();
   await expect(page.locator(".coordinate-row")).toHaveText("成绩与排名未分享");
-  await page.getByRole("link", { name: "时间轴", exact: true }).click();
+  await page.getByRole("link", { name: "历次考试", exact: true }).click();
   await page.locator(".history-row").click();
   await expect(page.locator(".exam-detail-overall")).toContainText("总分未分享");
   await expect(page.locator(".exam-detail-subject").first()).toContainText("未分享");
@@ -196,7 +196,7 @@ test("keyboard focus and navigation have visible current state", async ({ page }
   await page.goto("/share/fixture");
   await expect(page.locator(".public-shell")).toBeVisible();
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("link", { name: "总成绩", exact: true })).toBeFocused();
+  await expect(page.getByRole("link", { name: "这次成绩", exact: true })).toBeFocused();
   await page.keyboard.press("Tab");
   const subject = page.getByRole("link", { name: "单科", exact: true });
   await expect(subject).toBeFocused();
@@ -235,7 +235,7 @@ test("share pages keep the comparison layer factual and compact", async ({ page 
   const errors = await fixture(page, 2);
   await page.goto("/p/fixture?view=timeline");
   await expect(page.locator(".public-comparison-note")).toHaveCount(0);
-  await page.getByRole("link", { name: "总成绩", exact: true }).click();
+  await page.getByRole("link", { name: "这次成绩", exact: true }).click();
   await expect(page.locator(".public-comparison-note")).toHaveCount(1);
   const totalText = await page.locator(".public-shell").innerText();
   expect(totalText).not.toMatch(/口径|可比记录|变化来源|整体位置|具体坐标|多次考试怎么看/);

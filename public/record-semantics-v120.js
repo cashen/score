@@ -52,9 +52,22 @@ export function latestExam(exams = []) {
 
 export function comparableRanking(a, b) {
   if (!a || !b) return false;
+  if ((a.contextId || "") && (b.contextId || "")) {
+    return a.scope === b.scope &&
+      a.contextId === b.contextId &&
+      (a.basis || "final_score") === (b.basis || "final_score");
+  }
   return a.scope === b.scope &&
-    (a.label || "") === (b.label || "") &&
+    (a.labelSnapshot || a.label || "") === (b.labelSnapshot || b.label || "") &&
     (a.basis || "final_score") === (b.basis || "final_score");
+}
+
+export function comparisonStrengthLabel(input = {}) {
+  if (input?.status === "baseline") return "还没有可以比较的历史";
+  if (input?.status !== "comparable") return "暂不直接比较";
+  if (input?.strength === "strong") return "同系列直接对比";
+  if (input?.strength === "limited") return "参考对比（条件不完全一致）";
+  return "同类考试对比";
 }
 
 export function percentile(rank, participants) {

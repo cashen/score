@@ -123,3 +123,69 @@ test("share projection keeps only the exam's real subject scope", () => {
   assert.deepEqual(data.exams[0].subjectSet, ["english"]);
   assert.deepEqual(Object.keys(data.exams[0].subjects), ["english"]);
 });
+
+
+test("ranking identity uses stable population context before label text", async () => {
+  const { comparableRanking } = await import("../public/record-semantics-v120.js");
+  const base = { scope: "class", label: "3班", labelSnapshot: "3班", contextId: "class:某高中|高三|3班", basis: "final_score", rank: 2 };
+  const samePopulationDifferentLabel = { ...base, label: "实验班", labelSnapshot: "实验班", rank: 3 };
+  const differentPopulation = { ...base, contextId: "class:某高中|高三|4班", rank: 4 };
+  assert.equal(comparableRanking(base, samePopulationDifferentLabel), true);
+  assert.equal(comparableRanking(base, differentPopulation), false);
+  assert.equal(comparableRanking(
+    { scope: "school", label: "学校", basis: "final_score" },
+    { scope: "school", label: "学校", basis: "final_score" }
+  ), true);
+});
+
+test("attendance and special condition are separate facts", () => {
+  const special = normalizeExam({
+    name: "月考",
+    date: "2026-09-25",
+    type: "monthly",
+    condition: "special",
+    subjectSet: ["english"],
+    subjects: { english: { rawScore: 103 } }
+  });
+  const absent = normalizeExam({
+    name: "月考",
+    date: "2026-09-25",
+    type: "monthly",
+    attendance: "absent",
+    subjectSet: ["english"],
+    subjects: { english: {} }
+  });
+  const legacy = normalizeExam({
+    name: "历史月考",
+    date: "2026-08-25",
+    type: "monthly",
+    status: "poor",
+    subjectSet: ["english"],
+    subjects: { english: { rawScore: 100 } }
+  });
+  assert.equal(special.attendance, "present");
+  assert.equal(special.condition, "special");
+  assert.equal(absent.attendance, "absent");
+  assert.equal(absent.condition, "normal");
+  assert.equal(legacy.condition, "special");
+});
+
+test("share projection exposes optional exam situation fields only when allowed", () => {
+  const student = { displayName: "测试", graduationYear: 2027 };
+  const exam = normalizeExam({
+    name: "特殊情况月考",
+    date: "2026-09-25",
+    type: "monthly",
+    attendance: "present",
+    condition: "special",
+    subjectSet: ["english"],
+    subjects: { english: { rawScore: 103 } }
+  });
+  const data = publicProjection(student, [exam], {
+    displayName: true, graduationYear: false, school: false, className: false,
+    overallScore: true, overallRank: false, subjectScores: true, subjectRanks: false,
+    history: false, examStatus: true, comparisonContext: false, status: false, comparison: false
+  });
+  assert.equal(data.exams[0].attendance, "present");
+  assert.equal(data.exams[0].condition, "special");
+});
