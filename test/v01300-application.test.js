@@ -9,7 +9,7 @@ test("application layer owns view transitions without DOM dependencies", () => {
   assert.equal(state.trajectoryView, "subject");
   assert.equal(state.subjectKey, "math");
   assert.equal(state.subjectMetric, "score");
-  assert.equal(APPLICATION_ARCHITECTURE_VERSION, "0.13.2");
+  assert.equal(APPLICATION_ARCHITECTURE_VERSION, "0.13.4");
 });
 
 test("application selector reads selected exam from state", () => {
