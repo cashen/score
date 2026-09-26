@@ -1,0 +1,25 @@
+{
+  "project": "cashen/score",
+  "release": "0.14.2.3",
+  "branch": "ui/exam-entry-v001",
+  "base": {
+    "sha": "f61ff8c0da50f7e771509c59f082a32149131df2"
+  },
+  "status": "verification",
+  "stages": {
+    "foundation": "completed",
+    "homepage": "completed",
+    "examEntry": "in_progress",
+    "readingSharing": "planned",
+    "familySettings": "planned",
+    "cleanup": "planned"
+  },
+  "compatibility": [
+    "Schema 1",
+    "Workers KV",
+    "Share v2",
+    "existing APIs"
+  ],
+  "principle": "考试录入像成绩单，不像后台配置；缺少数据允许自然留空。",
+  "latestFix": "将跨阶段 release test 改为 package/Worker 一致性检查。"
+}
