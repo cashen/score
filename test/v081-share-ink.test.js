@@ -15,7 +15,7 @@ test("single-exam public views explain the current baseline without inventing a 
 });
 
 test("the E-ink treatment is scoped to external share rendering", () => {
-  assert.match(app, /class="public-shell eeink-share"/);
+  assert.match(app, /class="public-shell eink-share"/);
   assert.match(app, /data-share-view=/);
   assert.match(app, /data-exam-count=/);
   assert.match(app, /publicBaselineV081\("total"/);
