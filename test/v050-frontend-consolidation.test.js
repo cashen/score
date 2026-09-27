@@ -10,8 +10,7 @@ const onboarding = await readFile(new URL("../public/onboarding-v050.js", import
 const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "utf8");
 const onboardingCss = await readFile(new URL("../public/onboarding-v050.css", import.meta.url), "utf8");
 
-const activeSources = [index, router, app, onboarding, css, onboardingCss].join("
-");
+const activeSources = [index, router, app, onboarding, css, onboardingCss].join("\n");
 const cssFlat = css.replace(/\s+/g, " ");
 
 function expectAll(source, values) {
