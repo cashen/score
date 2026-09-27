@@ -24,18 +24,18 @@ export class StudentIndexCoordinator extends DurableObject {
     const activeKey = indexKey(studentId, false);
     const trashKey = indexKey(studentId, true);
     const active = (await this.env.SCORE_KV.get(activeKey, "json")) || { studentId, items: [] };
-    const trash = (await this.env.SCORE_KV.get(trashKey, "json")) || { studentId, items: [] };
     let activeItems = Array.isArray(active.items) ? active.items : [];
-    let trashItems = Array.isArray(trash.items) ? trash.items : [];
 
     if (operation === "upsert-active") {
       activeItems = [summary, ...activeItems.filter((item) => item.id !== summary.id && !item.deletedAt)];
-      trashItems = trashItems.filter((item) => item.id !== summary.id);
       await this.env.SCORE_KV.put(activeKey, JSON.stringify({
         studentId, items: bounded(activeItems), updatedAt: new Date().toISOString()
       }));
       return;
     }
+
+    const trash = (await this.env.SCORE_KV.get(trashKey, "json")) || { studentId, items: [] };
+    let trashItems = Array.isArray(trash.items) ? trash.items : [];
 
     if (operation === "delete") {
       activeItems = activeItems.filter((item) => item.id !== summary.id);
