@@ -23,7 +23,7 @@ test("v0.15 production binds the serialized student index writer", async () => {
 
 test("v0.15 active index writes stop duplicating per-exam summary keys", async () => {
   const source = await readFile(new URL("../src/index.js", import.meta.url), "utf8");
-  assert.doesNotMatch(source, /putJson\\(env,.*exam-summary:/);
+  assert.doesNotMatch(source, /putJson\(env,.*exam-summary:/);
   assert.ok(source.includes('mutateExamIndexes(env, studentId, "upsert-active", examSummary(exam))'));
 });
 
