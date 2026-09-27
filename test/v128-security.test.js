@@ -66,9 +66,11 @@ test("coordinate insight escapes persisted exam names before DOM insertion", asy
 
 test("new Secret Share links keep raw tokens in URL fragments and redeem via POST", async () => {
   const source = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+  const shareApp = await readFile(new URL("../public/share-app.js", import.meta.url), "utf8");
+  const publicSource = source + "\n" + shareApp;
   assert.match(source, /\/share\/#\$\{encodeURIComponent\(result\.token\)\}/);
-  assert.match(source, /\/api\/share\/secret\/redeem/);
-  assert.match(source, /history\.replaceState\(null, "", location\.pathname \+ location\.search\)/);
+  assert.match(publicSource, /\/api\/share\/secret\/redeem/);
+  assert.match(publicSource, /history\.replaceState\(null, "", location\.pathname \+ location\.search\)/);
 });
 
 test("bootstrap is covered by the same one-time gate namespace", async () => {
