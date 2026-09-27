@@ -459,3 +459,49 @@
   .eink-share .subject-chip,
   .eink-share .history-row { color: CanvasText; }
 }
+
+/* v0.14.4 share alignment — centered shell + centered reading frame.
+ * Desktop has stable inner measure; mobile naturally fills the shell.
+ */
+:root{
+  --eink-reading-width:760px;
+  --eink-body-measure:40rem;
+  --eink-shell-gutter:clamp(18px,3vw,32px);
+}
+.share-eink-root{
+  width:100%;
+  min-height:100svh;
+  overflow-x:clip;
+}
+.public-shell.eink-share{
+  width:min(calc(100% - (2 * var(--eink-shell-gutter))),var(--eink-reading-width));
+  max-width:var(--eink-reading-width);
+  margin-inline:auto;
+  box-sizing:border-box;
+}
+.eink-share > .public-brand,
+.eink-share > .privacy-note,
+.eink-share > .public-view-nav,
+.eink-share > .public-coordinate,
+.eink-share > .public-reading-section{
+  width:min(100%,var(--eink-body-measure));
+  max-width:var(--eink-body-measure);
+  margin-inline:auto;
+  box-sizing:border-box;
+}
+.eink-share > .public-brand,
+.eink-share > .public-view-nav{justify-content:flex-start}
+@media (max-width:760px){
+  :root{--eink-body-measure:100%;--eink-shell-gutter:16px}
+  .eink-share > .public-brand,
+  .eink-share > .privacy-note,
+  .eink-share > .public-view-nav,
+  .eink-share > .public-coordinate,
+  .eink-share > .public-reading-section{
+    width:100%;
+    max-width:none;
+  }
+}
+@media (max-width:430px){
+  .public-shell.eink-share{width:calc(100% - 28px)}
+}
