@@ -14,7 +14,7 @@ test("share page uses the independent E-ink visual root", () => {
   assert.match(app, /share-eink-root/);
   assert.match(app, /public-shell eink-share/);
   assert.doesNotMatch(app, /ink-share-flourish/);
-  assert.match(index, /share-eink-v001\\.css/);
+  assert.match(index, /share-eink-v001\.css/);
 });
 
 test("E-ink share system is a calm grayscale reading layer", () => {
@@ -29,5 +29,5 @@ test("E-ink share system is a calm grayscale reading layer", () => {
 
 test("release version is synchronized for E-ink share", () => {
   assert.equal(pkg.version, "0.14.3.0");
-  assert.match(wrangler, /^APP_VERSION\\s*=\\s*"0\\.14\\.3\\.0"/m);
+  assert.match(wrangler, /^APP_VERSION\s*=\s*"0\.14\.3\.0"/m);
 });
