@@ -5,12 +5,23 @@ import worker from "../src/v020-gateway.js";
 class MockKV {
   constructor() { this.map = new Map(); }
   async get(key, type) {
+    if (Array.isArray(key)) {
+      this.bulkGetCalls = (this.bulkGetCalls || 0) + 1;
+      const values = new Map();
+      for (const item of key) {
+        if (!this.map.has(item)) continue;
+        const value = this.map.get(item);
+        values.set(item, type === "json" ? JSON.parse(value) : value);
+      }
+      return values;
+    }
     if (!this.map.has(key)) return null;
     const value = this.map.get(key);
     return type === "json" ? JSON.parse(value) : value;
   }
   async put(key, value) { this.map.set(key, String(value)); }
   async delete(key) { this.map.delete(key); }
+  async list() { this.listCalls = (this.listCalls || 0) + 1; return { keys: [], list_complete: true }; }
 }
 
 
@@ -129,6 +140,8 @@ test("single-exam share stays pinned while trajectory share includes multiple ex
     body: JSON.stringify({ kind: "secret", mode: "live", scope: "trajectory", fields: { history: true, overallScore: true, overallRank: true, subjectScores: true, subjectRanks: true } })
   });
   assert.equal(response.status, 201);
+  env.SCORE_KV.listCalls = 0;
+  env.SCORE_KV.bulkGetCalls = 0;
   const trajectory = await response.json();
   assert.equal(trajectory.share.scope, "trajectory");
   response = await call(env, `/api/share/secret/${trajectory.token}`);
@@ -136,6 +149,8 @@ test("single-exam share stays pinned while trajectory share includes multiple ex
   external = await response.json();
   assert.equal(external.share.scope, "trajectory");
   assert.deepEqual(external.data.exams.map((exam) => exam.name), ["10月联考", "9月月考"]);
+  assert.equal(env.SCORE_KV.listCalls, 0);
+  assert.equal(env.SCORE_KV.bulkGetCalls, 1);
 });
 
 test("one-exam live trajectory requires an explicit future-exam acknowledgement", async () => {

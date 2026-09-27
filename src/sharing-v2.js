@@ -1,9 +1,9 @@
 import { randomToken, sha256, tokenHash } from "./lib/crypto.js";
-import { normalizePublicSlug, normalizeShareFields } from "./lib/model.js";
+import { normalizePublicSlug, normalizeShareFields, sortExamsChronologically } from "./lib/model.js";
 import { publicProjection } from "./domain/share-projection.js";
 import { errorJson, json, readJson } from "./lib/http.js";
 import { enforceRateLimit } from "./lib/rate-limit.js";
-import { getJson, putJson, listKeys } from "./repositories/kv.js";
+import { getJson, getManyJson, putJson } from "./repositories/kv.js";
 
 const MAX_EXAMS = 80;
 
@@ -40,18 +40,20 @@ function isExpired(grant) {
   return Boolean(grant.expiresAt && Date.now() >= new Date(grant.expiresAt).getTime());
 }
 
+async function shareExamIndex(env, studentId) {
+  const index = (await getJson(env, `exam-index:${studentId}`)) || { studentId, items: [] };
+  const items = Array.isArray(index.items) ? [...index.items] : [];
+  items.sort((a, b) => String(b?.date || "").localeCompare(String(a?.date || "")) || String(b?.createdAt || "").localeCompare(String(a?.createdAt || "")) || String(a?.id || "").localeCompare(String(b?.id || "")));
+  return { ...index, items: items.slice(0, MAX_EXAMS) };
+}
+
 async function loadExams(env, studentId) {
-  let index = (await getJson(env, `exam-index:${studentId}`)) || { items: [] };
-  {
-    try {
-      const listed = await listKeys(env, { prefix: `exam-summary:${studentId}:`, limit: MAX_EXAMS });
-      const summaries = await Promise.all((listed?.keys || []).map((key) => getJson(env, key.name)));
-      if (summaries.some(Boolean)) index = { items: summaries.filter(Boolean) };
-    } catch {}
-  }
-  index.items = (index.items || []).sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.updatedAt).localeCompare(String(a.updatedAt)));
-  const exams = await Promise.all((index.items || []).slice(0, MAX_EXAMS).map((item) => getJson(env, `exam:${studentId}:${item.id}`)));
-  return exams.filter((exam) => exam && !exam.deletedAt);
+  const index = await shareExamIndex(env, studentId);
+  const items = (index.items || []).filter((item) => item?.id).slice(0, MAX_EXAMS);
+  const keys = items.map((item) => `exam:${studentId}:${item.id}`);
+  const values = await getManyJson(env, keys);
+  const exams = items.map((item) => values.get(`exam:${studentId}:${item.id}`)).filter((exam) => exam && !exam.deletedAt);
+  return sortExamsChronologically(exams).slice(0, MAX_EXAMS);
 }
 
 async function selectExams(env, studentId, scope, examId = null) {
@@ -60,8 +62,13 @@ async function selectExams(env, studentId, scope, examId = null) {
       const exam = await getJson(env, `exam:${studentId}:${examId}`);
       return exam && !exam.deletedAt ? [exam] : [];
     }
-    const all = await loadExams(env, studentId);
-    return all[0] ? [all[0]] : [];
+    const index = await shareExamIndex(env, studentId);
+    for (const item of (index.items || []).slice(0, MAX_EXAMS)) {
+      if (!item?.id) continue;
+      const exam = await getJson(env, `exam:${studentId}:${item.id}`);
+      if (exam && !exam.deletedAt) return [exam];
+    }
+    return [];
   }
   return loadExams(env, studentId);
 }

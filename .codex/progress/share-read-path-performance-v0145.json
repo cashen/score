@@ -1,0 +1,38 @@
+{
+  "project": "cashen/score",
+  "release": "0.14.5.0",
+  "workstream": "share-read-path-performance",
+  "branch": "perf/share-kv-batch-v0145",
+  "base": "31e82492f70ccfc1e73cb1fd118bca96c2761a1e",
+  "status": "implementation",
+  "completed": [
+    "live baseline verified",
+    "performance plan committed",
+    "KV bulk JSON repository primitive",
+    "share trajectory bulk-read path",
+    "single-share direct-read path",
+    "release bumped to 0.14.5.0",
+    "bulk-read and share integration regression contracts"
+  ],
+  "performanceTarget": {
+    "trajectoryNormalPath": "exam-index -> one KV bulk read (up to 80 exams)",
+    "singleWithExamId": "direct exam key read",
+    "singleWithoutExamId": "exam-index -> latest non-deleted exam read",
+    "legacyFallback": "individual reads only when a local/legacy KV double cannot bulk-read"
+  },
+  "invariants": [
+    "Schema 1",
+    "Workers KV",
+    "Share v2",
+    "share whitelist",
+    "permissions",
+    "comparison semantics",
+    "public URL state",
+    "deleted exams remain excluded",
+    "open PR #64 remains untouched"
+  ],
+  "next": "exact-head npm run verify -> review failures -> browser share regression -> PR -> exact-head CI -> merge -> main/production attestation",
+  "lastVerifiedMain": "31e82492f70ccfc1e73cb1fd118bca96c2761a1e",
+  "latestImplementationCommit": "6beb2efccf18dc193c8c2d621b736e2921a35b5c",
+  "note": "Cloudflare KV binding bulk reads support up to 100 keys per request; implementation keeps the product cap at MAX_EXAMS=80."
+}
