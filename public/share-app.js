@@ -1,24 +1,10 @@
 import { brandMark } from "./brand-logo-b.js";
-import {
-  comparisonStrengthLabel,
-  findComparableExam as coreFindComparableExam,
-  findComparableExamForSubject as coreFindComparableExamForSubject,
-  sortExamsChronologically,
-  examScoreSummary,
-  scoreSummaryText,
-  subjectScore,
-  formatComparisonSummary,
-  resolveDisplayMetric,
-  shareBehaviorLabel,
-  subjectKeysForDisplay,
-  examScoreLabel,
-  subjectObservationExams,
-  metricBetween as canonicalMetricBetween,
-  scoreDeltaParts,
-  shouldShowScoreDelta,
-  scoreChangeSentence,
-  scoreChangeDetail
-} from "./domain-v001.js";
+import { comparisonStrengthLabel, findComparableExam as coreFindComparableExam, findComparableExamForSubject as coreFindComparableExamForSubject, sortExamsChronologically, metricBetween as canonicalMetricBetween } from "./record-semantics-v120.js";
+import { examScoreSummary, scoreSummaryText, subjectScore } from "./score-core-v090.js";
+import { formatComparisonSummary } from "./product-language-v001.js";
+import { resolveDisplayMetric, shareBehaviorLabel } from "./human-reading-v140.js";
+import { subjectKeysForDisplay, examScoreLabel } from "./exam-scope.js";
+import { scoreDeltaParts, shouldShowScoreDelta, scoreChangeSentence, scoreChangeDetail } from "./record-reading-v130.js";
 import { PUBLIC_VIEW_LABELS, PUBLIC_SUBJECT_OVERVIEW_LABEL } from "./product-contract.js";
 
 const PRODUCT_NAME = "我的高三";
@@ -242,7 +228,7 @@ function publicComparisonNote(exams, key = null, share = {}) {
   return `<aside class="public-comparison-note"><div class="section-label">和以前相比</div><strong>${esc(directionText(metric))}</strong><p>${esc(strength)} · ${esc(summary.detail)}</p></aside>`;
 }
 
-function publicSubjectComparisonV080(exams, key, share = {}) {
+async function publicSubjectComparisonV080(exams, key, share = {}) {
   const ordered = sortExamsChronologically(exams);
   const picker = `<div class="subject-picker public-subject-picker"><a class="subject-chip ${key == null ? "active" : ""}" href="?view=subject" aria-current="${key == null ? "page" : "false"}">全部科目</a>${SUBJECTS.map(([subject, label]) => `<a class="subject-chip ${subject === key ? "active" : ""}" href="?view=subject&subject=${encodeURIComponent(subject)}" aria-current="${subject === key ? "page" : "false"}">${label}</a>`).join("")}</div>`;
   if (key == null) {
@@ -251,6 +237,7 @@ function publicSubjectComparisonV080(exams, key, share = {}) {
   }
 
   const label = SUBJECTS.find(([subject]) => subject === key)?.[1] || "单科";
+  const { subjectObservationExams } = await import("./trajectory-analysis-v010.js");
   const subjectExams = subjectObservationExams(ordered, key);
   const current = subjectExams[0] || null;
   const effectiveMetric = current ? resolveDisplayMetric(current, key, "auto") : "score";
@@ -325,7 +312,7 @@ function publicTimelineV080(exams, selectedExamId = null, share = {}) {
   return `<section class="public-reading-section public-timeline"><div class="section-label">历次考试</div><h2>每一次考试都可以打开</h2>${publicBaselineV081("timeline", ordered, share)}${selected ? publicExamDetailV080(selected, share, ordered) : ""}<div class="history-list">${rows || `<div class="empty compact">暂未分享考试数据。</div>`}</div><p class="muted">页面只显示你选择分享的内容。</p></section>`;
 }
 
-function renderPublicV080(result) {
+async function renderPublicV080(result) {
   const data = result.data || {};
   app.classList.add("share-eink-root");
   const params = new URLSearchParams(location.search);
@@ -342,7 +329,7 @@ function renderPublicV080(result) {
   const coordinateText = coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>成绩与排名未分享</span>`;
   const meta = [data.student?.graduationYear ? `${data.student.graduationYear}届` : null, data.student?.schoolLabel, data.student?.className].filter(Boolean).map(esc).join(" · ");
   const total = `<section class="public-coordinate"><div class="public-mode">${esc(shareBehaviorLabel(result.share))}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinateText}</div>${publicBaselineV081("total", exams, result.share)}${publicComparisonNote(exams, null, result.share)}${result.share.fields?.overallScore === true && exams.length > 1 ? (() => { const previousResult = coreFindComparableExam(exams, latest); const previous = previousResult.status === "comparable" ? previousResult.reference : null; const metric = previous ? metricBetween(latest, previous, null, "score") : null; return metric && shouldShowScoreDelta(metric) ? `<div class="public-score-change"><strong>${esc(scoreChangeSentence(metric))}</strong><small>${esc(scoreChangeDetail(metric))}</small></div>` : ""; })() : ""}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share, exams)}</div>${publicHistory(exams, result.share)}` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
-  const body = view === "subject" ? publicSubjectComparisonV080(exams, subject, result.share) : view === "timeline" ? publicTimelineV080(exams, selectedExamId, result.share) : total;
+  const body = view === "subject" ? await publicSubjectComparisonV080(exams, subject, result.share) : view === "timeline" ? publicTimelineV080(exams, selectedExamId, result.share) : total;
   app.innerHTML = `<main class="public-shell eink-share" data-share-view="${view}" data-exam-count="${exams.length}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span></div><div class="privacy-note">这是家庭主动分享的内容，请不要随意转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">需要时可以随时撤销分享</footer>`;
 }
 
@@ -374,7 +361,7 @@ async function renderExternal(kind, locator) {
     } else {
       result = await shareApi(`/api/share/${kind}/${encodeURIComponent(locator)}`);
     }
-    renderPublicV080(result);
+    await renderPublicV080(result);
   } catch (error) {
     app.innerHTML = `<main class="login-shell"><section class="login-card">${brandMark()}<h1>分享已失效</h1><p>${esc(error.message)}</p></section></main>`;
   }
