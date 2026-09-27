@@ -31,8 +31,8 @@
     "deleted exams remain excluded",
     "open PR #64 remains untouched"
   ],
-  "next": "exact-head npm run verify -> review failures -> browser share regression -> PR -> exact-head CI -> merge -> main/production attestation"
-  "lastVerifiedMain": "31e82492f70ccfc1e73cb1fd118bca96c2761a1e"
-  "latestImplementationCommit": "352582692ddaa88058e323a304c1ddde6bed467a1"
+  "next": "exact-head npm run verify -> review failures -> browser share regression -> PR -> exact-head CI -> merge -> main/production attestation",
+  "lastVerifiedMain": "31e82492f70ccfc1e73cb1fd118bca96c2761a1e",
+  "latestImplementationCommit": "6beb2efccf18dc193c8c2d621b736e2921a35b5c",
   "note": "Cloudflare KV binding bulk reads support up to 100 keys per request; implementation keeps the product cap at MAX_EXAMS=80."
 }
