@@ -19,6 +19,20 @@ function bounded(items) {
  * operations from losing one another. KV remains the durable read store.
  */
 export class StudentIndexCoordinator extends DurableObject {
+  async fetch(request) {
+    if (request.method !== "POST" || new URL(request.url).pathname !== "/mutate") {
+      return new Response("Not found", { status: 404 });
+    }
+    const body = await request.json().catch(() => null);
+    if (!body) return new Response("Invalid JSON", { status: 400 });
+    try {
+      await this.mutateExamIndex(body);
+      return new Response(null, { status: 204 });
+    } catch (error) {
+      return new Response(error?.message || "Index mutation failed", { status: 400 });
+    }
+  }
+
   async mutateExamIndex({ studentId, operation, summary }) {
     if (!studentId || !summary?.id) throw new Error("Invalid exam index mutation");
     const activeKey = indexKey(studentId, false);
