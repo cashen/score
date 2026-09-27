@@ -2167,3 +2167,18 @@ summary:focus-visible,
     max-width:none;
   }
 }
+
+/* v0.14.4 canonical frame ownership: workspace pages stay wider; reading pages use the reading measure. */
+.page-heading,.share-layout,.family-layout,.exam-list,.current-shares{
+  width:min(100%,var(--layout-workspace,960px));
+  max-width:var(--layout-workspace,960px);
+  margin-inline:auto;
+}
+.full-timeline-list,.trajectory-view{
+  width:min(100%,var(--layout-reading,760px));
+  max-width:var(--layout-reading,760px);
+  margin-inline:auto;
+}
+@media (max-width:820px){
+  .page-heading,.share-layout,.family-layout,.exam-list,.current-shares{width:100%;max-width:none}
+}

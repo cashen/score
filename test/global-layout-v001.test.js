@@ -24,3 +24,13 @@ test("v0.14.4 does not add another general-purpose stylesheet layer", () => {
   assert.match(index, /share-eink-v001\.css/);
   assert.doesNotMatch(index, /layout-v001\.css/);
 });
+
+
+test("v0.14.4 keeps workspace pages wider than reading-only pages", () => {
+  assert.match(css, /\.page-heading[\s\S]*var\(--layout-workspace,960px\)/);
+  assert.match(css, /\.share-layout[\s\S]*var\(--layout-workspace,960px\)/);
+  assert.match(css, /\.family-layout[\s\S]*var\(--layout-workspace,960px\)/);
+  assert.match(css, /\.exam-list[\s\S]*var\(--layout-workspace,960px\)/);
+  assert.match(css, /\.trajectory-view[\s\S]*var\(--layout-reading,760px\)/);
+  assert.match(css, /\.full-timeline-list[\s\S]*var\(--layout-reading,760px\)/);
+});

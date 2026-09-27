@@ -30,7 +30,8 @@
     "release synchronized to 0.14.4.0",
     "page-family components aligned to the canonical reading axis",
     "shared reading typography rhythm",
-    "expanded Chromium matrix to 360/390/430/768/820/1280/1440/1920"
+    "expanded Chromium matrix to 360/390/430/768/820/1280/1440/1920",
+    "corrected workspace-versus-reading frame ownership"
   ],
   "invariants": [
     "Schema 1",
@@ -41,5 +42,5 @@
     "comparison semantics",
     "public share URL state"
   ],
-  "next": "run expanded browser matrix on final head -> repair geometry regressions if any -> CSS ownership cleanup"
+  "next": "CI -> browser visual verification -> review desktop/tablet/mobile artifacts -> CSS ownership cleanup"
 }
