@@ -9,6 +9,8 @@ const sources = {
   sharing: fs.readFileSync(new URL("../src/sharing-v2.js", import.meta.url), "utf8")
 };
 const app = sources.app;
+const shareApp = fs.readFileSync(new URL("../public/share-app.js", import.meta.url), "utf8");
+const publicSource = app + "\n" + shareApp;
 
 const forbiddenUiPhrases = [
   "当前基线",
@@ -48,8 +50,8 @@ test("v0.12.21 user-facing language removes known internal/AI-style phrases", ()
       assert.equal(source.includes(phrase), false, `forbidden UI phrase remains in ${name}: ${phrase}`);
     }
   }
-  for (const phrase of preferredPhrases) assert.equal(app.includes(phrase), true, `preferred UI phrase missing: ${phrase}`);
-  assert.equal(app.includes("轨迹</button>"), false);
+  for (const phrase of preferredPhrases) assert.equal(publicSource.includes(phrase), true, `preferred UI phrase missing: ${phrase}`);
+  assert.equal(publicSource.includes("轨迹</button>"), false);
   assert.equal(app.includes(">成绩</button>"), true);
 });
 
