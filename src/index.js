@@ -488,6 +488,14 @@ async function handleExamRestore(request, env, session, studentId, examId) {
   return json({ exam: restored });
 }
 
+function shareIndexKey(studentId) {
+  return `share-index:${studentId}`;
+}
+
+async function getShareIndex(env, studentId) {
+  return (await getJson(env, shareIndexKey(studentId))) || { studentId, items: [] };
+}
+
 async function handleStudentLifecycle(request, env, session, studentId) {
   requireCsrf(request, session);
   if (session.member.role !== "owner") throw Object.assign(new Error("只有家庭管理员可以归档资料"), { status: 403, code: "owner_required" });
