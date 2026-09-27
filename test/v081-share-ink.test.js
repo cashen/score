@@ -15,7 +15,7 @@ test("single-exam public views explain the current baseline without inventing a 
 });
 
 test("the E-ink treatment is scoped to external share rendering", () => {
-  assert.match(app, /class="public-shell eink-share"/);
+  assert.match(app, /class="public-shell eeink-share"/);
   assert.match(app, /data-share-view=/);
   assert.match(app, /data-exam-count=/);
   assert.match(app, /publicBaselineV081\("total"/);
@@ -23,8 +23,8 @@ test("the E-ink treatment is scoped to external share rendering", () => {
   assert.match(app, /publicBaselineV081\("timeline"/);
   assert.match(app, /classList\.add\("share-eink-root"\)/);
   assert.match(index, /app-v094\.css/);
-  assert.match(css, /\.public-shell\.ink-share/);
-  assert.match(css, /\.ink-share \.public-view-tab/);
+  assert.match(css, /\.public-shell\.eink-share/);
+  assert.match(css, /\.eink-share \.public-view-tab/);
   assert.doesNotMatch(css, /(^|\n)\s*(\.trajectory|\.container|\.tabs|\.share-card)\b/);
   assert.doesNotMatch(css, /url\(/);
 });
