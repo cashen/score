@@ -9,13 +9,13 @@
   "stages": {
     "baseline": "completed",
     "layout": "completed",
-    "typography": "pending",
-    "navigation": "pending",
-    "home": "pending",
-    "examEntry": "pending",
-    "sharing": "pending",
+    "typography": "in_progress",
+    "navigation": "in_progress",
+    "home": "in_progress",
+    "examEntry": "in_progress",
+    "sharing": "in_progress",
     "shareEink": "completed",
-    "family": "pending",
+    "family": "in_progress",
     "responsive": "in_progress",
     "accessibility": "in_progress",
     "legacyCleanup": "pending",
@@ -27,7 +27,8 @@
     "private shell/home/container alignment",
     "centered E-ink shell + inner reading measure",
     "browser centering contract",
-    "release synchronized to 0.14.4.0"
+    "release synchronized to 0.14.4.0",
+    "page-family components aligned to the canonical reading axis"
   ],
   "invariants": [
     "Schema 1",
@@ -38,5 +39,5 @@
     "comparison semantics",
     "public share URL state"
   ],
-  "next": "exact-head verify -> browser matrix -> remaining page families -> PR Ready -> merge -> main SHA -> production attestation"
+  "next": "CI on the final branch head -> browser visual verification -> inspect desktop/tablet/mobile geometry -> continue CSS ownership cleanup"
 }
