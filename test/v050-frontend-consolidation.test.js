@@ -10,7 +10,8 @@ const onboarding = await readFile(new URL("../public/onboarding-v050.js", import
 const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "utf8");
 const onboardingCss = await readFile(new URL("../public/onboarding-v050.css", import.meta.url), "utf8");
 
-const activeSources = [index, router, app, onboarding, css, onboardingCss].join("\n");
+const activeSources = [index, router, app, onboarding, css, onboardingCss].join("
+");
 const cssFlat = css.replace(/\s+/g, " ");
 
 function expectAll(source, values) {
@@ -20,7 +21,8 @@ function expectAll(source, values) {
 test("production entry uses the legacy bundle, foundation and scoped share layer", () => {
   expectAll(index, ["/css/app-v094.css", "/css/ui-foundation-v001.css", "/css/share-eink-v001.css", "/router-v2.js"]);
   assert.equal((index.match(/<link rel="stylesheet"/g) || []).length, 3);
-  assert.ok(index.indexOf("/css/app-v094.css") < index.indexOf("/css/ui-foundation-v001.css"));\n  assert.ok(index.indexOf("/css/ui-foundation-v001.css") < index.indexOf("/css/share-eink-v001.css"));
+  assert.ok(index.indexOf("/css/app-v094.css") < index.indexOf("/css/ui-foundation-v001.css"));
+  assert.ok(index.indexOf("/css/ui-foundation-v001.css") < index.indexOf("/css/share-eink-v001.css"));
   for (const asset of [
     "brand-v021.js",
     "exam-humanize.js",
