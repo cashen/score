@@ -1,0 +1,42 @@
+{
+  "project": "cashen/score",
+  "release": "0.14.4.0",
+  "branch": "ui/global-layout-v001",
+  "base": {
+    "sha": "31afa00e9056f55bace93824cc40992b32212599"
+  },
+  "status": "implementation",
+  "stages": {
+    "baseline": "completed",
+    "layout": "completed",
+    "typography": "pending",
+    "navigation": "pending",
+    "home": "pending",
+    "examEntry": "pending",
+    "sharing": "pending",
+    "shareEink": "completed",
+    "family": "pending",
+    "responsive": "in_progress",
+    "accessibility": "in_progress",
+    "legacyCleanup": "pending",
+    "browserVerification": "pending",
+    "production": "pending"
+  },
+  "completed": [
+    "canonical layout tokens",
+    "private shell/home/container alignment",
+    "centered E-ink shell + inner reading measure",
+    "browser centering contract",
+    "release synchronized to 0.14.4.0"
+  ],
+  "invariants": [
+    "Schema 1",
+    "Workers KV",
+    "Share v2",
+    "existing APIs",
+    "permissions",
+    "comparison semantics",
+    "public share URL state"
+  ],
+  "next": "exact-head verify -> browser matrix -> remaining page families -> PR Ready -> merge -> main SHA -> production attestation"
+}

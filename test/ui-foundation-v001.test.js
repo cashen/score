@@ -40,3 +40,13 @@ test("touch, focus and display preferences are first-class constraints", () => {
 test("foundation is presentation-only", () => {
   assert.doesNotMatch(foundation, /fetch\(|XMLHttpRequest|localStorage|indexedDB|\/api\//);
 });
+
+
+test("v0.14.4 defines one canonical responsive layout scale", () => {
+  for (const token of ["--layout-outer:1200px", "--layout-workspace:960px", "--layout-reading:760px", "--layout-measure:640px", "--layout-gutter:clamp(16px,3vw,32px)"]) {
+    const esc = token.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
+    assert.match(foundation, new RegExp(esc));
+  }
+  assert.match(foundation, /\.app-main\s*\{[\s\S]*margin-inline:\s*auto/);
+  assert.match(foundation, /\.public-shell:not\(\.eink-share\)/);
+});
