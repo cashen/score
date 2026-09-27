@@ -343,6 +343,14 @@
   background: transparent;
 }
 .eink-share .public-exam-detail .exam-detail-overall { border-bottom-color: var(--eink-line-soft); }
+.eink-share .exam-detail-subject {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 10px 14px;
+  align-items: baseline;
+}
+.eink-share .exam-detail-subject strong { min-width: 0; }
+.eink-share .exam-detail-subject span { min-width: 0; }
 .eink-share .empty {
   margin-top: 24px;
   padding: 20px 0;
