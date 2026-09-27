@@ -19,6 +19,10 @@ test("v0.15 production binds the serialized student index writer", async () => {
   assert.ok(wrangler.includes('name = "STUDENT_INDEX"\nclass_name = "StudentIndexCoordinator"'));
   assert.ok(wrangler.includes('tag = "v2"\nnew_sqlite_classes = ["StudentIndexCoordinator"]'));
   assert.ok(entry.includes('export { StudentIndexCoordinator } from "./student-index-coordinator.js";'));
+  const source = await readFile(new URL("../src/index.js", import.meta.url), "utf8");
+  const coordinator = await readFile(new URL("../src/student-index-coordinator.js", import.meta.url), "utf8");
+  assert.match(source, /coordinator\.fetch\(new Request\("https:\/\/student-index\/mutate"/);
+  assert.match(coordinator, /async fetch\(request\)/);
 });
 
 test("v0.15 active index writes stop duplicating per-exam summary keys", async () => {
