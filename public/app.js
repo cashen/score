@@ -1697,7 +1697,7 @@ function publicTimelineV080(exams, selectedExamId = null, share = {}) {
 }
 function renderPublicV080(result) {
   const data = result.data || {};
-  app.classList.add("share-ink-root");
+  app.classList.add("share-eink-root");
   const params = new URLSearchParams(location.search);
   const view = ["total", "subject", "timeline"].includes(params.get("view")) ? params.get("view") : "total";
   const subject = validSubjectKey(params.get("subject"));
@@ -1713,7 +1713,7 @@ function renderPublicV080(result) {
   const meta = [data.student?.graduationYear ? `${data.student.graduationYear}届` : null, data.student?.schoolLabel, data.student?.className].filter(Boolean).map(esc).join(" · ");
   const total = `<section class="public-coordinate"><div class="public-mode">${esc(shareBehaviorLabel(result.share))}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinateText}</div>${publicBaselineV081("total", exams, result.share)}${publicComparisonNote(exams, null, result.share)}${result.share.fields?.overallScore === true && exams.length > 1 ? (() => { const previousResult = coreFindComparableExam(exams, latest); const previous = previousResult.status === "comparable" ? previousResult.reference : null; const metric = previous ? metricBetween(latest, previous, null, "score") : null; return metric && shouldShowScoreDelta(metric) ? `<div class="public-score-change"><strong>${esc(scoreChangeSentence(metric))}</strong><small>${esc(scoreChangeDetail(metric))}</small></div>` : ""; })() : ""}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share, exams)}</div>${publicHistory(exams, result.share)}` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
   const body = view === "subject" ? publicSubjectComparisonV080(exams, subject, result.share) : view === "timeline" ? publicTimelineV080(exams, selectedExamId, result.share) : total;
-  app.innerHTML = `<main class="public-shell ink-share" data-share-view="${view}" data-exam-count="${exams.length}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span><i class="ink-share-flourish" aria-hidden="true"></i></div><div class="privacy-note">这是家庭主动分享的内容，请不要随意转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">需要时可以随时撤销分享</footer>`;
+  app.innerHTML = `<main class="public-shell eink-share" data-share-view="${view}" data-exam-count="${exams.length}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span></div><div class="privacy-note">这是家庭主动分享的内容，请不要随意转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">需要时可以随时撤销分享</footer>`;
 }
 
 async function renderExternal(kind, locator) {
