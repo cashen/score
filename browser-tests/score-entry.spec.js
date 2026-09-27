@@ -96,12 +96,15 @@ test("score-card entry supports previous-exam template, common presets, and savi
   await page.locator('input[name="biology-raw"]').fill("88");
   await page.getByRole("button", { name: "保存考试" }).click();
 
-  await expect(page.locator("#exam-dialog")).toHaveCount(0);
-  await expect(page.locator("[data-status-region]")).toContainText("考试已保存");
+  await expect(page.locator("#exam-dialog")).toHaveCount(1);
+  await expect(page.locator("[data-draft-state]")).toContainText("已保存。可以继续修改");
+  await expect(page.locator("[data-status-region]")).toContainText("已保存");
   expect(state.payload.subjectSet).toEqual(["physics", "chemistry", "biology"]);
   expect(state.payload.subjects.physics.rawScore).toBe(82);
   expect(state.payload.subjects.chemistry.rawScore).toBe(91);
   expect(state.payload.subjects.biology.rawScore).toBe(88);
+  await page.getByRole("button", { name: "关闭" }).click();
+  await expect(page.locator("#exam-dialog")).toHaveCount(0);
 });
 
 test("score-card entry keeps touch targets usable on small screens", async ({ page }) => {

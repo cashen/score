@@ -134,7 +134,7 @@ test("provision -> login -> create exam -> secret share keeps notes private", as
     headers: { cookie, "x-score-csrf": login.csrf, origin: "https://score.example" },
     body: JSON.stringify({ ...created, expectedRevision: 99 })
   });
-  assert.equal(response.status, 409);
+  assert.equal(response.status, 409, await response.text());
 
   response = await call(e, `/api/students/${provision.studentId}/shares`, {
     method: "POST",

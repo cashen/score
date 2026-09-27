@@ -1,3 +1,11 @@
+## 0.15.0.0
+
+- 收口考试数据读取：正常考试、首页轨迹与家庭导出改为 `exam-index` + KV Bulk Get，正常路径不再枚举 `exam-summary:*`。
+- `exam-summary:*` 降为一次性兼容迁移来源；新写入不再维护逐场 summary 副本。
+- 新增 StudentIndexCoordinator Durable Object，串行协调考试活动索引与回收站索引的写入，减少多设备并发保存造成的索引覆盖。
+- active exam index 与 trash index 分离；正常成绩、分享与回收站读取互不携带已删除考试。
+- 版本同步至 0.15.0.0。
+
 ## 0.14.5.0
 
 - 优化公开分享页的 KV 读取路径：轨迹分享直接使用现有考试索引，并通过 Workers KV Bulk Get 批量读取考试，避免正常路径先列举考试摘要再逐条读取。

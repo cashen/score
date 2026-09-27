@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+const shareApp = await readFile(new URL("../public/share-app.js", import.meta.url), "utf8");
+const publicApp = app + "\n" + shareApp;
 const bundle = await readFile(new URL("../public/css/app-v094.css", import.meta.url), "utf8");
 const index = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
 const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
@@ -50,7 +52,7 @@ test("runtime bundle contains the same hierarchy layer", () => {
 });
 
 test("public share no longer exposes the multi-card trajectory analysis", () => {
-  const publicPart = app.slice(app.indexOf("function renderPublicV080"), app.indexOf("async function renderExternal"));
+  const publicPart = publicApp.slice(publicApp.indexOf("function renderPublicV080"), publicApp.indexOf("async function renderExternal"));
   assert.doesNotMatch(publicPart, /public-analysis-note|从最早一次到现在/);
   assert.match(publicPart, /publicComparisonNote\(/);
 });

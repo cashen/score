@@ -120,3 +120,18 @@ share API → explicit projection → browser
 5. 常用组合和上一场仅作为快捷入口，不自动修改事实。
 
 名称推断只生成建议，不得未经用户点击写入 `subjectSet`。没有录入的数据与“没有参加该科”必须保持语义区分。
+
+
+## v0.15 data-access architecture
+
+运行时考试读取统一走：
+
+    exam-index:{studentId}
+            ↓
+    Workers KV Bulk Get
+            ↓
+    exam:{studentId}:{examId}[]
+
+`exam-summary:{studentId}:{examId}` 不再作为正常读取索引。仅当 canonical `exam-index` 缺失时，允许一次受控兼容迁移，从旧 summary key 生成新 index；新版本写入不再维护 summary 副本。
+
+活动考试与回收站使用独立索引：`exam-index:{studentId}` 和 `exam-trash-index:{studentId}`。考试索引的新增、修改、删除、恢复通过 `StudentIndexCoordinator` Durable Object 按 student 串行协调，再写回 Workers KV。KV 的跨 POP 最终一致性仍然存在，因此 DO 解决的是并发 read-modify-write 覆盖，而不是把 KV 变成事务数据库。

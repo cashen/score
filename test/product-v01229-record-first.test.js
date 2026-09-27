@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+const shareApp = await readFile(new URL("../public/share-app.js", import.meta.url), "utf8");
+const publicApp = app + "\n" + shareApp;
 const css = await readFile(new URL("../public/css/app-v094.css", import.meta.url), "utf8");
 
 test("record-first reading imports the centralized score delta layer", () => {
@@ -22,11 +24,11 @@ test("private reading views expose score changes without changing ranking semant
 });
 
 test("public reading only derives score changes from explicitly shared score fields", () => {
-  assert.match(app, /share\.fields\?\.subjectScores === true/);
-  assert.match(app, /share\.fields\?\.overallScore === true/);
-  assert.match(app, /function publicSubjectRows\(exam, share = \{\}, exams = \[\]\)/);
-  assert.match(app, /function publicExamDetailV080\(exam, share = \{\}, exams = \[\]\)/);
-  assert.match(app, /function publicTimelineV080\(exams, selectedExamId = null, share = \{\}\)/);
+  assert.match(publicApp, /share\.fields\?\.subjectScores === true/);
+  assert.match(publicApp, /share\.fields\?\.overallScore === true/);
+  assert.match(publicApp, /function publicSubjectRows\(exam, share = \{\}, exams = \[\]\)/);
+  assert.match(publicApp, /function publicExamDetailV080\(exam, share = \{\}, exams = \[\]\)/);
+  assert.match(publicApp, /function publicTimelineV080\(exams, selectedExamId = null, share = \{\}\)/);
 });
 
 test("the restrained change treatment does not introduce direction colors", () => {

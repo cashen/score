@@ -18,7 +18,7 @@ required = [ "SESSION_SECRET", "AUTH_PEPPER", "ADMIN_BOOTSTRAP_SECRET" ]
 
 [vars]
 # APP_VERSION is pinned to the release commit by the repository version contract.
-APP_VERSION = "0.14.5.0"
+APP_VERSION = "0.15.0.0"
 SCHEMA_VERSION = "1"
 PASSWORD_ITERATIONS = "100000"
 BOOTSTRAP_ENABLED = "false"
@@ -28,9 +28,17 @@ BOOTSTRAP_ENABLED = "false"
 name = "ONE_TIME_GATE"
 class_name = "OneTimeCredentialGate"
 
+[[durable_objects.bindings]]
+name = "STUDENT_INDEX"
+class_name = "StudentIndexCoordinator"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["OneTimeCredentialGate"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["StudentIndexCoordinator"]
 
 [observability.logs]
 enabled = false

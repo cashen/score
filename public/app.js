@@ -37,7 +37,6 @@ import {
 } from "./domain-v001.js";
 import { createAppState, dispatchViewAction, captureViewContext, restoreViewContext } from "./application-v001.js";
 import { shareUrlFor, shareFileName } from "./share-delivery-v092.js";
-import { PUBLIC_VIEW_LABELS, PUBLIC_SUBJECT_OVERVIEW_LABEL } from "./product-contract.js";
 import { deliverShareImage } from "./share-image-v092.js";
 
 const PRODUCT_NAME = "我的高三";
@@ -1036,14 +1035,30 @@ async function saveExam(event) {
       ? await api(`/api/students/${state.student.id}/exams/${state.editingExam.id}`, { method: "PUT", body: JSON.stringify(payload) })
       : await api(`/api/students/${state.student.id}/exams`, { method: "POST", body: JSON.stringify(payload) });
     formElement.dispatchEvent(new CustomEvent("score:save-succeeded", { bubbles: true }));
-    closeDialog();
-    await loadStudentData();
-    const savedExam = savedResult?.exam || (savedExamId ? state.exams.find((item) => item.id === savedExamId) : state.exams.find((item) => item.id === savedResult?.exam?.id));
-    restoreViewContext(state,{...returnContext,selectedExamId:returnContext.selectedExamId&&state.exams.some(item=>item.id===returnContext.selectedExamId)?returnContext.selectedExamId:null});
+    const savedExam = savedResult?.exam;
+    if (!savedExam) throw new Error("服务器没有返回保存后的考试记录，请重新打开考试列表核对");
+    state.exams = sortExamsChronologically([
+      savedExam,
+      ...state.exams.filter((item) => item.id !== savedExam.id && !item.deletedAt)
+    ]);
+    state.trash = state.trash.filter((item) => item.id !== savedExam.id);
+    dispatchViewAction(state, { type: "view/exam-edit", exam: savedExam });
+    restoreViewContext(state, {
+      ...returnContext,
+      selectedExamId: returnContext.selectedExamId && state.exams.some((item) => item.id === returnContext.selectedExamId)
+        ? returnContext.selectedExamId
+        : null
+    });
     writePrivateNavigation({ replace: true });
-    const saveSummary = savedExam ? recordSaveSummary(savedExam) : null;
-    state.notice = saveSummary ? `考试已保存 · ${saveSummary.line}` : "考试已保存";
+    const saveSummary = recordSaveSummary(savedExam);
+    state.notice = saveSummary ? `已保存 · ${saveSummary.line}` : "已保存";
     state.noticeTone = "success";
+    button.disabled = false;
+    button.textContent = "保存考试";
+    const status = formElement.querySelector("[data-draft-state]");
+    if (status) status.textContent = "已保存。可以继续修改，完成后再关闭。";
+    const errorBox = formElement.querySelector("#exam-form-error");
+    if (errorBox) errorBox.innerHTML = "";
     renderDashboard();
   } catch (error) {
     button.disabled = false;
@@ -1057,9 +1072,11 @@ async function deleteExam() {
   const deletingExamId = state.editingExam.id;
   try {
     const deleted = await api(`/api/students/${state.student.id}/exams/${deletingExamId}`, { method: "DELETE", body: JSON.stringify({ expectedRevision: state.editingExam.revision }) });
-    state.undoDelete = { id: deletingExamId, revision: state.editingExam.revision + 1, undoUntil: deleted.undoUntil };
+    const deletedExam = { ...state.editingExam, deletedAt: new Date().toISOString(), revision: state.editingExam.revision + 1 };
+    state.undoDelete = { id: deletingExamId, revision: deletedExam.revision, undoUntil: deleted.undoUntil };
+    state.exams = state.exams.filter((item) => item.id !== deletingExamId);
+    state.trash = [deletedExam, ...state.trash.filter((item) => item.id !== deletingExamId)];
     closeDialog();
-    await Promise.all([loadStudentData(), loadExamTrash()]);
     if (state.selectedExamId === deletingExamId) dispatchViewAction(state, { type: "view/clear-exam" });
     writePrivateNavigation({ replace: true });
     state.notice = "考试已删除，15 分钟内可以撤销";
@@ -1541,202 +1558,7 @@ function bindDashboard() {
   document.querySelector("[data-action='create-recovery-link']")?.addEventListener("click", createRecoveryLink);
 }
 
-function publicSubjectRows(exam, share = {}, exams = []) {
-  if (!exam?.subjects) return "";
-  const scoreShared = share.fields?.subjectScores === true;
-  const rankShared = share.fields?.subjectRanks === true;
-  return SUBJECTS.filter(([key]) => subjectKeysForDisplay(exam).includes(key)).map(([key, label]) => {
-    const subject = exam.subjects[key] || {};
-    const score = scoreShared ? scoreOf(subject) : null;
-    const school = rankShared ? rankByScope(subject.rankings, "school") : null;
-    const clazz = rankShared ? rankByScope(subject.rankings, "class") : null;
-    const meta = [school?.rank != null ? `校内第 ${school.rank}` : null, clazz?.rank != null ? `班级第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
-    const previousResult = scoreShared && exams.length > 1 ? coreFindComparableExamForSubject(exams, exam, key, "score") : null;
-    const previous = previousResult?.status === "comparable" ? previousResult.reference : null;
-    const scoreMetric = previous ? metricBetween(exam, previous, key, "score") : null;
-    const change = scoreMetric && shouldShowScoreDelta(scoreMetric) ? scoreChangeSentence(scoreMetric) : "";
-    const scoreText = scoreShared ? (score == null ? "" : fmtNumber(score)) : "未分享";
-    const rankText = rankShared ? meta : "未分享";
-    return `<div class="subject-row"><strong>${label}</strong><b>${esc(scoreText)}</b><span class="subject-row-meta">${esc(rankText)}${change ? `<small class="score-change-inline">${esc(change)}</small>` : ""}</span></div>`;
-  }).join("");
-}
-function publicOverallHistoryCoordinate(exam, share = {}) {
-  const projected = { ...exam, overall: { rankings: exam.overallRankings || [] }, overallScore: exam.overallScore };
-  const score = share.fields?.overallScore === true && overallScore(projected) != null ? `${fmtNumber(overallScore(projected))} 分` : "";
-  const school = share.fields?.overallRank === true ? overallRank(projected, "school") : null;
-  const clazz = share.fields?.overallRank === true ? overallRank(projected, "class") : null;
-  const joint = share.fields?.overallRank === true ? overallRank(projected, "joint") : null;
-  return [score, school?.rank != null ? `校内第 ${school.rank} 名` : "", clazz?.rank != null ? `班级第 ${clazz.rank} 名` : "", joint?.rank != null ? `联考第 ${joint.rank} 名` : ""].filter(Boolean);
-}
-
-function publicHistory(exams, share = {}) {
-  if (share.fields?.history !== true || !Array.isArray(exams) || exams.length < 2) return "";
-  return `<section class="public-history"><div class="section-label">${PUBLIC_VIEW_LABELS.timeline}</div><h2>每一场考试都保留在这里</h2><div class="history-list">${exams.map((exam, index) => {
-    const items = publicOverallHistoryCoordinate(exam, share);
-    return `<a class="history-row ${index === 0 ? "is-latest" : ""}" href="?view=timeline&exam=${encodeURIComponent(exam.id)}"><span><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最近一次考试" : ""}</small></span><div class="history-coordinate">${items.map((item) => `<span>${esc(item)}</span>`).join("")}</div><span class="row-chevron" aria-hidden="true">›</span></a>`;
-  }).join("")}</div><p class="muted">每一场只显示这场考试自己分享的成绩和排名。</p></section>`;
-}
-
-function publicViewNavV080(active = "total", subject = null) {
-  const suffix = subject ? `&subject=${encodeURIComponent(subject)}` : "";
-  const items = [["total", PUBLIC_VIEW_LABELS.total, ""], ["subject", PUBLIC_VIEW_LABELS.subject, suffix], ["timeline", PUBLIC_VIEW_LABELS.timeline, ""]];
-  return `<nav class="public-view-nav" aria-label="分享视图">${items.map(([key, label, itemSuffix]) => `<a class="public-view-tab ${active === key ? "active" : ""}" href="?view=${key}${itemSuffix}" aria-current="${active === key ? "page" : "false"}">${label}</a>`).join("")}</nav>`;
-}
-
-function publicBaselineV081(view, exams, share = {}) {
-  if (!Array.isArray(exams) || exams.length !== 1) return "";
-  const behavior = shareBehaviorLabel(share);
-  const scopeText = share.scope === "trajectory" ? "目前记录到这里" : "这次考试";
-  return `<aside class="public-baseline-note" aria-label="记录状态"><span class="public-baseline-mark" aria-hidden="true"></span><div><strong>目前的记录</strong><small>${scopeText}</small><p>${share.scope === "trajectory" ? "现在只记录到这一场考试。" : "分享只包含这一场考试。"}${behavior}。</p></div></aside>`;
-}
-
-function publicComparisonNote(exams, key = null, share = {}) {
-  if (share.fields?.history !== true || exams.length < 2) return "";
-  const ordered = sortExamsChronologically(exams);
-  const current = ordered[0] || null;
-  const effectiveMetric = key && current ? resolveDisplayMetric(current, key, "auto") : (!key && current ? resolveDisplayMetric(current, null, "auto") : "score");
-  const comparison = key
-    ? coreFindComparableExamForSubject(subjectObservationExams(ordered, key), current, key, effectiveMetric)
-    : coreFindComparableExam(ordered, current);
-  const previous = comparison.status === "comparable" ? comparison.reference : null;
-  const summary = formatComparisonSummary({
-    hasHistory: true,
-    comparable: Boolean(previous),
-    reason: comparison.reason,
-    previousDate: previous ? fmtDate(previous.date) : "",
-    historyCount: Math.max(0, exams.length - 1)
-  });
-  if (!previous) {
-    return `<aside class="public-comparison-note"><div class="section-label">和以前相比</div><strong>${esc(summary.title)}</strong>${summary.detail ? `<p>${esc(summary.detail)}</p>` : ""}</aside>`;
-  }
-  const metric = key ? comparison.metric : metricBetween(current, previous, null, resolveDisplayMetric(current, null, "auto"));
-  const strength = comparisonStrengthLabel(comparison);
-  return `<aside class="public-comparison-note"><div class="section-label">和以前相比</div><strong>${esc(directionText(metric))}</strong><p>${esc(strength)} · ${esc(summary.detail)}</p></aside>`;
-}
-
-function publicSubjectComparisonV080(exams, key, share = {}) {
-  const ordered = sortExamsChronologically(exams);
-  const picker = `<div class="subject-picker public-subject-picker"><a class="subject-chip ${key == null ? "active" : ""}" href="?view=subject" aria-current="${key == null ? "page" : "false"}">全部科目</a>${SUBJECTS.map(([subject, label]) => `<a class="subject-chip ${subject === key ? "active" : ""}" href="?view=subject&subject=${encodeURIComponent(subject)}" aria-current="${subject === key ? "page" : "false"}">${label}</a>`).join("")}</div>`;
-  if (key == null) {
-    const latest = ordered[0] || null;
-    return `<section class="public-reading-section"><div class="section-label">${PUBLIC_VIEW_LABELS.subject}</div><h2>${PUBLIC_SUBJECT_OVERVIEW_LABEL}</h2>${publicBaselineV081("subject", ordered, share)}${picker}${latest ? `<div class="subject-rows public-subjects">${publicSubjectRows(latest, share)}</div>` : `<p class="muted">还没有可分享的考试数据。</p>`}</section>`;
-  }
-
-  const label = SUBJECTS.find(([subject]) => subject === key)?.[1] || "单科";
-  const subjectExams = subjectObservationExams(ordered, key);
-  const current = subjectExams[0] || null;
-  const effectiveMetric = current ? resolveDisplayMetric(current, key, "auto") : "score";
-  const comparison = coreFindComparableExamForSubject(subjectExams, current, key, effectiveMetric);
-  const change = comparison.status === "comparable" ? comparison.metric : null;
-  const currentValue = current ? subjectMetricValue(current, key, "score") || subjectMetricValue(current, key, effectiveMetric) : "";
-  const compareText = change
-    ? `和 ${fmtDate(comparison.reference.date)} 相比`
-    : formatComparisonSummary({
-        hasHistory: subjectExams.length > 1,
-        comparable: false,
-        reason: comparison.reason,
-        historyCount: Math.max(0, subjectExams.length - 1)
-      }).title;
-
-  const rows = subjectExams.map((exam, index) => {
-    const subject = exam.subjects?.[key] || {};
-    const score = share.fields?.subjectScores !== true ? null : scoreOf(subject);
-    const school = share.fields?.subjectRanks !== true ? null : rankByScope(subject.rankings, "school");
-    const clazz = share.fields?.subjectRanks !== true ? null : rankByScope(subject.rankings, "class");
-    const values = [score == null ? null : `${fmtNumber(score)} 分`, school?.rank != null ? `校内第 ${school.rank}` : null, clazz?.rank != null ? `班级第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
-    return `<div class="subject-compare-row ${index === 0 ? "is-latest" : ""}"><div><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最近一次有记录的成绩" : ""}</small></div><b>${esc(values || "未分享")}</b></div>`;
-  }).join("");
-
-  const changeBlock = current ? `<div class="subject-focus-fact"><strong>${esc(currentValue)}</strong></div><div class="comparison-state" role="status"><strong>${esc(change ? directionText(change) : compareText)}</strong><span>${esc(change ? change.detail + " · " + compareText : compareText)}</span></div>` : `<div class="empty compact">还没有可分享的${esc(label)}成绩。</div>`;
-
-  return `<section class="public-reading-section public-subject-comparison"><div class="section-label">单科</div><h2>${label}的历次记录</h2>${publicBaselineV081("subject", subjectExams, share)}${picker}${changeBlock}${rows ? `<div class="subject-compare-list">${rows}</div>` : `<p class="muted">还没有可分享的${label}记录。</p>`}<p class="muted subject-history-scope">这里只列出实际记录过${label}成绩的考试；没有记录这门课的考试不会出现在这里。</p></section>`;
-}
-
-function publicExamDetailV080(exam, share = {}, exams = []) {
-  if (!exam) return "";
-  const scoreShared = share.fields?.subjectScores === true;
-  const rankShared = share.fields?.subjectRanks === true;
-  const overallPreviousResult = share.fields?.overallScore === true && exams.length > 1 ? coreFindComparableExam(exams, exam) : null;
-  const overallPrevious = overallPreviousResult?.status === "comparable" ? overallPreviousResult.reference : null;
-  const overallScoreMetric = overallPrevious ? metricBetween(exam, overallPrevious, null, "score") : null;
-  const rows = SUBJECTS.filter(([key]) => subjectKeysForDisplay(exam).includes(key)).map(([key, label]) => {
-    const subject = exam.subjects?.[key] || {};
-    const score = scoreShared ? scoreOf(subject) : null;
-    const school = rankShared ? rankByScope(subject.rankings, "school") : null;
-    const clazz = rankShared ? rankByScope(subject.rankings, "class") : null;
-    const values = [score == null ? null : `${fmtNumber(score)} 分`, subject.fullScore ? `满分 ${subject.fullScore}` : null, school?.rank != null ? `校内第 ${school.rank}` : null, clazz?.rank != null ? `班级第 ${clazz.rank}` : null].filter(Boolean).join(" · ");
-    const previousResult = scoreShared && exams.length > 1 ? coreFindComparableExamForSubject(exams, exam, key, "score") : null;
-    const previous = previousResult?.status === "comparable" ? previousResult.reference : null;
-    const scoreMetric = previous ? metricBetween(exam, previous, key, "score") : null;
-    const change = scoreMetric && shouldShowScoreDelta(scoreMetric) ? scoreChangeSentence(scoreMetric) : "";
-    const display = !scoreShared && !rankShared ? "未分享" : [values, change].filter(Boolean).join(" · ");
-    return `<div class="exam-detail-subject"><strong>${label}</strong><span>${esc(display)}</span></div>`;
-  }).join("");
-  const summary = examScoreSummary(exam);
-  const situation = share.fields?.examStatus === true ? examSituationText(exam) : "";
-  const contextText = share.fields?.comparisonContext === true ? examComparisonContextText(exam) : "";
-  const scoreLabel = examScoreLabel(exam, summary);
-  const scoreText = share.fields?.overallScore !== true ? `${scoreLabel || "成绩"}未分享` : (summary.kind === "missing" ? "" : scoreSummaryText(summary));
-  const rankText = share.fields?.overallRank !== true ? "" : rankingDetails(exam.overallRankings || []);
-  const overall = [scoreText, rankText].filter(Boolean).join(" · ");
-  const change = share.fields?.overallScore === true ? renderScoreChange(overallScoreMetric) : "";
-  const optionalMeta = [situation, contextText].filter(Boolean).join(" · ");
-  return `<section class="public-reading-section public-exam-detail"><div class="section-label">考试详情</div><h2>${esc(exam.name)}</h2><p>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${optionalMeta ? ` · ${esc(optionalMeta)}` : ""}</p><div class="exam-detail-overall"><strong>${esc(overall)}</strong>${change}</div><div class="exam-detail-subjects">${rows}</div></section>`;
-}
-function publicTimelineV080(exams, selectedExamId = null, share = {}) {
-  const ordered = sortExamsChronologically(exams);
-  const selected = ordered.find((exam) => exam.id === selectedExamId) || null;
-  const rows = ordered.map((exam, index) => {
-    const coordinateItems = publicOverallHistoryCoordinate(exam, share);
-    const previousResult = share.fields?.overallScore === true && ordered.length > 1 ? coreFindComparableExam(ordered, exam) : null;
-    const previous = previousResult?.status === "comparable" ? previousResult.reference : null;
-    const scoreMetric = previous ? metricBetween(exam, previous, null, "score") : null;
-    return `<a class="history-row ${index === 0 ? "is-latest" : ""}" href="?view=timeline&exam=${encodeURIComponent(exam.id)}"><span><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}${index === 0 ? " · 最近一次考试" : ""}</small></span><div class="history-coordinate">${coordinateItems.map((item) => `<span>${esc(item)}</span>`).join("")}${renderScoreChange(scoreMetric)}</div><span class="row-chevron" aria-hidden="true">›</span></a>`;
-  }).join("");
-  return `<section class="public-reading-section public-timeline"><div class="section-label">历次考试</div><h2>每一次考试都可以打开</h2>${publicBaselineV081("timeline", ordered, share)}${selected ? publicExamDetailV080(selected, share, ordered) : ""}<div class="history-list">${rows || `<div class="empty compact">暂未分享考试数据。</div>`}</div><p class="muted">页面只显示你选择分享的内容。</p></section>`;
-}
-function renderPublicV080(result) {
-  const data = result.data || {};
-  app.classList.add("share-eink-root");
-  const params = new URLSearchParams(location.search);
-  const view = ["total", "subject", "timeline"].includes(params.get("view")) ? params.get("view") : "total";
-  const subject = validSubjectKey(params.get("subject"));
-  const selectedExamId = params.get("exam") || null;
-  const exams = sortExamsChronologically(data.exams || []);
-  const latest = exams[0] || null;
-  const school = rankByScope(latest?.overallRankings, "school");
-  const clazz = rankByScope(latest?.overallRankings, "class");
-  const latestSummary = examScoreSummary(latest);
-  const totalText = scoreSummaryText(latestSummary);
-  const coordinate = latest ? [result.share.fields?.overallRank !== true ? null : school?.rank != null ? `校内第 ${school.rank} 名` : null, result.share.fields?.overallRank !== true ? null : clazz?.rank != null ? `班级第 ${clazz.rank} 名` : null, result.share.fields?.overallScore !== true ? null : totalText].filter(Boolean) : [];
-  const coordinateText = coordinate.length ? coordinate.map((item) => `<span>${esc(item)}</span>`).join("") : `<span>成绩与排名未分享</span>`;
-  const meta = [data.student?.graduationYear ? `${data.student.graduationYear}届` : null, data.student?.schoolLabel, data.student?.className].filter(Boolean).map(esc).join(" · ");
-  const total = `<section class="public-coordinate"><div class="public-mode">${esc(shareBehaviorLabel(result.share))}</div><h1>${esc(data.student?.displayName || "学生")}</h1><p>${meta}</p>${latest ? `<div class="exam-context"><strong>${esc(latest.name)}</strong><span>${fmtDate(latest.date)} · ${examTypeLabel(latest.type)}</span></div><div class="coordinate-row">${coordinateText}</div>${publicBaselineV081("total", exams, result.share)}${publicComparisonNote(exams, null, result.share)}${result.share.fields?.overallScore === true && exams.length > 1 ? (() => { const previousResult = coreFindComparableExam(exams, latest); const previous = previousResult.status === "comparable" ? previousResult.reference : null; const metric = previous ? metricBetween(latest, previous, null, "score") : null; return metric && shouldShowScoreDelta(metric) ? `<div class="public-score-change"><strong>${esc(scoreChangeSentence(metric))}</strong><small>${esc(scoreChangeDetail(metric))}</small></div>` : ""; })() : ""}<div class="subject-rows public-subjects">${publicSubjectRows(latest, result.share, exams)}</div>${publicHistory(exams, result.share)}` : `<div class="empty compact">暂未分享考试数据。</div>`}</section>`;
-  const body = view === "subject" ? publicSubjectComparisonV080(exams, subject, result.share) : view === "timeline" ? publicTimelineV080(exams, selectedExamId, result.share) : total;
-  app.innerHTML = `<main class="public-shell eink-share" data-share-view="${view}" data-exam-count="${exams.length}"><div class="public-brand">${brandMark()}<span>${PRODUCT_NAME} · 分享</span></div><div class="privacy-note">这是家庭主动分享的内容，请不要随意转发</div>${publicViewNavV080(view, subject)}${body}</main><footer class="footer">需要时可以随时撤销分享</footer>`;
-}
-
-async function renderExternal(kind, locator) {
-  try {
-    let result;
-    if (kind === "secret" && !locator) {
-      const token = decodeURIComponent(String(location.hash || "").replace(/^#/, ""));
-      if (!token) throw new Error("分享链接无效");
-      result = await api("/api/share/secret/redeem", { method: "POST", body: JSON.stringify({ token }) });
-      history.replaceState(null, "", location.pathname + location.search);
-    } else {
-      result = await api(`/api/share/${kind}/${encodeURIComponent(locator)}`);
-    }
-    renderPublicV080(result);
-  } catch (error) {
-    app.innerHTML = `<main class="login-shell"><section class="login-card">${brandMark()}<h1>分享已失效</h1><p>${esc(error.message)}</p></section></main>`;
-  }
-}
-
 async function bootstrap() {
-  const path = location.pathname;
-  if (path.startsWith("/share/")) return renderExternal("secret", path.slice("/share/".length));
-  if (path.startsWith("/p/")) return renderExternal("public", path.slice("/p/".length));
   const params = new URLSearchParams(location.search);
   if (["total", "subject", "timeline"].includes(params.get("view")) || params.get("exam")) syncPrivateNavigationFromUrl();
   window.addEventListener("popstate", async () => {

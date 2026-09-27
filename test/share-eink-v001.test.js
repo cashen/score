@@ -5,15 +5,16 @@ import path from "node:path";
 
 const root = process.cwd();
 const app = fs.readFileSync(path.join(root, "public/app.js"), "utf8");
+const shareApp = fs.readFileSync(path.join(root, "public/share-app.js"), "utf8");
 const index = fs.readFileSync(path.join(root, "public/index.html"), "utf8");
 const css = fs.readFileSync(path.join(root, "public/css/share-eink-v001.css"), "utf8");
 const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
 const wrangler = fs.readFileSync(path.join(root, "wrangler.toml"), "utf8");
 
 test("share page uses the independent E-ink visual root", () => {
-  assert.match(app, /share-eink-root/);
-  assert.match(app, /public-shell eink-share/);
-  assert.doesNotMatch(app, /ink-share-flourish/);
+  assert.match(shareApp, /share-eink-root/);
+  assert.match(shareApp, /public-shell eink-share/);
+  assert.doesNotMatch(shareApp, /ink-share-flourish/);
   assert.match(index, /share-eink-v001\.css/);
 });
 
@@ -28,12 +29,12 @@ test("E-ink share system is a calm grayscale reading layer", () => {
 });
 
 test("release version is synchronized for E-ink share", () => {
-  assert.equal(pkg.version, "0.14.5.0");
-  assert.match(wrangler, /^APP_VERSION\s*=\s*"0\.14\.5\.0"/m);
+  assert.equal(pkg.version, "0.15.0.0");
+  assert.match(wrangler, /^APP_VERSION\s*=\s*"0\.15\.0\.0"/m);
 });
 
 
-test("v0.14.5 share alignment keeps the reading frame centered", () => {
+test("v0.15 share alignment keeps the reading frame centered", () => {
   assert.match(css, /--eink-reading-width:\s*760px/);
   assert.match(css, /--eink-body-measure:\s*40rem/);
   assert.match(css, /\.eink-share > \.public-coordinate/);
