@@ -42,5 +42,5 @@
     "comparison semantics",
     "public share URL state"
   ],
-  "next": "CI -> browser visual verification -> review desktop/tablet/mobile artifacts -> CSS ownership cleanup"
+  "next": "browser matrix run for 8 Chromium widths + WebKit 390 -> review geometry/screenshots -> CSS ownership cleanup"
 }
