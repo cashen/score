@@ -4,6 +4,8 @@ import { readFile } from "node:fs/promises";
 import { publicProjection } from "../src/lib/model.js";
 
 const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+const shareApp = await readFile(new URL("../public/share-app.js", import.meta.url), "utf8");
+const publicApp = app + "\n" + shareApp;
 
 test("trajectory sharing exposes full per-exam detail through the existing allow-list", () => {
   const projected = publicProjection(
@@ -25,10 +27,10 @@ test("trajectory sharing exposes full per-exam detail through the existing allow
 });
 
 test("shared report has total, subject, timeline and deep exam detail paths", () => {
-  assert.match(app, /function renderPublicV080\(/);
-  assert.match(app, /function publicSubjectComparisonV080\(/);
-  assert.match(app, /function publicTimelineV080\(/);
-  assert.match(app, /function publicExamDetailV080\(/);
-  assert.match(app, /view=timeline&exam=/);
-  assert.match(app, /页面只显示你选择分享的内容/);
+  assert.match(publicApp, /function renderPublicV080\(/);
+  assert.match(publicApp, /function publicSubjectComparisonV080\(/);
+  assert.match(publicApp, /function publicTimelineV080\(/);
+  assert.match(publicApp, /function publicExamDetailV080\(/);
+  assert.match(publicApp, /view=timeline&exam=/);
+  assert.match(publicApp, /页面只显示你选择分享的内容/);
 });
