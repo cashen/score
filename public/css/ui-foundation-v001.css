@@ -286,3 +286,22 @@ a { text-underline-offset: 2px; }
     max-width:none;
   }
 }
+
+/* v0.14.4 reading typography — one stable rhythm for page families. */
+:root{
+  --ui-font-body:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans CJK SC",sans-serif;
+  --ui-font-reading:ui-serif,"Songti SC","STSong","Noto Serif CJK SC",serif;
+  --ui-text-size-body:16px;
+  --ui-text-size-meta:13px;
+  --ui-text-size-label:12px;
+  --ui-leading-body:1.62;
+}
+body{
+  font-family:var(--ui-font-body);
+  font-size:var(--ui-text-size-body);
+  line-height:var(--ui-leading-body);
+}
+:where(.page-heading h1,.home-welcome h1){text-wrap:balance}
+:where(.page-heading p,.section-head-simple p,.home-welcome p){max-width:var(--layout-measure,640px)}
+:where(.section-label,.eyebrow){font-size:var(--ui-text-size-label)}
+:where(.page-heading p,.section-head-simple p,.home-welcome p,small){line-height:1.55}
