@@ -28,12 +28,12 @@ export async function getManyJson(env, keys) {
     }
 
     if (values instanceof Map) {
-      for (const [key, value] of values.entries()) result.set(key, value);
+      batch.forEach((key) => result.set(key, values.get(key) ?? null));
       continue;
     }
 
     if (values && typeof values === "object" && !Array.isArray(values)) {
-      for (const [key, value] of Object.entries(values)) result.set(key, value);
+      batch.forEach((key) => result.set(key, values[key] ?? null));
       continue;
     }
 
