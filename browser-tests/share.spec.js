@@ -214,7 +214,7 @@ test("reduced motion and high contrast keep content and controls usable", async 
   await page.emulateMedia({ reducedMotion: "reduce", contrast: "more" });
   await page.goto("/share/fixture?view=timeline&exam=fixture-1");
   await expect(page.locator(".exam-detail-subject")).toHaveCount(6);
-  expect(await page.locator(".share-ink-root").evaluate(node => getComputedStyle(node).backgroundImage)).toBe("none");
+  expect(await page.locator(".share-eink-root").evaluate(node => getComputedStyle(node).backgroundImage)).toBe("none");
   expect(await page.locator(".public-view-tab").first().evaluate(node => getComputedStyle(node).transitionDuration)).toBe("0s");
   await layout(page);
 });

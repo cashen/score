@@ -5,11 +5,13 @@ import { access, readFile } from "node:fs/promises";
 const index = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
 const bundle = await readFile(new URL("../public/css/app-v094.css", import.meta.url), "utf8");
 
-test("runtime stylesheets have one legacy bundle plus one final foundation layer", async () => {
-  assert.equal((index.match(/<link rel="stylesheet"/g) || []).length, 2);
+test("runtime stylesheets have one legacy bundle, one foundation layer and one scoped share layer", async () => {
+  assert.equal((index.match(/<link rel="stylesheet"/g) || []).length, 3);
   assert.match(index, /href="\/css\/app-v094\.css"/);
   assert.match(index, /href="\/css\/ui-foundation-v001\.css"/);
+  assert.match(index, /href="\/css\/share-eink-v001\.css"/);
   assert.ok(index.indexOf("app-v094.css") < index.indexOf("ui-foundation-v001.css"));
+  assert.ok(index.indexOf("ui-foundation-v001.css") < index.indexOf("share-eink-v001.css"));
 
   for (const legacy of ["styles.css", "onboarding-v050.css", "ui-v050.css", "ui-v070.css", "ui-v080.css", "ui-v081-share-ink.css", "brand-logo-b.css", "ui-v092-share-delivery.css"]) {
     const escaped = legacy.replace(/[.-]/g, "\\$&");

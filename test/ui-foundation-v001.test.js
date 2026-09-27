@@ -7,11 +7,13 @@ const index = await readFile(new URL("public/index.html", root), "utf8");
 const foundation = await readFile(new URL("public/css/ui-foundation-v001.css", root), "utf8");
 const bundle = await readFile(new URL("public/css/app-v094.css", root), "utf8");
 
-test("v0.14 foundation is the final stylesheet layer", async () => {
-  assert.equal((index.match(/<link rel="stylesheet"/g) || []).length, 2);
+test("v0.14 foundation precedes the scoped share layer", async () => {
+  assert.equal((index.match(/<link rel="stylesheet"/g) || []).length, 3);
   assert.match(index, /href="\/css\/app-v094\.css"/);
   assert.match(index, /href="\/css\/ui-foundation-v001\.css"/);
+  assert.match(index, /href="\/css\/share-eink-v001\.css"/);
   assert.ok(index.indexOf("app-v094.css") < index.indexOf("ui-foundation-v001.css"));
+  assert.ok(index.indexOf("ui-foundation-v001.css") < index.indexOf("share-eink-v001.css"));
   await access(new URL("public/css/ui-foundation-v001.css", root));
   assert.match(bundle, /--score-touch-target:\s*44px/);
 });
