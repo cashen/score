@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+const shareApp = await readFile(new URL("../public/share-app.js", import.meta.url), "utf8");
+const publicApp = app + "\n" + shareApp;
 const bundle = await readFile(new URL("../public/css/app-v094.css", import.meta.url), "utf8");
 const index = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
 const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
