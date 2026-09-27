@@ -41,7 +41,10 @@ function isExpired(grant) {
 }
 
 async function shareExamIndex(env, studentId) {
-  return (await getJson(env, `exam-index:${studentId}`)) || { studentId, items: [] };
+  const index = (await getJson(env, `exam-index:${studentId}`)) || { studentId, items: [] };
+  const items = Array.isArray(index.items) ? [...index.items] : [];
+  items.sort((a, b) => String(b?.date || "").localeCompare(String(a?.date || "")) || String(b?.createdAt || "").localeCompare(String(a?.createdAt || "")) || String(a?.id || "").localeCompare(String(b?.id || "")));
+  return { ...index, items: items.slice(0, MAX_EXAMS) };
 }
 
 async function loadExams(env, studentId) {
