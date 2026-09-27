@@ -209,12 +209,37 @@ test("keyboard focus and navigation have visible current state", async ({ page }
   await expect(page.getByRole("link", { name: PUBLIC_VIEW_LABELS.subject, exact: true })).toHaveAttribute("aria-current", "page");
 });
 
+test("e-ink reader visual contract is quiet and responsive", async ({ page }) => {
+  await fixture(page, 2);
+  await page.goto("/p/fixture?view=timeline");
+  const root = page.locator(".share-eink-root");
+  await expect(root).toBeVisible();
+  await expect(page.locator(".ink-share-flourish")).toHaveCount(0);
+  const visual = await page.locator(".eink-share").evaluate(node => {
+    const style = getComputedStyle(node);
+    const rootStyle = getComputedStyle(node.closest(".share-eink-root"));
+    return {
+      width: node.getBoundingClientRect().width,
+      radius: style.borderRadius,
+      shadow: style.boxShadow,
+      backgroundImage: rootStyle.backgroundImage,
+      maxWidth: style.maxWidth
+    };
+  });
+  expect(visual.width).toBeLessThanOrEqual(760);
+  expect(visual.radius).toBe("0px");
+  expect(visual.shadow).toBe("none");
+  expect(visual.backgroundImage).toBe("none");
+  expect(visual.maxWidth).toBe("760px");
+  expect(await page.locator(".public-coordinate, .public-reading-section").evaluateAll(nodes => nodes.every(node => getComputedStyle(node).boxShadow === "none"))).toBe(true);
+});
+
 test("reduced motion and high contrast keep content and controls usable", async ({ page }) => {
   await fixture(page);
   await page.emulateMedia({ reducedMotion: "reduce", contrast: "more" });
   await page.goto("/share/fixture?view=timeline&exam=fixture-1");
   await expect(page.locator(".exam-detail-subject")).toHaveCount(6);
-  expect(await page.locator(".share-ink-root").evaluate(node => getComputedStyle(node).backgroundImage)).toBe("none");
+  expect(await page.locator(".share-eink-root").evaluate(node => getComputedStyle(node).backgroundImage)).toBe("none");
   expect(await page.locator(".public-view-tab").first().evaluate(node => getComputedStyle(node).transitionDuration)).toBe("0s");
   await layout(page);
 });
