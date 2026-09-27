@@ -219,6 +219,17 @@ function examSummary(exam) {
     deletedAt: exam.deletedAt || null
   };
 }
+function assertRevision(body, existing) {
+  const revision = Number(body.expectedRevision);
+  if (!Number.isInteger(revision) || revision !== existing.revision) {
+    throw Object.assign(new Error("这条成绩已在其他位置修改，请重新载入后再保存"), {
+      status: 409,
+      code: "revision_conflict",
+      current: examSummary(existing)
+    });
+  }
+}
+
 async function handleAdminProvision(request, env) {
   await enforceRateLimit(env, request, { scope: "admin-provision", ipMax: 5, windowSeconds: 900 });
   if (env.BOOTSTRAP_ENABLED !== "true" || await getJson(env, "bootstrap:completed")) return errorJson("管理员建户入口已关闭", 404, "not_found");
