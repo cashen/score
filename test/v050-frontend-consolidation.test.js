@@ -5,12 +5,14 @@ import { readFile } from "node:fs/promises";
 const index = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
 const router = await readFile(new URL("../public/router-v2.js", import.meta.url), "utf8");
 const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
+const shareApp = await readFile(new URL("../public/share-app.js", import.meta.url), "utf8");
+const activeSources = [index, router, app, shareApp, onboarding, css, onboardingCss].join("\n");
 const draft = await readFile(new URL("../public/draft.js", import.meta.url), "utf8");
 const onboarding = await readFile(new URL("../public/onboarding-v050.js", import.meta.url), "utf8");
 const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "utf8");
 const onboardingCss = await readFile(new URL("../public/onboarding-v050.css", import.meta.url), "utf8");
 
-const activeSources = [index, router, app, onboarding, css, onboardingCss].join("\n");
+
 const cssFlat = css.replace(/\s+/g, " ");
 
 function expectAll(source, values) {
@@ -39,13 +41,14 @@ test("production entry uses the legacy bundle, foundation and scoped share layer
   ]) assert.ok(!index.includes(asset), `legacy asset still active: ${asset}`);
 });
 
-test("router has one normal app path and one onboarding path", () => {
+test("router separates private and public share application paths", () => {
   expectAll(router, [
     'await import("./onboarding-v050.js")',
     'await import("./app.js")',
     'await import("./coordinate-insight-v100.js")',
     "const externalShare = path.startsWith(\"/share/\") || path.startsWith(\"/p/\")",
-    "if (!externalShare) await import(\"./coordinate-insight-v100.js\")",
+    'else if (externalShare) await import("./share-app.js")',
+    'await import("./coordinate-insight-v100.js")',
     "1500",
     "网络有点慢，数据还在读取"
   ]);
@@ -142,11 +145,11 @@ test("exam scope is a domain fact, not a single/all mode split", () => {
   expectAll(app, ["subjectSet", "先记已经拿到的成绩", "自己选择科目", "subjectKeysForDisplay", "resolveExamScope"]);
   assert.doesNotMatch(app, /singleMode|allMode/);
 });
-test("successful save closes the editor and restores context", () => {
+test("successful save keeps the editor open and restores context", () => {
   const section = app.slice(app.indexOf("async function saveExam"), app.indexOf("async function deleteExam"));
   assert.match(section, /captureViewContext\(state\)/);
-  assert.match(section, /closeDialog\(\);\s*await loadStudentData\(\);/);
-  assert.match(section, /restoreViewContext\(state/);
+  assert.doesNotMatch(section, /closeDialog\(\);\s*await loadStudentData\(\);/);
+  assert.match(section, /restoreViewContext\(state/);\n  assert.match(section, /const savedExam = savedResult\?\.exam;/);\n  assert.match(section, /已保存。可以继续修改/);
   assert.match(section, /catch \(error\)/);
   assert.ok(app.includes('input[name="subjectSet"]'));
   assert.ok(cssFlat.includes("100dvh"));
