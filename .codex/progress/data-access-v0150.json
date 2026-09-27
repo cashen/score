@@ -1,0 +1,9 @@
+{
+  "project":"cashen/score",
+  "release":"0.15.0.0",
+  "branch":"arch/data-access-v0150",
+  "status":"implementation",
+  "baseMain":"a35b912359dd37fe7cb2bbcee052e51175a956e8",
+  "completed":["canonical exam reads","student index coordinator","active/trash indexes","response-driven exam save","public share browser entry"],
+  "next":"exact-head verify, browser regression, PR, merge only exact tested HEAD, production attestation"
+}

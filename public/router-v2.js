@@ -9,9 +9,10 @@ const slowTimer = setTimeout(() => {
 
 try {
   if (onboarding) await import("./onboarding-v050.js");
+  else if (externalShare) await import("./share-app.js");
   else {
     await import("./app.js");
-    if (!externalShare) await import("./coordinate-insight-v100.js");
+    await import("./coordinate-insight-v100.js");
   }
 } finally {
   clearTimeout(slowTimer);
