@@ -148,7 +148,9 @@ test("successful save keeps the editor open and restores context", () => {
   const section = app.slice(app.indexOf("async function saveExam"), app.indexOf("async function deleteExam"));
   assert.match(section, /captureViewContext\(state\)/);
   assert.doesNotMatch(section, /closeDialog\(\);\s*await loadStudentData\(\);/);
-  assert.match(section, /restoreViewContext\(state/);\n  assert.match(section, /const savedExam = savedResult\?\.exam;/);\n  assert.match(section, /已保存。可以继续修改/);
+  assert.match(section, /restoreViewContext\(state/);
+  assert.match(section, /const savedExam = savedResult\?\.exam;/);
+  assert.match(section, /已保存。可以继续修改/);
   assert.match(section, /catch \(error\)/);
   assert.ok(app.includes('input[name="subjectSet"]'));
   assert.ok(cssFlat.includes("100dvh"));
