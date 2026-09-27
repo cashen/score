@@ -1,0 +1,20 @@
+{
+  "project": "cashen/score",
+  "feature": "share-eink-reading-v01424",
+  "baseline": "5a6ed9754e9e79e1bb0fde34bab8c3e6cddfe7a5",
+  "version": "0.14.2.4",
+  "status": "implementation",
+  "scope": [
+    "独立 E-ink 灰阶视觉层",
+    "移除钢笔/手写/纹理隐喻",
+    "连续阅读式分享布局",
+    "手机/平板/PC 自适应",
+    "保持分享数据与 URL 语义不变"
+  ],
+  "verification": [
+    "browser share regression",
+    "E-ink visual contract",
+    "reduced-motion/high-contrast",
+    "npm run verify"
+  ]
+}
