@@ -56,7 +56,7 @@ test("v0.12.21 user-facing language removes known internal/AI-style phrases", ()
 });
 
 test("scope-aware score wording is centralized rather than hard-coded in the main renderer", () => {
-  assert.equal(app.includes("scoreSummaryText(summary)"), true);
-  assert.equal(app.includes("scoreSummaryText(latestSummary)"), true);
-  assert.equal(app.includes("本次实际记录的科目成绩与排名"), true);
+  assert.equal(publicSource.includes("scoreSummaryText(summary)"), true);
+  assert.equal(publicSource.includes("scoreSummaryText(latestSummary)"), true);
+  assert.equal(publicSource.includes("本次实际记录的科目成绩与排名"), true);
 });
