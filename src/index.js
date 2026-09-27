@@ -21,10 +21,11 @@ import { handleFamilyMemberPatch, handleFamilyMembers, handleFamilyStudentCreate
 import { routePrivateSharingV2, routePublicSharingV2 } from "./sharing-v2.js";
 import { enforceRateLimit, rateLimitHeaders } from "./lib/rate-limit.js";
 import { claimOneTime, consumeOneTime, releaseOneTime } from "./security-gate.js";
-import { getJson, putJson, deleteKey, listKeys } from "./repositories/kv.js";
+import { getJson, getManyJson, putJson, deleteKey, listKeys } from "./repositories/kv.js";
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_EXAMS = 80;
+const INDEX_COORDINATOR_VERSION = "v1";
 const PASSWORD_MIN_ITERATIONS = 100000;
 const PASSWORD_MAX_ITERATIONS = 100000;
 const DUMMY_PASSWORD_RECORD = Object.freeze({
@@ -109,63 +110,115 @@ async function requireStudent(env, member, studentId, write = false) {
   return student;
 }
 
-async function loadExamIndex(env, studentId) {
-  const legacy = (await getJson(env, `exam-index:${studentId}`)) || { studentId, items: [], updatedAt: null };
-  try {
-    const listed = await listKeys(env, { prefix: `exam-summary:${studentId}:`, limit: MAX_EXAMS });
-    const summaries = await Promise.all((listed?.keys || []).map((key) => getJson(env, key.name)));
-    const items = await Promise.all(summaries.filter(Boolean).map(async (summary) => {
-      if (summary.createdAt) return summary;
-      const exam = await getJson(env, `exam:${studentId}:${summary.id}`);
-      return exam?.createdAt ? { ...summary, createdAt: exam.createdAt } : summary;
-    }));
-    if (items.length) {
-      items.sort(compareExamsChronologically);
-      return { studentId, items: items.slice(0, MAX_EXAMS), updatedAt: now() };
-    }
-  } catch {
-    // Local test KV and older bindings may not implement list; retain the legacy index.
-  }
-  return legacy;
+async function examIndexCoordinator(env, studentId) {
+  if (!env.STUDENT_INDEX || typeof env.STUDENT_INDEX.getByName !== "function") return null;
+  return env.STUDENT_INDEX.getByName(`${INDEX_COORDINATOR_VERSION}:${studentId}`);
 }
 
-async function saveExamIndex(env, studentId, items) {
-  const normalized = sortExamsChronologically(items);
-  const bounded = normalized.slice(0, MAX_EXAMS);
-  await Promise.all(bounded.map((item) => putJson(env, `exam-summary:${studentId}:${item.id}`, item)));
-  await putJson(env, `exam-index:${studentId}`, { studentId, items: bounded, updatedAt: now() });
+async function mutateExamIndexes(env, studentId, operation, summary) {
+  const coordinator = await examIndexCoordinator(env, studentId);
+  if (coordinator && typeof coordinator.mutateExamIndex === "function") {
+    await coordinator.mutateExamIndex({ studentId, operation, summary });
+    return;
+  }
+
+  // Local/legacy fallback only. Production is bound to StudentIndexCoordinator.
+  const active = (await getJson(env, `exam-index:${studentId}`)) || { studentId, items: [] };
+  const trash = (await getJson(env, `exam-trash-index:${studentId}`)) || { studentId, items: [] };
+  let activeItems = Array.isArray(active.items) ? active.items : [];
+  let trashItems = Array.isArray(trash.items) ? trash.items : [];
+  if (operation === "upsert-active" || operation === "restore") {
+    activeItems = [summary, ...activeItems.filter((item) => item.id !== summary.id && !item.deletedAt)];
+    trashItems = trashItems.filter((item) => item.id !== summary.id);
+    await putJson(env, `exam-index:${studentId}`, { studentId, items: sortExamsChronologically(activeItems).slice(0, MAX_EXAMS), updatedAt: now() });
+    if (operation === "restore") await putJson(env, `exam-trash-index:${studentId}`, { studentId, items: trashItems, updatedAt: now() });
+    return;
+  }
+  if (operation === "delete") {
+    activeItems = activeItems.filter((item) => item.id !== summary.id);
+    trashItems = [summary, ...trashItems.filter((item) => item.id !== summary.id)];
+    await putJson(env, `exam-index:${studentId}`, { studentId, items: sortExamsChronologically(activeItems).slice(0, MAX_EXAMS), updatedAt: now() });
+    await putJson(env, `exam-trash-index:${studentId}`, { studentId, items: sortExamsChronologically(trashItems).slice(0, MAX_EXAMS), updatedAt: now() });
+  }
+}
+
+async function loadExamIndex(env, studentId) {
+  const current = await getJson(env, `exam-index:${studentId}`);
+  if (current && Array.isArray(current.items)) {
+    return { studentId, items: current.items.slice(0, MAX_EXAMS), updatedAt: current.updatedAt || null };
+  }
+
+  // One-time compatibility path for installations where the canonical index predates v0.15.
+  try {
+    const listed = await listKeys(env, { prefix: `exam-summary:${studentId}:`, limit: MAX_EXAMS });
+    const names = (listed?.keys || []).map((key) => key.name).filter(Boolean);
+    const values = await getManyJson(env, names);
+    const summaries = names.map((name) => values.get(name)).filter(Boolean);
+    if (summaries.length) {
+      const items = sortExamsChronologically(summaries).slice(0, MAX_EXAMS);
+      const migrated = { studentId, items, updatedAt: now() };
+      await putJson(env, `exam-index:${studentId}`, migrated);
+      return migrated;
+    }
+  } catch {
+    // Older test doubles or partial legacy bindings may not implement list/bulk reads.
+  }
+  return { studentId, items: [], updatedAt: null };
+}
+
+async function loadExamTrashIndex(env, studentId) {
+  const current = await getJson(env, `exam-trash-index:${studentId}`);
+  return current && Array.isArray(current.items)
+    ? { studentId, items: current.items.slice(0, MAX_EXAMS), updatedAt: current.updatedAt || null }
+    : { studentId, items: [], updatedAt: null };
 }
 
 async function loadExams(env, studentId, { latestOnly = false } = {}) {
   const index = await loadExamIndex(env, studentId);
-  const exams = await Promise.all((index.items || []).map((item) => getJson(env, `exam:${studentId}:${item.id}`)));
-  const ordered = sortExamsChronologically(exams.filter((exam) => exam && !exam.deletedAt));
+  const items = (index.items || []).filter((item) => item?.id).slice(0, MAX_EXAMS);
+  const keys = items.map((item) => `exam:${studentId}:${item.id}`);
+  const values = await getManyJson(env, keys);
+  const ordered = sortExamsChronologically(
+    items.map((item) => values.get(`exam:${studentId}:${item.id}`)).filter((exam) => exam && !exam.deletedAt)
+  );
   return latestOnly ? ordered.slice(0, 1) : ordered.slice(0, MAX_EXAMS);
 }
 
-function examSummary(exam) {
-  return { id: exam.id, name: exam.name, date: exam.date, type: exam.type, subjectSet: Array.isArray(exam.subjectSet) ? exam.subjectSet : null, status: exam.status, revision: exam.revision, createdAt: exam.createdAt || null, updatedAt: exam.updatedAt };
-}
-
-function assertRevision(body, existing) {
-  const revision = Number(body.expectedRevision);
-  if (!Number.isInteger(revision) || revision !== existing.revision) {
-    throw Object.assign(new Error("这条成绩已在其他位置修改，请重新载入后再保存"), {
-      status: 409,
-      code: "revision_conflict",
-      current: examSummary(existing)
-    });
+async function loadTrashExams(env, studentId) {
+  const trashIndex = await loadExamTrashIndex(env, studentId);
+  if (trashIndex.items.length) {
+    const keys = trashIndex.items.map((item) => `exam:${studentId}:${item.id}`);
+    const values = await getManyJson(env, keys);
+    return trashIndex.items
+      .map((item) => values.get(`exam:${studentId}:${item.id}`))
+      .filter((exam) => exam?.deletedAt)
+      .sort((a, b) => String(b.deletedAt).localeCompare(String(a.deletedAt)));
   }
+
+  // Legacy compatibility: deleted exams from pre-v0.15 active indexes can still be found
+  // without bringing KV list back into the normal read path.
+  const index = await loadExamIndex(env, studentId);
+  const keys = (index.items || []).map((item) => `exam:${studentId}:${item.id}`);
+  const values = await getManyJson(env, keys);
+  return [...values.values()]
+    .filter((exam) => exam?.deletedAt)
+    .sort((a, b) => String(b.deletedAt).localeCompare(String(a.deletedAt)));
 }
 
-function shareIndexKey(studentId) {
-  return `share-index:${studentId}`;
+function examSummary(exam) {
+  return {
+    id: exam.id,
+    name: exam.name,
+    date: exam.date,
+    type: exam.type,
+    subjectSet: Array.isArray(exam.subjectSet) ? exam.subjectSet : null,
+    status: exam.status,
+    revision: exam.revision,
+    createdAt: exam.createdAt || null,
+    updatedAt: exam.updatedAt,
+    deletedAt: exam.deletedAt || null
+  };
 }
-
-async function getShareIndex(env, studentId) {
-  return (await getJson(env, shareIndexKey(studentId))) || { studentId, items: [] };
-}
-
 async function handleAdminProvision(request, env) {
   await enforceRateLimit(env, request, { scope: "admin-provision", ipMax: 5, windowSeconds: 900 });
   if (env.BOOTSTRAP_ENABLED !== "true" || await getJson(env, "bootstrap:completed")) return errorJson("管理员建户入口已关闭", 404, "not_found");
@@ -361,8 +414,7 @@ async function handleExamCreate(request, env, session, studentId) {
     const input = { ...body, context: { schoolLabel: student.schoolLabel, classLabel: student.className, grade: student.grade, ...body.context } };
     const exam = normalizeExam(input);
     await putJson(env, `exam:${studentId}:${exam.id}`, exam);
-    const index = await loadExamIndex(env, studentId);
-    await saveExamIndex(env, studentId, [examSummary(exam), ...index.items.filter((item) => item.id !== exam.id)]);
+    await mutateExamIndexes(env, studentId, "upsert-active", examSummary(exam));
     if (requestKey) await putJson(env, requestKey, { examId: exam.id, createdAt: now() }, { expirationTtl: 7 * 24 * 60 * 60 });
     if (claimId) {
       const consumed = await consumeOneTime(env, "exam-create", claimLocator, claimId);
@@ -387,8 +439,7 @@ async function handleExamUpdate(request, env, session, studentId, examId) {
   const exam = normalizeExam({ ...body, id: examId }, existing);
   await putJson(env, `exam-history:${studentId}:${examId}:r${existing.revision}`, existing);
   await putJson(env, `exam:${studentId}:${examId}`, exam);
-  const index = await loadExamIndex(env, studentId);
-  await saveExamIndex(env, studentId, [examSummary(exam), ...index.items.filter((item) => item.id !== exam.id)]);
+  await mutateExamIndexes(env, studentId, "upsert-active", examSummary(exam));
   return json({ exam });
 }
 
@@ -404,16 +455,13 @@ async function handleExamDelete(request, env, session, studentId, examId) {
   await putJson(env, `exam-history:${studentId}:${examId}:r${existing.revision}`, { ...existing, deletedAt });
   const deleted = { ...existing, deletedAt, deletedBy: session.member.id, updatedAt: deletedAt, revision: existing.revision + 1 };
   await putJson(env, `exam:${studentId}:${examId}`, deleted);
-  const index = await loadExamIndex(env, studentId);
-  await saveExamIndex(env, studentId, [examSummary(deleted), ...index.items.filter((item) => item.id !== examId)]);
+  await mutateExamIndexes(env, studentId, "delete", examSummary(deleted));
   return json({ ok: true, undoUntil: new Date(Date.now() + 15 * 60 * 1000).toISOString() });
 }
 
 async function handleExamTrash(env, member, studentId) {
   await requireStudent(env, member, studentId, false);
-  const index = await loadExamIndex(env, studentId);
-  const exams = await Promise.all((index.items || []).map((item) => getJson(env, `exam:${studentId}:${item.id}`)));
-  return json({ exams: exams.filter((exam) => exam?.deletedAt).sort((a, b) => String(b.deletedAt).localeCompare(String(a.deletedAt))) });
+  return json({ exams: await loadTrashExams(env, studentId) });
 }
 
 async function handleExamRestore(request, env, session, studentId, examId) {
@@ -425,8 +473,7 @@ async function handleExamRestore(request, env, session, studentId, examId) {
   assertRevision(body, existing);
   const restored = { ...existing, deletedAt: null, deletedBy: null, updatedAt: now(), revision: existing.revision + 1 };
   await putJson(env, `exam:${studentId}:${examId}`, restored);
-  const index = await loadExamIndex(env, studentId);
-  await saveExamIndex(env, studentId, [examSummary(restored), ...index.items.filter((item) => item.id !== examId)]);
+  await mutateExamIndexes(env, studentId, "restore", examSummary(restored));
   return json({ exam: restored });
 }
 
@@ -464,9 +511,7 @@ async function handleFamilyExport(env, member) {
   const exams = [];
   const shares = [];
   for (const student of students) exams.push(...await loadExams(env, student.id), ...await (async () => {
-    const index = await loadExamIndex(env, student.id);
-    const all = await Promise.all((index.items || []).map((item) => getJson(env, `exam:${student.id}:${item.id}`)));
-    return all.filter((exam) => exam?.deletedAt);
+    return await loadTrashExams(env, student.id);
   })());
   for (const student of students) shares.push(...((await getShareIndex(env, student.id)).items || []).map((share) => ({ ...share, studentId: student.id })));
   return json({ exportedAt: now(), schemaVersion: 1, family: { id: family.id, displayName: family.displayName }, students, exams, shares, members: (await Promise.all((family.memberIds || []).map((id) => getJson(env, `member:${id}`)))).filter(Boolean).map((m) => ({ id: m.id, username: m.username, role: m.role, createdAt: m.createdAt, disabledAt: m.disabledAt || null })) });
