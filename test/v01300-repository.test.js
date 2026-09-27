@@ -11,5 +11,5 @@ test("repository boundary centralizes KV JSON serialization", async () => {
   assert.deepEqual(await getJson(env, "exam:x"), { ok: true });
   await putJson(env, "exam:x", { score: 100 });
   assert.deepEqual(calls, [["get", "exam:x", "json"], ["put", "exam:x", "{\"score\":100}"]]);
-  assert.equal(REPOSITORY_ARCHITECTURE_VERSION, "0.13.0");
+  assert.equal(REPOSITORY_ARCHITECTURE_VERSION, "0.14.5");
 });
