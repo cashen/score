@@ -6,12 +6,11 @@ const index = await readFile(new URL("../public/index.html", import.meta.url), "
 const router = await readFile(new URL("../public/router-v2.js", import.meta.url), "utf8");
 const app = await readFile(new URL("../public/app.js", import.meta.url), "utf8");
 const shareApp = await readFile(new URL("../public/share-app.js", import.meta.url), "utf8");
-const activeSources = [index, router, app, shareApp, onboarding, css, onboardingCss].join("\n");
 const draft = await readFile(new URL("../public/draft.js", import.meta.url), "utf8");
 const onboarding = await readFile(new URL("../public/onboarding-v050.js", import.meta.url), "utf8");
 const css = await readFile(new URL("../public/ui-v050.css", import.meta.url), "utf8");
 const onboardingCss = await readFile(new URL("../public/onboarding-v050.css", import.meta.url), "utf8");
-
+const activeSources = [index, router, app, shareApp, onboarding, css, onboardingCss].join("\n");
 
 const cssFlat = css.replace(/\s+/g, " ");
 
