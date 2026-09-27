@@ -117,8 +117,13 @@ async function examIndexCoordinator(env, studentId) {
 
 async function mutateExamIndexes(env, studentId, operation, summary) {
   const coordinator = await examIndexCoordinator(env, studentId);
-  if (coordinator && typeof coordinator.mutateExamIndex === "function") {
-    await coordinator.mutateExamIndex({ studentId, operation, summary });
+  if (coordinator && typeof coordinator.fetch === "function") {
+    const response = await coordinator.fetch(new Request("https://student-index/mutate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ studentId, operation, summary })
+    }));
+    if (!response.ok) throw new Error("考试索引更新失败");
     return;
   }
 
