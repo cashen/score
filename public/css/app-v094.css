@@ -1295,492 +1295,575 @@ summary:focus-visible,
   .metric-chip { transition: none !important; }
 }
 
-/* ---- source: /ui-v081-share-ink.css ---- */
-.share-ink-root {
-  --ink-paper: #f7f2e8;
-  --ink-paper-clear: #fffdf8;
-  --ink-text: #202522;
-  --ink-muted: #666963;
-  --ink-line: #9b9d94;
-  --ink-line-soft: #d8d2c5;
-  --ink-accent: #3f5f68;
+/* ---- source: /ui-v095-share-eink.css ---- */
+/*
+ * E-ink share reading system.
+ * Visual-only layer: preserves the existing share data contract, URLs and semantics.
+ * Design intent: quiet grayscale, reading-width content, no faux paper texture,
+ * no pen/handwriting decoration, no shadows/gradients, touch-safe controls.
+ */
+.share-eink-root {
+  --eink-bg: #f1f1ed;
+  --eink-surface: #fafaf7;
+  --eink-text: #222522;
+  --eink-muted: #5f625e;
+  --eink-line: #c8cac4;
+  --eink-line-strong: #858983;
+  --eink-accent: #343834;
+  --eink-focus: #4f544f;
+  --eink-reading-width: 760px;
+  --eink-measure: 42rem;
   min-height: 100svh;
-  color: var(--ink-text);
-  background-color: var(--ink-paper);
-  background-image:
-    linear-gradient(rgba(255, 255, 255, .42), rgba(255, 255, 255, .42)),
-    repeating-linear-gradient(0deg, transparent 0 31px, rgba(63, 58, 47, .025) 31px 32px);
+  color: var(--eink-text);
+  background: var(--eink-bg);
 }
 
-.public-shell.ink-share {
-  position: relative;
-  max-width: 780px;
-  padding: 28px 24px 72px;
-  color: var(--ink-text);
+.public-shell.eink-share {
+  width: min(100%, var(--eink-reading-width));
+  margin: 0 auto;
+  padding: 30px 28px 72px;
+  color: var(--eink-text);
+  background: var(--eink-surface);
 }
 
-.ink-share .public-brand {
-  position: relative;
-  gap: 11px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid var(--ink-line);
-  font-family: ui-serif, "Songti SC", "STSong", serif;
-  font-weight: 700;
-  letter-spacing: .025em;
+.eink-share .public-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 0 17px;
+  border-bottom: 1px solid var(--eink-line-strong);
+  color: var(--eink-text);
+  font-family: ui-serif, "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+  font-weight: 650;
+  letter-spacing: .015em;
 }
 
-.ink-share .public-brand::after {
-  position: absolute;
-  right: 0;
-  bottom: -3px;
-  width: 34%;
-  height: 5px;
-  background: repeating-linear-gradient(165deg, transparent 0 4px, rgba(32, 37, 34, .54) 4px 5px);
-  content: "";
-  pointer-events: none;
-}
-
-.ink-share .public-brand .brand-mark {
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--ink-text);
-  border-radius: 50% 46% 52% 43%;
-  color: var(--ink-text);
+.eink-share .public-brand .brand-mark {
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  border: 1px solid var(--eink-text);
+  border-radius: 4px;
+  color: var(--eink-text);
   background: transparent;
-  box-shadow: inset 0 0 0 2px var(--ink-paper), inset 0 0 0 3px var(--ink-line);
-  transform: rotate(-2deg);
+  box-shadow: none;
+  transform: none;
 }
 
-.ink-share-flourish {
-  width: min(20vw, 112px);
-  height: 23px;
-  margin-left: auto;
-  opacity: .52;
-  background: repeating-linear-gradient(155deg, transparent 0 6px, var(--ink-text) 6px 7px);
-  clip-path: polygon(0 58%, 100% 0, 100% 44%, 0 100%);
-}
-
-.ink-share .privacy-note {
-  margin: 16px 0 10px;
-  padding: 2px 0 2px 12px;
-  border-left: 2px solid var(--ink-accent);
-  color: var(--ink-muted);
+.eink-share .privacy-note {
+  max-width: var(--eink-measure);
+  margin: 12px auto 8px;
+  padding: 0;
+  color: var(--eink-muted);
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.7;
 }
 
-.ink-share .public-view-nav {
+.eink-share .public-view-nav {
+  display: flex;
   gap: 0;
-  margin: 0 0 20px;
-  padding: 4px 0 0;
-  border-bottom: 1px solid var(--ink-line-soft);
+  width: 100%;
+  margin: 0 auto 26px;
+  padding: 0;
+  border-bottom: 1px solid var(--eink-line);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--eink-line-strong) transparent;
 }
 
-.ink-share .public-view-tab {
+.eink-share .public-view-tab {
   position: relative;
+  flex: 0 0 auto;
+  min-width: 44px;
   min-height: 44px;
-  padding: 11px 18px 10px;
+  padding: 11px 17px 10px;
   border: 0;
   border-radius: 0;
-  color: var(--ink-muted);
+  color: var(--eink-muted);
   background: transparent;
-  font-weight: 620;
+  font-weight: 650;
+  white-space: nowrap;
 }
 
-.ink-share .public-view-tab.active {
-  border: 0;
-  color: var(--ink-text);
+.eink-share .public-view-tab.active {
+  color: var(--eink-text);
   background: transparent;
 }
 
-.ink-share .public-view-tab.active::after {
+.eink-share .public-view-tab.active::after {
   position: absolute;
-  right: 13px;
+  right: 12px;
   bottom: -1px;
-  left: 13px;
-  height: 6px;
-  background: repeating-linear-gradient(150deg, transparent 0 3px, var(--ink-text) 3px 4px);
+  left: 12px;
+  height: 2px;
+  background: var(--eink-text);
   content: "";
 }
 
-.ink-share .public-view-tab:focus-visible,
-.ink-share .subject-chip:focus-visible,
-.ink-share .history-row:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--ink-accent) 32%, transparent);
+.eink-share .public-view-tab:focus-visible,
+.eink-share .subject-chip:focus-visible,
+.eink-share .history-row:focus-visible {
+  outline: 2px solid var(--eink-focus);
   outline-offset: 3px;
 }
 
-.ink-share .public-coordinate,
-.ink-share .public-reading-section {
-  margin: 0;
-  padding: 24px 0 4px;
+.eink-share .public-coordinate,
+.eink-share .public-reading-section {
+  width: min(100%, var(--eink-measure));
+  margin: 0 auto;
+  padding: 26px 0 6px;
   border: 0;
-  border-top: 1px solid var(--ink-text);
+  border-top: 1px solid var(--eink-line-strong);
   border-radius: 0;
-  color: var(--ink-text);
+  color: var(--eink-text);
   background: transparent;
   box-shadow: none;
 }
 
-.ink-share .public-reading-section {
-  padding-top: 21px;
+.eink-share .public-reading-section {
+  padding-top: 24px;
 }
 
-.ink-share .public-coordinate h1,
-.ink-share .public-reading-section h2 {
-  color: var(--ink-text);
-  font-family: ui-serif, "Songti SC", "STSong", serif;
-  font-weight: 700;
-}
-
-.ink-share .public-coordinate h1 {
-  margin-top: 2px;
-  font-size: clamp(32px, 7vw, 48px);
-  letter-spacing: -.025em;
-}
-
-.ink-share .public-coordinate > p,
-.ink-share .public-reading-section > p {
-  color: var(--ink-muted);
-}
-
-.ink-share .public-mode {
-  margin-bottom: 12px;
-  padding: 3px 8px;
-  border: 1px solid var(--ink-line);
-  border-radius: 2px;
-  color: var(--ink-muted);
-  background: var(--ink-paper-clear);
+.eink-share .public-coordinate h1,
+.eink-share .public-reading-section h2 {
+  margin-top: 3px;
+  color: var(--eink-text);
+  font-family: ui-serif, "Songti SC", "STSong", "Noto Serif CJK SC", serif;
   font-weight: 650;
-  letter-spacing: .06em;
+  letter-spacing: -.012em;
 }
 
-.ink-share .exam-context {
-  position: relative;
-  margin-top: 25px;
-  padding: 0 0 11px 14px;
-  border-bottom: 1px solid var(--ink-line-soft);
+.eink-share .public-coordinate h1 {
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.2;
 }
 
-.ink-share .exam-context::before {
-  position: absolute;
-  top: 3px;
-  bottom: 12px;
-  left: 0;
-  width: 5px;
-  background: repeating-linear-gradient(135deg, var(--ink-text) 0 1px, transparent 1px 3px);
-  content: "";
+.eink-share .public-reading-section h2 {
+  font-size: clamp(20px, 3vw, 25px);
+  line-height: 1.35;
 }
 
-.ink-share .coordinate-row {
-  gap: 7px 18px;
-  margin: 15px 0 4px;
+.eink-share .public-coordinate > p,
+.eink-share .public-reading-section > p {
+  color: var(--eink-muted);
+  line-height: 1.75;
 }
 
-.ink-share .coordinate-row > span {
-  color: var(--ink-text);
-  font-family: ui-serif, "Songti SC", "STSong", serif;
-  font-size: clamp(22px, 5vw, 30px);
-  font-weight: 650;
-}
-
-.ink-share .coordinate-row > span + span::before {
-  color: var(--ink-line);
-  content: "／";
-}
-
-.ink-share .public-baseline-note {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  gap: 12px;
-  align-items: stretch;
-  margin: 18px 0 8px;
-  padding: 13px 0;
-  border-top: 1px solid var(--ink-line-soft);
-  border-bottom: 1px solid var(--ink-line-soft);
-}
-
-.ink-share .public-baseline-mark {
-  min-height: 44px;
-  border-right: 1px solid var(--ink-line);
-  background: repeating-linear-gradient(145deg, transparent 0 5px, rgba(32, 37, 34, .68) 5px 6px);
-}
-
-.ink-share .public-baseline-note strong {
-  font-family: ui-serif, "Songti SC", "STSong", serif;
-  font-size: 15px;
-}
-
-.ink-share .public-baseline-note p {
-  margin: 4px 0 0;
-  color: var(--ink-muted);
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.ink-share .public-subjects {
-  margin-top: 16px;
-  border-top-color: var(--ink-line);
-}
-
-.ink-share .subject-row,
-.ink-share .subject-compare-row,
-.ink-share .exam-detail-subject {
-  border-bottom-color: var(--ink-line-soft);
-}
-
-.ink-share .subject-row {
-  min-height: 54px;
-  padding-inline: 3px;
-}
-
-.ink-share .subject-row b,
-.ink-share .subject-compare-row b,
-.ink-share .exam-detail-subject span {
-  color: var(--ink-text);
-}
-
-.ink-share .section-label {
-  color: var(--ink-accent);
+.eink-share .public-mode {
+  margin-bottom: 11px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--eink-muted);
+  background: transparent;
   font-size: 11px;
-  font-weight: 750;
-  letter-spacing: .14em;
+  font-weight: 650;
+  letter-spacing: .08em;
 }
 
-.ink-share .public-subject-picker {
-  gap: 0;
-  margin: 15px 0;
-  padding: 4px 0;
-  border-top: 1px solid var(--ink-line-soft);
-  border-bottom: 1px solid var(--ink-line-soft);
+.eink-share .exam-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px 10px;
+  margin-top: 27px;
+  padding: 0 0 11px;
+  border-bottom: 1px solid var(--eink-line);
 }
 
-.ink-share .subject-chip {
+.eink-share .exam-context::before {
+  display: none;
+}
+
+.eink-share .exam-context strong {
+  color: var(--eink-text);
+  font-family: ui-serif, "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.eink-share .exam-context span {
+  color: var(--eink-muted);
+}
+
+.eink-share .coordinate-row {
+  gap: 7px 22px;
+  margin: 17px 0 3px;
+}
+
+.eink-share .coordinate-row > span {
+  color: var(--eink-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: clamp(21px, 4.5vw, 30px);
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -.015em;
+}
+
+.eink-share .coordinate-row > span + span {
   position: relative;
+  margin-left: 0;
+}
+
+.eink-share .coordinate-row > span + span::before {
+  position: absolute;
+  left: -14px;
+  color: var(--eink-line-strong);
+  content: "·";
+  font-weight: 400;
+}
+
+.eink-share .public-baseline-note {
+  display: grid;
+  grid-template-columns: 1px minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+  max-width: var(--eink-measure);
+  margin: 21px 0 9px;
+  padding: 12px 0;
+  border-top: 1px solid var(--eink-line);
+  border-bottom: 1px solid var(--eink-line);
+}
+
+.eink-share .public-baseline-mark {
+  min-height: 42px;
+  border: 0;
+  background: var(--eink-line-strong);
+}
+
+.eink-share .public-baseline-note strong {
+  color: var(--eink-text);
+  font-family: ui-serif, "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.eink-share .public-baseline-note p {
+  margin: 4px 0 0;
+  color: var(--eink-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.eink-share .public-subjects {
+  margin-top: 18px;
+  border-top: 1px solid var(--eink-line-strong);
+}
+
+.eink-share .subject-row,
+.eink-share .subject-compare-row,
+.eink-share .exam-detail-subject {
+  border-bottom-color: var(--eink-line);
+  background: transparent;
+}
+
+.eink-share .subject-row {
+  min-height: 56px;
+  padding-inline: 2px;
+}
+
+.eink-share .subject-row b,
+.eink-share .subject-compare-row b,
+.eink-share .exam-detail-subject span {
+  color: var(--eink-text);
+}
+
+.eink-share .subject-row b,
+.eink-share .subject-compare-row b {
+  font-weight: 650;
+}
+
+.eink-share .section-label {
+  color: var(--eink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+}
+
+.eink-share .public-subject-picker {
+  display: flex;
+  gap: 0;
+  margin: 16px 0;
+  padding: 0;
+  border-top: 1px solid var(--eink-line);
+  border-bottom: 1px solid var(--eink-line);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.eink-share .subject-chip {
+  position: relative;
+  flex: 0 0 auto;
+  min-width: 44px;
   min-height: 44px;
   padding: 10px 13px;
   border: 0;
   border-radius: 0;
-  color: var(--ink-muted);
+  color: var(--eink-muted);
+  background: transparent;
+  white-space: nowrap;
+}
+
+.eink-share .subject-chip.active {
+  color: var(--eink-text);
+  background: transparent;
+  box-shadow: inset 0 -2px 0 var(--eink-text);
+}
+
+.eink-share .subject-compare-row {
+  min-height: 68px;
+  padding: 15px 2px;
+}
+
+.eink-share .subject-compare-row.is-latest {
   background: transparent;
 }
 
-.ink-share .subject-chip.active {
-  border: 0;
-  color: var(--ink-text);
-  background:
-    repeating-linear-gradient(150deg, transparent 0 5px, rgba(32, 37, 34, .12) 5px 6px);
-  box-shadow: inset 0 -1px 0 var(--ink-text);
+.eink-share .subject-compare-row small {
+  color: var(--eink-muted);
 }
 
-.ink-share .subject-compare-row {
-  min-height: 68px;
-  padding: 15px 3px;
+.eink-share .comparison-state {
+  margin: 14px 0 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--eink-line);
+  border-bottom: 1px solid var(--eink-line);
+  background: transparent;
 }
 
-.ink-share .history-list {
-  border-top: 1px solid var(--ink-line);
+.eink-share .comparison-state strong {
+  display: block;
+  color: var(--eink-text);
+  font-weight: 650;
 }
 
-.ink-share .history-row {
+.eink-share .comparison-state span {
+  display: block;
+  margin-top: 4px;
+  color: var(--eink-muted);
+  line-height: 1.65;
+}
+
+.eink-share .history-list {
+  border-top: 1px solid var(--eink-line-strong);
+}
+
+.eink-share .history-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto 16px;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
   position: relative;
-  min-height: 64px;
-  padding: 13px 4px 13px 17px;
-  border-bottom: 1px solid var(--ink-line-soft);
-  color: var(--ink-text);
+  min-height: 66px;
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--eink-line);
+  color: var(--eink-text);
   background: transparent;
   text-decoration: none;
 }
 
-.ink-share .history-row > span:first-child {
+.eink-share .history-row:hover {
+  background: #f0f0ec;
+}
+
+.eink-share .history-row > span:first-child {
   min-width: 0;
 }
 
-.ink-share .history-row > span:first-child small {
+.eink-share .history-row > span:first-child small {
   display: block;
+  color: var(--eink-muted);
 }
 
-.ink-share .history-row .row-chevron {
+.eink-share .history-row .row-chevron {
   justify-self: end;
+  color: var(--eink-text);
+  font-family: ui-serif, "Songti SC", serif;
+  font-size: 20px;
 }
 
-.ink-share .exam-detail-subject {
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: 12px;
-  align-items: baseline;
-}
-
-.ink-share .exam-detail-subject strong {
-  white-space: nowrap;
-}
-
-.ink-share .exam-detail-subject span {
-  min-width: 0;
-  text-align: right;
-  font-weight: 500;
-}
-
-.ink-share .history-row.is-latest {
+.eink-share .history-row.is-latest {
   background: transparent;
 }
 
-.ink-share .history-row.is-latest::before {
+.eink-share .history-row.is-latest::before {
   position: absolute;
-  top: 20px;
-  left: 1px;
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--ink-text);
+  top: 50%;
+  left: -1px;
+  width: 5px;
+  height: 5px;
+  border: 1px solid var(--eink-text);
   border-radius: 50%;
-  background: var(--ink-paper-clear);
+  background: var(--eink-surface);
   content: "";
+  transform: translateY(-50%);
 }
 
-.ink-share .history-coordinate {
-  color: var(--ink-muted);
+.eink-share .history-coordinate {
+  justify-content: flex-end;
+  color: var(--eink-muted);
 }
 
-.ink-share .row-chevron {
-  color: var(--ink-text);
-  font-family: ui-serif, "Songti SC", serif;
+.eink-share .exam-detail-subject {
+  background: transparent;
 }
 
-.ink-share .public-exam-detail {
-  margin: 18px 0 22px;
-  padding: 18px 16px 8px;
-  border: 1px solid var(--ink-line);
-  border-left-width: 5px;
-  background: rgba(255, 253, 248, .58);
+.eink-share .exam-detail-subject strong {
+  white-space: nowrap;
+  font-weight: 650;
 }
 
-.ink-share .public-exam-detail .exam-detail-overall {
-  border-bottom-color: var(--ink-line);
+.eink-share .exam-detail-subject span {
+  font-weight: 500;
 }
 
-.ink-share .empty {
-  border-color: var(--ink-line-soft);
-  color: var(--ink-muted);
-  background: var(--ink-paper-clear);
+.eink-share .public-exam-detail {
+  margin: 20px 0 24px;
+  padding: 18px 0 6px;
+  border: 0;
+  border-top: 1px solid var(--eink-line-strong);
+  border-bottom: 1px solid var(--eink-line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
-.share-ink-root > .footer {
+.eink-share .public-exam-detail .exam-detail-overall {
+  border-bottom-color: var(--eink-line-strong);
+}
+
+.eink-share .empty {
+  border: 0;
+  border-top: 1px solid var(--eink-line);
+  border-bottom: 1px solid var(--eink-line);
+  border-radius: 0;
+  color: var(--eink-muted);
+  background: transparent;
+}
+
+.share-eink-root > .footer {
+  width: min(100%, var(--eink-reading-width));
   margin: 0 auto;
-  border-top: 1px solid var(--ink-line-soft);
-  color: var(--ink-muted);
-  background: var(--ink-paper);
-  letter-spacing: .04em;
+  border-top: 1px solid var(--eink-line);
+  color: var(--eink-muted);
+  background: var(--eink-bg);
+  letter-spacing: .02em;
 }
 
-@media (max-width: 620px) {
-  .public-shell.ink-share {
-    padding: 18px 16px 56px;
+@media (min-width: 900px) {
+  .eink-share .public-coordinate,
+  .eink-share .public-reading-section,
+  .eink-share .privacy-note {
+    max-width: var(--eink-measure);
+  }
+}
+
+@media (max-width: 760px) {
+  .public-shell.eink-share {
+    padding: 24px 20px 60px;
   }
 
-  .ink-share-flourish {
-    width: 64px;
+  .eink-share .public-coordinate,
+  .eink-share .public-reading-section,
+  .eink-share .privacy-note {
+    width: 100%;
   }
 
-  .ink-share .public-view-nav {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    overflow: visible;
+  .eink-share .public-view-nav {
+    margin-bottom: 22px;
   }
 
-  .ink-share .public-view-tab {
-    padding-inline: 8px;
+  .eink-share .public-view-tab {
+    flex: 1 0 auto;
+    padding-inline: 13px;
     text-align: center;
   }
 
-  .ink-share .public-coordinate,
-  .ink-share .public-reading-section {
-    padding-top: 18px;
+  .eink-share .coordinate-row {
+    column-gap: 16px;
   }
 
-  .ink-share .coordinate-row > span + span::before {
+  .eink-share .coordinate-row > span + span::before {
     display: none;
   }
 
-  .ink-share .public-baseline-note {
-    grid-template-columns: 22px minmax(0, 1fr);
-    gap: 10px;
+  .eink-share .public-subject-picker {
+    display: flex;
   }
 
-  .ink-share .public-subject-picker {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .ink-share .subject-chip {
-    padding-inline: 7px;
+  .eink-share .subject-chip {
+    flex: 1 0 auto;
     text-align: center;
   }
 
-  .ink-share .subject-compare-row {
+  .eink-share .subject-compare-row {
     grid-template-columns: 1fr;
+    gap: 4px;
   }
 
-  .ink-share .subject-compare-row b {
+  .eink-share .subject-compare-row b {
     text-align: left;
   }
 
-  .ink-share .public-exam-detail {
-    padding-inline: 12px;
+  .eink-share .public-exam-detail {
+    padding-inline: 0;
   }
 
-  .ink-share .history-row {
+  .eink-share .history-row {
     grid-template-columns: minmax(0, 1fr) 16px;
-    gap: 5px 10px;
+    gap: 6px 10px;
   }
 
-  .ink-share .history-coordinate {
+  .eink-share .history-coordinate {
     grid-column: 1;
     grid-row: 2;
     justify-content: flex-start;
   }
+}
 
-  .ink-share .history-row .row-chevron {
-    grid-column: 2;
-    grid-row: 1 / span 2;
+@media (max-width: 430px) {
+  .public-shell.eink-share {
+    padding-inline: 16px;
+  }
+
+  .eink-share .public-brand {
+    padding-bottom: 14px;
+  }
+
+  .eink-share .public-coordinate,
+  .eink-share .public-reading-section {
+    padding-top: 21px;
+  }
+
+  .eink-share .coordinate-row > span {
+    font-size: 21px;
+  }
+
+  .eink-share .public-view-tab {
+    padding-inline: 9px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ink-share *,
-  .ink-share *::before,
-  .ink-share *::after {
+  .eink-share *,
+  .eink-share *::before,
+  .eink-share *::after {
     scroll-behavior: auto !important;
     transition: none !important;
-  }
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .share-ink-root {
-    background-image: none;
-  }
-
-  .ink-share .public-exam-detail {
-    background: var(--ink-paper-clear);
+    animation: none !important;
   }
 }
 
 @media (prefers-contrast: more) {
-  .share-ink-root {
-    --ink-muted: #343733;
-    --ink-line: #444843;
-    --ink-line-soft: #777b74;
-    background-image: none;
-  }
-
-  .ink-share .public-view-tab.active::after,
-  .ink-share .public-baseline-mark {
-    background-color: var(--ink-text);
+  .share-eink-root {
+    --eink-muted: #343733;
+    --eink-line: #666a65;
+    --eink-line-strong: #333733;
+    background: #ecece8;
   }
 }
+
 
 /* ---- source: /brand-logo-b.css ---- */
 /* Logo B: a score record page, three exam nodes, and a small effort cue. */
