@@ -201,7 +201,7 @@ test("authenticated share preview reuses the allow-list without exposing secret 
   assert.equal(response.status, 401);
 
   response = await call(env, `/api/students/${root.provision.studentId}/shares/revoke`, { method: "POST", headers: { cookie: root.cookie, "x-score-csrf": root.csrf, origin: "https://score.example" }, body: JSON.stringify({ kind: "public", locator: publicShare.share.locator }) });
-  assert.equal(response.status, 200);
+  assert.equal(response.status, 200, await response.text());
   response = await call(env, `/api/students/${root.provision.studentId}/shares/public/${publicShare.share.locator}/preview`, { headers: { cookie: root.cookie } });
   assert.equal(response.status, 404);
 });
