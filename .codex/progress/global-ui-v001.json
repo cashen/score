@@ -1,0 +1,46 @@
+{
+  "project": "cashen/score",
+  "release": "0.14.4.0",
+  "branch": "ui/global-layout-v001",
+  "base": {
+    "sha": "31afa00e9056f55bace93824cc40992b32212599"
+  },
+  "status": "implementation",
+  "stages": {
+    "baseline": "completed",
+    "layout": "completed",
+    "typography": "completed",
+    "navigation": "in_progress",
+    "home": "in_progress",
+    "examEntry": "in_progress",
+    "sharing": "in_progress",
+    "shareEink": "completed",
+    "family": "in_progress",
+    "responsive": "in_progress",
+    "accessibility": "in_progress",
+    "legacyCleanup": "pending",
+    "browserVerification": "pending",
+    "production": "pending"
+  },
+  "completed": [
+    "canonical layout tokens",
+    "private shell/home/container alignment",
+    "centered E-ink shell + inner reading measure",
+    "browser centering contract",
+    "release synchronized to 0.14.4.0",
+    "page-family components aligned to the canonical reading axis",
+    "shared reading typography rhythm",
+    "expanded Chromium matrix to 360/390/430/768/820/1280/1440/1920",
+    "corrected workspace-versus-reading frame ownership"
+  ],
+  "invariants": [
+    "Schema 1",
+    "Workers KV",
+    "Share v2",
+    "existing APIs",
+    "permissions",
+    "comparison semantics",
+    "public share URL state"
+  ],
+  "next": "browser matrix run for 8 Chromium widths + WebKit 390 -> review geometry/screenshots -> CSS ownership cleanup"
+}

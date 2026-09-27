@@ -217,3 +217,91 @@ a { text-underline-offset: 2px; }
 .home-view-tabs .trajectory-subtab{width:100%;min-height:42px;text-align:center}
 @media (max-width:760px){.app-main-tabs{width:100%;margin-bottom:18px}.home-welcome{align-items:flex-start}.home-latest-grid{grid-template-columns:1fr;gap:18px}.home-position{padding:14px 0 0;border-left:0;border-top:1px solid var(--ui-line-soft)}.home-subjects{padding:16px}}
 @media (max-width:560px){.home-topbar .topbar-inner{align-items:center}.privacy-note-lite{display:none}.student-picker{flex:1 1 auto;min-width:0}.student-picker select{width:100%;max-width:none}.home-account-trigger{min-width:0}.home-brand>span{font-size:15px}.home-latest{padding:18px 16px;border-radius:18px}.home-latest-context{align-items:flex-start;flex-direction:column;gap:3px}.home-score-reading>strong{font-size:clamp(42px,15vw,58px)}.home-subjects .subject-row{grid-template-columns:64px 82px minmax(0,1fr);gap:9px}.home-actions{grid-template-columns:1fr}.home-actions .btn{width:100%}.home-view-tabs{margin-top:-2px}}
+
+/* v0.14.4 global layout architecture — one shared spatial system.
+ * Center the work/reading area; keep information left-aligned inside it.
+ */
+:root{
+  --layout-outer:1200px;
+  --layout-workspace:960px;
+  --layout-reading:760px;
+  --layout-measure:640px;
+  --layout-gutter:clamp(16px,3vw,32px);
+  --layout-section-gap:clamp(28px,5vw,48px);
+}
+.topbar-inner{
+  width:min(100%,var(--layout-outer));
+  max-width:var(--layout-outer);
+  margin-inline:auto;
+  padding-inline:var(--layout-gutter);
+}
+.container{
+  width:min(100%,var(--layout-outer));
+  max-width:var(--layout-outer);
+  margin-inline:auto;
+  padding:24px var(--layout-gutter) 64px;
+}
+.app-main{
+  width:min(100%,var(--layout-workspace));
+  max-width:var(--layout-workspace);
+  margin-inline:auto;
+}
+.home-page{
+  width:min(100%,var(--layout-workspace));
+  max-width:var(--layout-workspace);
+  margin-inline:auto;
+}
+.app-main-tabs{
+  width:min(100%,var(--layout-reading));
+  max-width:var(--layout-reading);
+  margin-inline:auto;
+}
+.public-shell:not(.eink-share),
+.reading-frame,
+.change-section,
+.deep-trajectory{
+  width:min(calc(100% - (2 * var(--layout-gutter))),var(--layout-reading));
+  max-width:var(--layout-reading);
+  margin-inline:auto;
+  box-sizing:border-box;
+}
+:where(.reading-section,.public-reading-section,.public-history){
+  width:min(100%,var(--layout-reading));
+  max-width:var(--layout-reading);
+  margin-inline:auto;
+  box-sizing:border-box;
+}
+@media (min-width:1200px){
+  .container{padding-top:32px}
+  .home-page{padding-bottom:40px}
+}
+@media (max-width:640px){
+  .app-main-tabs{width:100%}
+  .public-shell:not(.eink-share),
+  .reading-frame,
+  .change-section,
+  .deep-trajectory,
+  :where(.reading-section,.public-reading-section,.public-history){
+    width:100%;
+    max-width:none;
+  }
+}
+
+/* v0.14.4 reading typography — one stable rhythm for page families. */
+:root{
+  --ui-font-body:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans CJK SC",sans-serif;
+  --ui-font-reading:ui-serif,"Songti SC","STSong","Noto Serif CJK SC",serif;
+  --ui-text-size-body:16px;
+  --ui-text-size-meta:13px;
+  --ui-text-size-label:12px;
+  --ui-leading-body:1.62;
+}
+body{
+  font-family:var(--ui-font-body);
+  font-size:var(--ui-text-size-body);
+  line-height:var(--ui-leading-body);
+}
+:where(.page-heading h1,.home-welcome h1){text-wrap:balance}
+:where(.page-heading p,.section-head-simple p,.home-welcome p){max-width:var(--layout-measure,640px)}
+:where(.section-label,.eyebrow){font-size:var(--ui-text-size-label)}
+:where(.page-heading p,.section-head-simple p,.home-welcome p,small){line-height:1.55}

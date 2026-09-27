@@ -28,6 +28,15 @@ test("E-ink share system is a calm grayscale reading layer", () => {
 });
 
 test("release version is synchronized for E-ink share", () => {
-  assert.equal(pkg.version, "0.14.3.0");
-  assert.match(wrangler, /^APP_VERSION\s*=\s*"0\.14\.3\.0"/m);
+  assert.equal(pkg.version, "0.14.4.0");
+  assert.match(wrangler, /^APP_VERSION\s*=\s*"0\.14\.4\.0"/m);
+});
+
+
+test("v0.14.4 share alignment keeps the reading frame centered", () => {
+  assert.match(css, /--eink-reading-width:\s*760px/);
+  assert.match(css, /--eink-body-measure:\s*40rem/);
+  assert.match(css, /\.eink-share > \.public-coordinate/);
+  assert.match(css, /margin-inline:\s*auto/);
+  assert.match(css, /@media \(max-width:760px\)/);
 });
