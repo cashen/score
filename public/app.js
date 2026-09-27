@@ -1036,14 +1036,30 @@ async function saveExam(event) {
       ? await api(`/api/students/${state.student.id}/exams/${state.editingExam.id}`, { method: "PUT", body: JSON.stringify(payload) })
       : await api(`/api/students/${state.student.id}/exams`, { method: "POST", body: JSON.stringify(payload) });
     formElement.dispatchEvent(new CustomEvent("score:save-succeeded", { bubbles: true }));
-    closeDialog();
-    await loadStudentData();
-    const savedExam = savedResult?.exam || (savedExamId ? state.exams.find((item) => item.id === savedExamId) : state.exams.find((item) => item.id === savedResult?.exam?.id));
-    restoreViewContext(state,{...returnContext,selectedExamId:returnContext.selectedExamId&&state.exams.some(item=>item.id===returnContext.selectedExamId)?returnContext.selectedExamId:null});
+    const savedExam = savedResult?.exam;
+    if (!savedExam) throw new Error("服务器没有返回保存后的考试记录，请重新打开考试列表核对");
+    state.exams = sortExamsChronologically([
+      savedExam,
+      ...state.exams.filter((item) => item.id !== savedExam.id && !item.deletedAt)
+    ]);
+    state.trash = state.trash.filter((item) => item.id !== savedExam.id);
+    dispatchViewAction(state, { type: "view/exam-edit", exam: savedExam });
+    restoreViewContext(state, {
+      ...returnContext,
+      selectedExamId: returnContext.selectedExamId && state.exams.some((item) => item.id === returnContext.selectedExamId)
+        ? returnContext.selectedExamId
+        : null
+    });
     writePrivateNavigation({ replace: true });
-    const saveSummary = savedExam ? recordSaveSummary(savedExam) : null;
-    state.notice = saveSummary ? `考试已保存 · ${saveSummary.line}` : "考试已保存";
+    const saveSummary = recordSaveSummary(savedExam);
+    state.notice = saveSummary ? `已保存 · ${saveSummary.line}` : "已保存";
     state.noticeTone = "success";
+    button.disabled = false;
+    button.textContent = "保存考试";
+    const status = formElement.querySelector("[data-draft-state]");
+    if (status) status.textContent = "已保存。可以继续修改，完成后再关闭。";
+    const errorBox = formElement.querySelector("#exam-form-error");
+    if (errorBox) errorBox.innerHTML = "";
     renderDashboard();
   } catch (error) {
     button.disabled = false;
@@ -1057,9 +1073,11 @@ async function deleteExam() {
   const deletingExamId = state.editingExam.id;
   try {
     const deleted = await api(`/api/students/${state.student.id}/exams/${deletingExamId}`, { method: "DELETE", body: JSON.stringify({ expectedRevision: state.editingExam.revision }) });
-    state.undoDelete = { id: deletingExamId, revision: state.editingExam.revision + 1, undoUntil: deleted.undoUntil };
+    const deletedExam = { ...state.editingExam, deletedAt: new Date().toISOString(), revision: state.editingExam.revision + 1 };
+    state.undoDelete = { id: deletingExamId, revision: deletedExam.revision, undoUntil: deleted.undoUntil };
+    state.exams = state.exams.filter((item) => item.id !== deletingExamId);
+    state.trash = [deletedExam, ...state.trash.filter((item) => item.id !== deletingExamId)];
     closeDialog();
-    await Promise.all([loadStudentData(), loadExamTrash()]);
     if (state.selectedExamId === deletingExamId) dispatchViewAction(state, { type: "view/clear-exam" });
     writePrivateNavigation({ replace: true });
     state.notice = "考试已删除，15 分钟内可以撤销";
