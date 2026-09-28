@@ -821,6 +821,13 @@ function examDialog(exam = null) {
     const attendance = exam?.attendance === "absent" || exam?.status === "absent" ? "absent" : "present";
     const condition = exam?.condition === "special" || ["good", "poor"].includes(exam?.status) ? "special" : "normal";
     statusField.innerHTML = `<div class="form-two"><div class="field"><label>到场情况</label><select name="attendance"><option value="present" ${attendance === "present" ? "selected" : ""}>正常参加</option><option value="absent" ${attendance === "absent" ? "selected" : ""}>缺考</option></select></div><div class="field"><label>这次是否有特殊情况</label><select name="condition"><option value="normal" ${condition === "normal" ? "selected" : ""}>没有</option><option value="special" ${condition === "special" ? "selected" : ""}>有</option></select></div></div><small>“数据还没录全”由系统根据实际成绩自动判断，不再和到场情况混在一起。</small>`;
+    const overallEntry = form.querySelector(".overall-entry");
+    if (overallEntry) {
+      const statusRow = document.createElement("div");
+      statusRow.className = "exam-attendance-inline";
+      statusRow.append(statusField);
+      overallEntry.insertAdjacentElement("afterend", statusRow);
+    }
   }
   const syncSubjectSelection=()=>{
     const selected=new Set([...form.querySelectorAll("input[name=\"subjectSet\"]:checked")].map(input=>input.value));
