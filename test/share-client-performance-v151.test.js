@@ -21,7 +21,7 @@ test("release version is synchronized for v0.15.1", async () => {
   const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
   const lock = await readFile(new URL("../package-lock.json", import.meta.url), "utf8");
   const wrangler = await readFile(new URL("../wrangler.toml", import.meta.url), "utf8");
-  assert.equal(pkg.version, "0.15.1.0");
-  assert.equal(lock.includes('"version": "0.15.1.0"'), true);
-  assert.equal(wrangler.includes('APP_VERSION = "0.15.1.0"'), true);
+  assert.equal(pkg.version, "0.15.2.0");
+  assert.equal(lock.includes('"version": "0.15.2.0"'), true);
+  assert.equal(wrangler.includes('APP_VERSION = "0.15.2.0"'), true);
 });
