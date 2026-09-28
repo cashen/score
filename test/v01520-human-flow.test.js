@@ -40,6 +40,11 @@ test('family load failures stay distinguishable from an empty member list', () =
   assert.equal(app.includes('data-action="retry-family"'), true);
 });
 
+test('attendance status is visible in the third entry step', () => {
+  assert.equal(app.includes('exam-attendance-inline'), true);
+  assert.equal(app.includes('到场情况'), true);
+});
+
 test('absent exams can have no subject records', () => {
   const absent = normalizeExam({ name: '9月月考', date: '2026-09-28', type: 'monthly', attendance: 'absent', status: 'absent', subjectSet: [], subjects: {} });
   assert.deepEqual(absent.subjectSet, []);
