@@ -305,3 +305,6 @@ body{
 :where(.page-heading p,.section-head-simple p,.home-welcome p){max-width:var(--layout-measure,640px)}
 :where(.section-label,.eyebrow){font-size:var(--ui-text-size-label)}
 :where(.page-heading p,.section-head-simple p,.home-welcome p,small){line-height:1.55}
+
+/* v0.15.2 private human-flow correction */
+.exam-list-row { text-decoration: none; color: inherit; }
