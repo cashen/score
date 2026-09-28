@@ -52,9 +52,9 @@ test("absent exam can be submitted without a subject", async ({ page }) => {
   await page.getByRole("button", { name: "记录第一次考试" }).click();
   await page.locator("[name=\"name\"]").fill("9月月考");
   await page.locator("[name=\"date\"]").fill("2026-09-28");
+  await page.getByRole("button", { name: "下一步" }).click();
+  await page.getByRole("button", { name: "下一步" }).click();
   await page.locator("[name=\"attendance\"]").selectOption("absent");
-  await page.getByRole("button", { name: "下一步" }).click();
-  await page.getByRole("button", { name: "下一步" }).click();
   await page.getByRole("button", { name: "检查并保存" }).click();
   await page.getByRole("button", { name: "保存考试" }).click();
   await expect.poll(() => payload).not.toBeNull();
