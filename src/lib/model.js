@@ -105,10 +105,17 @@ export function normalizeComparison(value = {}) {
 
 export function normalizeExam(input, existing = null) {
   const id = existing?.id || safeText(input.id, 80) || crypto.randomUUID();
+  const attendance = input.attendance !== undefined
+    ? (input.attendance === "absent" || input.status === "absent" ? "absent" : "present")
+    : existing?.attendance || (existing?.status === "absent" ? "absent" : "present");
+  const condition = input.condition !== undefined
+    ? (input.condition === "special" ? "special" : "normal")
+    : ["good", "poor"].includes(input.status) ? "special"
+    : existing?.condition || (["good", "poor"].includes(existing?.status) ? "special" : "normal");
   const subjectSet = input.subjectSet !== undefined
-    ? normalizeSubjectSet(input.subjectSet)
-    : Array.isArray(existing?.subjectSet) ? normalizeSubjectSet(existing.subjectSet) : null;
-  const activeSubjects = subjectSet?.length ? subjectSet : SUBJECTS;
+    ? normalizeSubjectSet(input.subjectSet, { allowEmpty: attendance === "absent" })
+    : Array.isArray(existing?.subjectSet) ? normalizeSubjectSet(existing.subjectSet, { allowEmpty: attendance === "absent" }) : null;
+  const activeSubjects = subjectSet !== null ? subjectSet : SUBJECTS;
   const subjects = {};
   for (const subject of activeSubjects) subjects[subject] = normalizeSubject(input.subjects?.[subject] || {});
   const date = safeText(input.date, 10);
@@ -136,13 +143,6 @@ export function normalizeExam(input, existing = null) {
   const contextInput = input.context === undefined
     ? existing?.context
     : Object.assign({}, existing?.context || {}, input.context || {});
-  const attendance = input.attendance !== undefined
-    ? (input.attendance === "absent" || input.status === "absent" ? "absent" : "present")
-    : existing?.attendance || (existing?.status === "absent" ? "absent" : "present");
-  const condition = input.condition !== undefined
-    ? (input.condition === "special" ? "special" : "normal")
-    : ["good", "poor"].includes(input.status) ? "special"
-    : existing?.condition || (["good", "poor"].includes(existing?.status) ? "special" : "normal");
   return {
     schemaVersion: 1,
     id,

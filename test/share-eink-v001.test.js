@@ -29,8 +29,8 @@ test("E-ink share system is a calm grayscale reading layer", () => {
 });
 
 test("release version is synchronized for E-ink share", () => {
-  assert.equal(pkg.version, "0.15.1.0");
-  assert.match(wrangler, /^APP_VERSION\s*=\s*"0\.15\.1\.0"/m);
+  assert.equal(pkg.version, "0.15.2.0");
+  assert.match(wrangler, /APP_VERSION\s*=\s*"0\.15\.2\.0"/m);
 });
 
 

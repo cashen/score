@@ -94,6 +94,18 @@ function fmtDate(value) {
   return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
+function todayLocalDate() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return year + "-" + month + "-" + day;
+}
+
+function studentSessionKey(familyId) {
+  return "score-current-student:" + (familyId || "unknown");
+}
+
 function examTypeLabel(type) {
   return EXAM_TYPES[type] || "其他";
 }
@@ -392,12 +404,13 @@ function syncPrivateNavigationFromUrl() {
   const params = new URLSearchParams(location.search);
   const tab = ["overview", "exams", "sharing", "family"].includes(params.get("tab")) ? params.get("tab") : "overview";
   const view = ["total", "subject", "timeline"].includes(params.get("view")) ? params.get("view") : "total";
+  const examId = params.get("exam") || null;
   dispatchViewAction(state, {
     type: "view/overview",
-    view,
-    subjectKey: validSubjectKey(params.get("subject")),
-    metric: validSubjectMetric(params.get("metric")),
-    examId: params.get("exam") || null
+    view: tab === "exams" && examId ? "timeline" : view,
+    subjectKey: tab === "overview" ? validSubjectKey(params.get("subject")) : null,
+    metric: tab === "overview" ? validSubjectMetric(params.get("metric")) : "auto",
+    examId: tab === "overview" || tab === "exams" ? examId : null
   });
   dispatchViewAction(state, { type: "view/tab", tab });
 }
@@ -406,7 +419,10 @@ function writePrivateNavigation({ replace = false } = {}) {
   const url = new URL(location.href);
   if (state.tab === "overview") url.searchParams.delete("tab");
   else url.searchParams.set("tab", state.tab);
-  if (state.tab !== "overview") {
+  if (state.tab === "exams") {
+    url.searchParams.delete("view"); url.searchParams.delete("subject"); url.searchParams.delete("metric");
+    if (state.selectedExamId) url.searchParams.set("exam", state.selectedExamId); else url.searchParams.delete("exam");
+  } else if (state.tab !== "overview") {
     url.searchParams.delete("view"); url.searchParams.delete("subject"); url.searchParams.delete("metric"); url.searchParams.delete("exam");
   } else {
     url.searchParams.set("view", state.trajectoryView);
@@ -628,12 +644,13 @@ function renderExamList() {
     const previous = previousComparableExam(state.exams, exam);
     const scoreMetric = previous ? metricBetween(exam, previous, null, "auto") : null;
     const coordinates = coordinateItems(exam).map((item) => `<span>${esc(item)}</span>`).join("");
-    return `<div class="exam-list-row" data-action="edit-exam" data-id="${esc(exam.id)}" tabindex="0" role="button"><div class="exam-list-title"><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)}</small></div><div class="exam-list-coordinate">${coordinates}${renderScoreChange(scoreMetric)}</div><span class="row-chevron" aria-hidden="true">›</span></div>`;
-  }).join("");
-  const trashBlock = state.trash.length
+    const recorded = recordCompleteness(exam);
+    const completion = recorded.subjectTotal ? `已记录 ${recorded.subjectCount} 科` : (exam.attendance === "absent" || exam.status === "absent" ? "缺考" : "暂未记录成绩");
+    return `<a class="exam-list-row" href="?view=timeline&exam=${encodeURIComponent(exam.id)}" data-action="view-exam" data-id="${esc(exam.id)}"><div class="exam-list-title"><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · ${examTypeLabel(exam.type)} · ${esc(completion)}</small></div><div class="exam-list-coordinate">${coordinates}${renderScoreChange(scoreMetric)}</div><span class="row-chevron" aria-hidden="true">›</span></a>`;
+  }).join("");  const trashBlock = state.trash.length
     ? `<details class="advanced exam-trash"><summary>回收站（${state.trash.length}）</summary><div class="advanced-body"><p class="muted">已删除的考试不会出现在正常成绩、历次考试或分享中。</p><div class="exam-list">${state.trash.map((exam) => `<div class="exam-list-row"><div class="exam-list-title"><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · 已删除 ${esc(String(exam.deletedAt || "").slice(0, 10))}</small></div><button type="button" class="btn btn-outline btn-small" data-action="restore-exam" data-id="${esc(exam.id)}" data-revision="${esc(exam.revision)}">恢复</button></div>`).join("")}</div></div></details>`
     : `<details class="advanced exam-trash" data-trash-panel><summary>回收站</summary><div class="advanced-body"><p class="muted">正在加载已删除的考试。</p></div></details>`;
-  return `<section><div class="page-heading"><div><h1>考试</h1><p>这里保留每一场考试的原始记录；不同难度的试卷，不建议只看分数直接横比。</p></div>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录考试</button>` : ""}</div>${rows ? `<div class="exam-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试。</p></div>`}${trashBlock}</section>`;
+  return `<section><div class="page-heading"><div><h1>考试</h1><p>这里是考试记录管理。点开先看记录，需要修改时再进入编辑。</p></div>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录考试</button>` : ""}</div>${rows ? `<div class="exam-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试。</p></div>`}${trashBlock}</section>`;
 }
 
 function shareFieldControls(prefix, scope) {
@@ -703,7 +720,9 @@ function studentRow(student) {
 
 function renderFamily() {
   const student = state.student;
-  const members = state.familyMembers.map(memberRow).join("") || `<div class="empty compact">暂无成员资料。</div>`;
+  const members = state.familyDataError
+    ? `<div class="error-box" role="alert">${esc(state.familyDataError)} <button type="button" class="btn btn-outline btn-small" data-action="retry-family">重试</button></div>`
+    : state.familyMembers.map(memberRow).join("") || `<div class="empty compact">暂无成员资料。</div>`;
   const students = (state.me?.students || []).map(studentRow).join("");
   const memberCreate = isOwner() ? `<details class="advanced family-add"><summary>添加家庭成员</summary><form id="family-member-create" class="form-stack advanced-body"><div class="field"><label>登录账号</label><input name="username" required minlength="3" maxlength="64" autocomplete="off"></div><div class="field"><label>初始密码</label><input name="password" type="password" required minlength="10" maxlength="256" autocomplete="new-password"><small>至少 10 个字符。请通过安全方式单独告诉对方。</small></div><div class="field"><label>权限</label><select name="role"><option value="editor">可编辑</option><option value="viewer">仅查看</option></select></div><button class="btn btn-primary" type="submit">添加成员</button></form></details>` : "";
   const studentCreate = canEdit() ? `<details class="advanced family-add"><summary>添加孩子</summary><form id="family-student-create" class="form-stack advanced-body"><div class="field"><label>孩子名字 / 称呼</label><input name="displayName" required maxlength="50"></div><div class="form-two"><div class="field"><label>毕业年份（可选）</label><input name="graduationYear" inputmode="numeric"></div><div class="field"><label>年级</label><input name="grade" value="高三"></div></div><div class="field"><label>学校（可选）</label><input name="schoolLabel"></div><div class="field"><label>班级（可选）</label><input name="className"></div><div class="field"><label>选科</label><input name="subjectTrack" value="物化生"></div><button class="btn btn-primary" type="submit">添加孩子</button></form></details>` : "";
@@ -723,8 +742,8 @@ function renderDashboard() {
   app.innerHTML = `${renderHeader()}<main class="container app-main"><nav class="tabs app-main-tabs" aria-label="主导航"><button class="tab ${state.tab === "overview" ? "active" : ""}" data-tab="overview">成绩</button><button class="tab ${state.tab === "exams" ? "active" : ""}" data-tab="exams">考试</button><button class="tab ${state.tab === "sharing" ? "active" : ""}" data-tab="sharing">分享</button><button class="tab ${state.tab === "family" ? "active" : ""}" data-tab="family">家庭</button></nav><div class="status-region is-${state.noticeTone}" data-status-region role="status" aria-live="polite" ${statusText ? "" : "hidden"}>${esc(statusText)} ${undoButton}</div>${body}</main><footer class="footer">${PRODUCT_NAME} · 数据默认只对家庭成员可见 · ${esc(state.me?.appVersion || "")}</footer>`;
   bindDashboard();
 }
-function renderLogin(error = "") {
-  app.innerHTML = `<main class="login-shell"><section class="login-card">${brandMark()}<h1>${PRODUCT_NAME}</h1><p>${PRODUCT_TAGLINE}。</p>${error ? `<div class="error-box" role="alert">${esc(error)}</div>` : ""}<form id="login-form"><div class="field"><label>登录账号</label><input name="username" autocomplete="username" required></div><div class="field"><label>密码</label><input name="password" type="password" autocomplete="current-password" minlength="10" required></div><button class="btn btn-primary btn-block" type="submit">登录</button></form><div class="login-help"><a href="/forgot">忘记密码？使用恢复码</a></div><small class="login-privacy">数据默认只对家庭成员可见。</small></section></main>`;
+function renderLogin(error = "", username = "") {
+  app.innerHTML = `<main class="login-shell"><section class="login-card">${brandMark()}<h1>${PRODUCT_NAME}</h1><p>${PRODUCT_TAGLINE}。</p>${error ? `<div class="error-box" role="alert">${esc(error)}</div>` : ""}<form id="login-form"><div class="field"><label>登录账号</label><input name="username" autocomplete="username" value="${esc(username)}" required></div><div class="field"><label>密码</label><input name="password" type="password" autocomplete="current-password" minlength="10" required></div><button class="btn btn-primary btn-block" type="submit">登录</button></form><div class="login-help"><a href="/forgot">忘记密码？使用恢复码</a></div><small class="login-privacy">数据默认只对家庭成员可见。</small></section></main>`;
   document.querySelector("#login-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const button = event.currentTarget.querySelector("button[type='submit']");
@@ -736,7 +755,7 @@ function renderLogin(error = "") {
       state.csrf = result.csrf;
       await loadPrivateApp();
     } catch (error) {
-      renderLogin(error.message);
+      renderLogin(error.message, String(form.get("username") || ""));
     }
   });
 }
@@ -765,7 +784,7 @@ function examDialog(exam = null) {
   const clazz = overallRank(exam, "class");
   const joint = overallRank(exam, "joint");
   const historicalClassLabel = exam?.context?.classLabel || state.student?.className || "班级";
-  document.body.insertAdjacentHTML("beforeend", `<div class="dialog-backdrop" id="exam-dialog"><form class="dialog exam-dialog" id="exam-form"><div class="dialog-head"><div><h2>${exam ? "查看 / 编辑考试" : "记录一次考试"}</h2><p>按成绩单上的顺序填写；不知道的数据可以留空。</p></div><button type="button" class="btn btn-outline btn-small" data-close-dialog>关闭</button></div><section class="exam-section"><h3>这次是什么考试</h3><div class="exam-context-grid"><div class="field"><label>考试名称</label><input name="name" required value="${esc(exam?.name || "")}" placeholder="例如 高三二模"></div><div class="field"><label>日期</label><input name="date" type="date" required value="${esc(exam?.date || new Date().toISOString().slice(0, 10))}"></div><div class="field"><label>类型</label><select name="type">${Object.entries(EXAM_TYPES).map(([value, label]) => `<option value="${value}" ${exam?.type === value ? "selected" : ""}>${label}</option>`).join("")}</select></div></div></section><section class="exam-section"><h3>总分与排名</h3><div class="overall-entry"><div class="field"><label>学校公布总分</label><input name="officialScore" inputmode="decimal" value="${exam?.overall?.officialScore ?? ""}"></div><div class="overall-ranks">${rankInputs("overall-school", school, "学校")}${rankInputs("overall-class", clazz, historicalClassLabel)}<div class="rank-pair joint-rank" data-joint-rank ${exam?.type === "joint" ? "" : "hidden"}><span>联考</span><input name="overall-joint-rank" inputmode="numeric" placeholder="名次" value="${joint?.rank ?? ""}" ${exam?.type === "joint" ? "" : "disabled"}><span>/</span><input name="overall-joint-participants" inputmode="numeric" placeholder="人数可空" value="${joint?.participants ?? ""}" ${exam?.type === "joint" ? "" : "disabled"}><span>人</span></div></div></div><details class="advanced exam-more"><summary>更多考试信息（可选）</summary><div class="advanced-body"><div class="form-two"><div class="field"><label>考试范围</label><select name="comparisonLevel">${COMPARISON_LEVELS.map(([value, label]) => `<option value="${value}" ${exam?.comparison?.level === value ? "selected" : ""}>${label}</option>`).join("")}</select></div><div class="field"><label>属于同一个考试系列</label><input name="comparisonSeries" maxlength="60" value="${esc(exam?.comparison?.series || "")}" placeholder="例如 2027届三次模拟考试"></div></div><div class="field"><label>特殊情况</label><select name="status">${Object.entries(EXAM_STATUS_LABELS).map(([value, label]) => `<option value="${value}" ${(exam?.status || "normal") === value ? "selected" : ""}>${label}</option>`).join("")}</select><small>重新编辑时保留原来的考试状态；具体发生了什么，可写在下方“想记住的事”里。</small></div></div></details></section><section class="exam-section"><div class="section-head-simple"><div><h3>成绩</h3><p>先记成绩，排名放到下一步；拿不到的数据可以留空。</p></div></div><div class="exam-subject-cards">${SUBJECTS.map(([key, label, full]) => subjectEditor(exam, key, label, full, historicalClassLabel)).join("")}</div></section><div class="field exam-notes"><label>想记住的事（仅家庭内部）</label><textarea name="notes" placeholder="例如：数学圆锥曲线失分较多">${esc(exam?.notes || "")}</textarea></div><div class="draft-state" data-draft-state>${exam ? "修改后保存才会更新" : "草稿会自动保存在本机"}</div><div id="exam-form-error" role="alert"></div><div class="dialog-actions">${exam && canEdit() ? `<button type="button" class="btn btn-danger" data-action="delete-exam">删除</button>` : ""}<button type="button" class="btn btn-outline" data-close-dialog>取消</button>${canEdit() ? `<button class="btn btn-primary" type="submit">保存考试</button>` : ""}</div></form></div>`);
+  document.body.insertAdjacentHTML("beforeend", `<div class="dialog-backdrop" id="exam-dialog"><form class="dialog exam-dialog" id="exam-form"><div class="dialog-head"><div><h2>${exam ? "查看 / 编辑考试" : "记录一次考试"}</h2><p>按成绩单上的顺序填写；不知道的数据可以留空。</p></div><button type="button" class="btn btn-outline btn-small" data-close-dialog>关闭</button></div><section class="exam-section"><h3>这次是什么考试</h3><div class="exam-context-grid"><div class="field"><label>考试名称</label><input name="name" required value="${esc(exam?.name || "")}" placeholder="例如 高三二模"></div><div class="field"><label>日期</label><input name="date" type="date" required value="${esc(exam?.date || todayLocalDate())}"></div><div class="field"><label>类型</label><select name="type">${Object.entries(EXAM_TYPES).map(([value, label]) => `<option value="${value}" ${exam?.type === value ? "selected" : ""}>${label}</option>`).join("")}</select></div></div></section><section class="exam-section"><h3>总分与排名</h3><div class="overall-entry"><div class="field"><label>学校公布总分</label><input name="officialScore" inputmode="decimal" value="${exam?.overall?.officialScore ?? ""}"></div><div class="overall-ranks">${rankInputs("overall-school", school, "学校")}${rankInputs("overall-class", clazz, historicalClassLabel)}<div class="rank-pair joint-rank" data-joint-rank ${exam?.type === "joint" ? "" : "hidden"}><span>联考</span><input name="overall-joint-rank" inputmode="numeric" placeholder="名次" value="${joint?.rank ?? ""}" ${exam?.type === "joint" ? "" : "disabled"}><span>/</span><input name="overall-joint-participants" inputmode="numeric" placeholder="人数可空" value="${joint?.participants ?? ""}" ${exam?.type === "joint" ? "" : "disabled"}><span>人</span></div></div></div><details class="advanced exam-more"><summary>更多考试信息（可选）</summary><div class="advanced-body"><div class="form-two"><div class="field"><label>考试范围</label><select name="comparisonLevel">${COMPARISON_LEVELS.map(([value, label]) => `<option value="${value}" ${exam?.comparison?.level === value ? "selected" : ""}>${label}</option>`).join("")}</select></div><div class="field"><label>属于同一个考试系列</label><input name="comparisonSeries" maxlength="60" value="${esc(exam?.comparison?.series || "")}" placeholder="例如 2027届三次模拟考试"></div></div><div class="field"><label>特殊情况</label><select name="status">${Object.entries(EXAM_STATUS_LABELS).map(([value, label]) => `<option value="${value}" ${(exam?.status || "normal") === value ? "selected" : ""}>${label}</option>`).join("")}</select><small>重新编辑时保留原来的考试状态；具体发生了什么，可写在下方“想记住的事”里。</small></div></div></details></section><section class="exam-section"><div class="section-head-simple"><div><h3>成绩</h3><p>先记成绩，排名放到下一步；拿不到的数据可以留空。</p></div></div><div class="exam-subject-cards">${SUBJECTS.map(([key, label, full]) => subjectEditor(exam, key, label, full, historicalClassLabel)).join("")}</div></section><div class="field exam-notes"><label>想记住的事（仅家庭内部）</label><textarea name="notes" placeholder="例如：数学圆锥曲线失分较多">${esc(exam?.notes || "")}</textarea></div><div class="draft-state" data-draft-state>${exam ? "修改后保存才会更新" : "草稿会自动保存在本机"}</div><div id="exam-form-error" role="alert"></div><div class="dialog-actions">${exam && canEdit() ? `<button type="button" class="btn btn-danger" data-action="delete-exam">删除</button>` : ""}<button type="button" class="btn btn-outline" data-close-dialog>取消</button>${canEdit() ? `<button class="btn btn-primary" type="submit">保存考试</button>` : ""}</div></form></div>`);
   const form = document.querySelector("#exam-form");
   let entryPreference = {};
   if (!exam) {
@@ -802,6 +821,13 @@ function examDialog(exam = null) {
     const attendance = exam?.attendance === "absent" || exam?.status === "absent" ? "absent" : "present";
     const condition = exam?.condition === "special" || ["good", "poor"].includes(exam?.status) ? "special" : "normal";
     statusField.innerHTML = `<div class="form-two"><div class="field"><label>到场情况</label><select name="attendance"><option value="present" ${attendance === "present" ? "selected" : ""}>正常参加</option><option value="absent" ${attendance === "absent" ? "selected" : ""}>缺考</option></select></div><div class="field"><label>这次是否有特殊情况</label><select name="condition"><option value="normal" ${condition === "normal" ? "selected" : ""}>没有</option><option value="special" ${condition === "special" ? "selected" : ""}>有</option></select></div></div><small>“数据还没录全”由系统根据实际成绩自动判断，不再和到场情况混在一起。</small>`;
+    const overallEntry = form.querySelector(".overall-entry");
+    if (overallEntry) {
+      const statusRow = document.createElement("div");
+      statusRow.className = "exam-attendance-inline";
+      statusRow.append(statusField);
+      overallEntry.insertAdjacentElement("afterend", statusRow);
+    }
   }
   const syncSubjectSelection=()=>{
     const selected=new Set([...form.querySelectorAll("input[name=\"subjectSet\"]:checked")].map(input=>input.value));
@@ -809,7 +835,8 @@ function examDialog(exam = null) {
     form.querySelectorAll("input[name=\"subjectSet\"]").forEach(input=>input.closest(".exam-subject-option")?.classList.toggle("is-selected",selected.has(input.value)));
     const summary=form.querySelector("[data-subject-selection-summary]");
     const addButton=form.querySelector("[data-open-subject-picker]");
-    if(summary) summary.textContent=selected.size ? "已添加 "+selected.size+" 科："+SUBJECTS.filter(([key])=>selected.has(key)).map(([,label])=>label).join("、") : "还没有添加科目";
+    const absent = form.querySelector("[name='attendance']")?.value === "absent";
+    if(summary) summary.textContent=selected.size ? "已添加 "+selected.size+" 科："+SUBJECTS.filter(([key])=>selected.has(key)).map(([,label])=>label).join("、") : (absent ? "缺考，不需要添加科目" : "还没有添加科目");
     if(addButton) addButton.textContent=selected.size ? "＋ 添加另一科" : "＋ 添加第一科";
     return [...selected];
   };
@@ -967,10 +994,11 @@ async function saveExam(event) {
   const formElement = event.currentTarget;
   const button = formElement.querySelector("button[type='submit']");
   const form = new FormData(formElement);
+  const attendance = value(form, "attendance") === "absent" ? "absent" : "present";
   const subjectSet = [...formElement.querySelectorAll('input[name="subjectSet"]:checked')].map(input => input.value);
-  if (!subjectSet.length) {
+  if (!subjectSet.length && attendance !== "absent") {
     const errorBox = formElement.querySelector("#exam-form-error");
-    if (errorBox) errorBox.innerHTML = '<div class="error-box">请至少选择一门科目。</div>';
+    if (errorBox) errorBox.innerHTML = '<div class="error-box">正常参加时，请至少添加一门科目；缺考可以直接保存。</div>';
     return;
   }
   const selected = new Set(subjectSet);
@@ -1307,11 +1335,26 @@ async function createRecoveryLink() {
   }
 }
 
-async function loadStudentData() {
-  if (!state.student) return;
-  const result = await api(`/api/students/${state.student.id}/exams`);
-  state.exams = sortExamsChronologically(result.exams || []);
-  state.trash = [];
+function renderLoadFailure(error) {
+  const isStudentMissing = error?.code === "student_missing";
+  const title = isStudentMissing ? "还没有孩子资料" : "暂时无法读取数据";
+  const message = isStudentMissing
+    ? "先到“家庭”里添加一个孩子，再开始记录考试。"
+    : "这次没有成功读到已有记录。请检查网络后重试；已经保存在本机的考试草稿不会受影响。";
+  app.innerHTML = `<main class="login-shell"><section class="login-card"><div class="section-label">${PRODUCT_NAME}</div><h1>${title}</h1><p>${message}</p><div class="onboarding-actions"><button type="button" class="btn btn-primary btn-block" data-action="retry-load">重新读取</button>${state.me ? `<button type="button" class="btn btn-outline btn-block" data-action="logout">返回登录</button>` : ""}</div></section></main>`;
+  document.querySelector("[data-action='retry-load']")?.addEventListener("click", loadPrivateApp);
+  document.querySelector("[data-action='logout']")?.addEventListener("click", async () => { await api("/api/logout", { method: "POST" }).catch(() => {}); location.assign("/"); });
+}
+
+async function loadStudentData(student = state.student) {
+  if (!student) return [];
+  const result = await api(`/api/students/${student.id}/exams`);
+  const exams = sortExamsChronologically(result.exams || []);
+  if (student.id === state.student?.id) {
+    state.exams = exams;
+    state.trash = [];
+  }
+  return exams;
 }
 
 async function loadExamTrash() {
@@ -1338,11 +1381,13 @@ async function loadShares() {
 }
 
 async function loadFamilyData() {
+  state.familyDataError = "";
   try {
     const members = await api("/api/family/members");
     state.familyMembers = members.members || [];
-  } catch {
-    state.familyMembers = [];
+  } catch (error) {
+    state.familyDataError = error.message || "家庭成员暂时无法读取";
+    return;
   }
   if (isOwner()) {
     try {
@@ -1351,6 +1396,8 @@ async function loadFamilyData() {
     } catch {
       state.invitations = [];
     }
+  } else {
+    state.invitations = [];
   }
 }
 
@@ -1359,8 +1406,10 @@ async function loadPrivateApp() {
     state.me = await api("/api/me");
     state.csrf = state.me.csrf;
     if (!state.me.recoveryReady) return renderRecoveryRequired();
-    state.student = state.me.students?.[0] || null;
-    if (!state.student) throw new Error("当前家庭还没有孩子资料");
+    const rememberedStudentId = (() => { try { return sessionStorage.getItem(studentSessionKey(state.me.family?.id)); } catch { return null; } })();
+    state.student = state.me.students?.find((student) => student.id === rememberedStudentId) || state.me.students?.[0] || null;
+    if (!state.student) throw Object.assign(new Error("当前家庭还没有孩子资料"), { code: "student_missing" });
+    try { sessionStorage.setItem(studentSessionKey(state.me.family?.id), state.student.id); } catch {}
     await loadStudentData();
     syncPrivateNavigationFromUrl();
     if (state.selectedExamId && !state.exams.some((item) => item.id === state.selectedExamId)) dispatchViewAction(state, { type: "view/clear-exam" });
@@ -1369,7 +1418,7 @@ async function loadPrivateApp() {
     renderDashboard();
   } catch (error) {
     if (error.status === 401) renderLogin();
-    else renderLogin(error.message);
+    else renderLoadFailure(error);
   }
 }
 
@@ -1414,11 +1463,20 @@ function bindDashboard() {
   document.querySelectorAll("[data-tab]").forEach((button) => button.addEventListener("click", async () => {
     dispatchViewAction(state, { type: "view/tab", tab: button.dataset.tab });
     clearNotice();
-    if (state.tab === "sharing") await loadShares();
-    if (state.tab === "family") await loadFamilyData();
-    if (state.tab === "exams") await loadExamTrash();
     writePrivateNavigation();
     renderDashboard();
+    if (state.tab === "sharing") {
+      await loadShares();
+      if (state.tab === "sharing") renderDashboard();
+    }
+    if (state.tab === "family") {
+      await loadFamilyData();
+      if (state.tab === "family") renderDashboard();
+    }
+    if (state.tab === "exams") {
+      await loadExamTrash();
+      if (state.tab === "exams") renderDashboard();
+    }
   }));
   document.querySelectorAll("[data-tab-jump]").forEach((button) => button.addEventListener("click", async () => {
     dispatchViewAction(state, { type: "view/tab", tab: button.dataset.tabJump });
@@ -1427,12 +1485,24 @@ function bindDashboard() {
     renderDashboard();
   }));
   document.querySelector("#student-select")?.addEventListener("change", async (event) => {
-    state.student = state.me.students.find((student) => student.id === event.target.value) || state.me.students[0];
-    await loadStudentData();
-    if (state.selectedExamId && !state.exams.some((item) => item.id === state.selectedExamId)) dispatchViewAction(state, { type: "view/clear-exam" });
-    if (state.tab === "sharing") await loadShares();
-    writePrivateNavigation({ replace: true });
-    renderDashboard();
+    const nextStudent = state.me.students.find((student) => student.id === event.target.value) || state.me.students[0];
+    const previousStudent = state.student;
+    if (!nextStudent || nextStudent.id === previousStudent?.id) return;
+    try {
+      const exams = await loadStudentData(nextStudent);
+      state.student = nextStudent;
+      state.exams = exams;
+      state.trash = [];
+      try { sessionStorage.setItem(studentSessionKey(state.me.family?.id), nextStudent.id); } catch {}
+      if (state.selectedExamId && !state.exams.some((item) => item.id === state.selectedExamId)) dispatchViewAction(state, { type: "view/clear-exam" });
+      if (state.tab === "sharing") await loadShares();
+      writePrivateNavigation({ replace: true });
+      renderDashboard();
+    } catch (error) {
+      state.student = previousStudent;
+      setNotice(`暂时无法切换到“${nextStudent.displayName}”——${error.message}`, "error");
+      renderDashboard();
+    }
   });
   document.querySelectorAll("[data-action='new-exam']").forEach((button) => button.addEventListener("click", () => examDialog()));
   document.querySelectorAll("[data-action='continue-exam']").forEach((button) => button.addEventListener("click", () => examDialog(state.exams.find(exam => exam.id === button.dataset.id))));
@@ -1446,6 +1516,10 @@ function bindDashboard() {
     const undo = state.undoDelete;
     if (!undo) return;
     restoreExam(undo.id, undo.revision);
+  });
+  document.querySelector("[data-action='retry-family']")?.addEventListener("click", async () => {
+    await loadFamilyData();
+    renderDashboard();
   });
   document.querySelector("[data-action='open-trajectory']")?.addEventListener("click", () => {
     const details = document.querySelector("#deep-trajectory");

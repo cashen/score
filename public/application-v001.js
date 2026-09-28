@@ -1,6 +1,6 @@
 const DEFAULT_STATE = Object.freeze({
   me: null, csrf: null, student: null, exams: [], trash: [], shares: [], shareResult: null,
-  familyMembers: [], invitations: [], tab: "overview", trajectoryView: "total", subjectKey: null,
+  familyMembers: [], invitations: [], familyDataError: "", tab: "overview", trajectoryView: "total", subjectKey: null,
   subjectMetric: "auto", selectedExamId: null, editingExam: null, notice: "", noticeTone: "notice"
 });
 
@@ -41,6 +41,7 @@ export function dispatchViewAction(state, action = {}) {
       return state;
     case "view/tab":
       state.tab = action.tab || "overview";
+      if (!["overview", "exams"].includes(state.tab)) state.selectedExamId = null;
       return state;
     case "view/subject":
       state.tab = "overview";
