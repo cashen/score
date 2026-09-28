@@ -650,7 +650,7 @@ function renderExamList() {
   }).join("");  const trashBlock = state.trash.length
     ? `<details class="advanced exam-trash"><summary>回收站（${state.trash.length}）</summary><div class="advanced-body"><p class="muted">已删除的考试不会出现在正常成绩、历次考试或分享中。</p><div class="exam-list">${state.trash.map((exam) => `<div class="exam-list-row"><div class="exam-list-title"><strong>${esc(exam.name)}</strong><small>${fmtDate(exam.date)} · 已删除 ${esc(String(exam.deletedAt || "").slice(0, 10))}</small></div><button type="button" class="btn btn-outline btn-small" data-action="restore-exam" data-id="${esc(exam.id)}" data-revision="${esc(exam.revision)}">恢复</button></div>`).join("")}</div></div></details>`
     : `<details class="advanced exam-trash" data-trash-panel><summary>回收站</summary><div class="advanced-body"><p class="muted">正在加载已删除的考试。</p></div></details>`;
-  return `<section><div class="page-heading"><div><h1>考试</h1><p>这里保留每一场考试的原始记录；不同难度的试卷，不建议只看分数直接横比。</p></div>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录考试</button>` : ""}</div>${rows ? `<div class="exam-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试。</p></div>`}${trashBlock}</section>`;
+  return `<section><div class="page-heading"><div><h1>考试</h1><p>这里是考试记录管理。点开先看记录，需要修改时再进入编辑。</p></div>${canEdit() ? `<button class="btn btn-primary" data-action="new-exam">记录考试</button>` : ""}</div>${rows ? `<div class="exam-list">${rows}</div>` : `<div class="empty-state compact"><h2>还没有考试记录</h2><p>先记录一场考试。</p></div>`}${trashBlock}</section>`;
 }
 
 function shareFieldControls(prefix, scope) {
@@ -1378,14 +1378,19 @@ async function loadFamilyData() {
   try {
     const members = await api("/api/family/members");
     state.familyMembers = members.members || [];
-    if (isOwner()) {
+  } catch (error) {
+    state.familyDataError = error.message || "家庭成员暂时无法读取";
+    return;
+  }
+  if (isOwner()) {
+    try {
       const invitations = await api("/api/admin/invitations");
       state.invitations = invitations.invitations || [];
-    } else {
+    } catch {
       state.invitations = [];
     }
-  } catch (error) {
-    state.familyDataError = error.message || "家庭资料暂时无法读取";
+  } else {
+    state.invitations = [];
   }
 }
 
