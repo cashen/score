@@ -720,7 +720,9 @@ function studentRow(student) {
 
 function renderFamily() {
   const student = state.student;
-  const members = state.familyMembers.map(memberRow).join("") || `<div class="empty compact">暂无成员资料。</div>`;
+  const members = state.familyDataError
+    ? `<div class="error-box" role="alert">${esc(state.familyDataError)} <button type="button" class="btn btn-outline btn-small" data-action="retry-family">重试</button></div>`
+    : state.familyMembers.map(memberRow).join("") || `<div class="empty compact">暂无成员资料。</div>`;
   const students = (state.me?.students || []).map(studentRow).join("");
   const memberCreate = isOwner() ? `<details class="advanced family-add"><summary>添加家庭成员</summary><form id="family-member-create" class="form-stack advanced-body"><div class="field"><label>登录账号</label><input name="username" required minlength="3" maxlength="64" autocomplete="off"></div><div class="field"><label>初始密码</label><input name="password" type="password" required minlength="10" maxlength="256" autocomplete="new-password"><small>至少 10 个字符。请通过安全方式单独告诉对方。</small></div><div class="field"><label>权限</label><select name="role"><option value="editor">可编辑</option><option value="viewer">仅查看</option></select></div><button class="btn btn-primary" type="submit">添加成员</button></form></details>` : "";
   const studentCreate = canEdit() ? `<details class="advanced family-add"><summary>添加孩子</summary><form id="family-student-create" class="form-stack advanced-body"><div class="field"><label>孩子名字 / 称呼</label><input name="displayName" required maxlength="50"></div><div class="form-two"><div class="field"><label>毕业年份（可选）</label><input name="graduationYear" inputmode="numeric"></div><div class="field"><label>年级</label><input name="grade" value="高三"></div></div><div class="field"><label>学校（可选）</label><input name="schoolLabel"></div><div class="field"><label>班级（可选）</label><input name="className"></div><div class="field"><label>选科</label><input name="subjectTrack" value="物化生"></div><button class="btn btn-primary" type="submit">添加孩子</button></form></details>` : "";
@@ -1326,11 +1328,26 @@ async function createRecoveryLink() {
   }
 }
 
-async function loadStudentData() {
-  if (!state.student) return;
-  const result = await api(`/api/students/${state.student.id}/exams`);
-  state.exams = sortExamsChronologically(result.exams || []);
-  state.trash = [];
+function renderLoadFailure(error) {
+  const isStudentMissing = error?.code === "student_missing";
+  const title = isStudentMissing ? "还没有孩子资料" : "暂时无法读取数据";
+  const message = isStudentMissing
+    ? "先到“家庭”里添加一个孩子，再开始记录考试。"
+    : "这次没有成功读到已有记录。请检查网络后重试；已经保存在本机的考试草稿不会受影响。";
+  app.innerHTML = `<main class="login-shell"><section class="login-card"><div class="section-label">${PRODUCT_NAME}</div><h1>${title}</h1><p>${message}</p><div class="onboarding-actions"><button type="button" class="btn btn-primary btn-block" data-action="retry-load">重新读取</button>${state.me ? `<button type="button" class="btn btn-outline btn-block" data-action="logout">返回登录</button>` : ""}</div></section></main>`;
+  document.querySelector("[data-action='retry-load']")?.addEventListener("click", loadPrivateApp);
+  document.querySelector("[data-action='logout']")?.addEventListener("click", async () => { await api("/api/logout", { method: "POST" }).catch(() => {}); location.assign("/"); });
+}
+
+async function loadStudentData(student = state.student) {
+  if (!student) return [];
+  const result = await api(`/api/students/${student.id}/exams`);
+  const exams = sortExamsChronologically(result.exams || []);
+  if (student.id === state.student?.id) {
+    state.exams = exams;
+    state.trash = [];
+  }
+  return exams;
 }
 
 async function loadExamTrash() {
@@ -1357,19 +1374,18 @@ async function loadShares() {
 }
 
 async function loadFamilyData() {
+  state.familyDataError = "";
   try {
     const members = await api("/api/family/members");
     state.familyMembers = members.members || [];
-  } catch {
-    state.familyMembers = [];
-  }
-  if (isOwner()) {
-    try {
+    if (isOwner()) {
       const invitations = await api("/api/admin/invitations");
       state.invitations = invitations.invitations || [];
-    } catch {
+    } else {
       state.invitations = [];
     }
+  } catch (error) {
+    state.familyDataError = error.message || "家庭资料暂时无法读取";
   }
 }
 
@@ -1378,8 +1394,10 @@ async function loadPrivateApp() {
     state.me = await api("/api/me");
     state.csrf = state.me.csrf;
     if (!state.me.recoveryReady) return renderRecoveryRequired();
-    state.student = state.me.students?.[0] || null;
-    if (!state.student) throw new Error("当前家庭还没有孩子资料");
+    const rememberedStudentId = (() => { try { return sessionStorage.getItem(studentSessionKey(state.me.family?.id)); } catch { return null; } })();
+    state.student = state.me.students?.find((student) => student.id === rememberedStudentId) || state.me.students?.[0] || null;
+    if (!state.student) throw Object.assign(new Error("当前家庭还没有孩子资料"), { code: "student_missing" });
+    try { sessionStorage.setItem(studentSessionKey(state.me.family?.id), state.student.id); } catch {}
     await loadStudentData();
     syncPrivateNavigationFromUrl();
     if (state.selectedExamId && !state.exams.some((item) => item.id === state.selectedExamId)) dispatchViewAction(state, { type: "view/clear-exam" });
@@ -1388,7 +1406,7 @@ async function loadPrivateApp() {
     renderDashboard();
   } catch (error) {
     if (error.status === 401) renderLogin();
-    else renderLogin(error.message);
+    else renderLoadFailure(error);
   }
 }
 
@@ -1433,11 +1451,20 @@ function bindDashboard() {
   document.querySelectorAll("[data-tab]").forEach((button) => button.addEventListener("click", async () => {
     dispatchViewAction(state, { type: "view/tab", tab: button.dataset.tab });
     clearNotice();
-    if (state.tab === "sharing") await loadShares();
-    if (state.tab === "family") await loadFamilyData();
-    if (state.tab === "exams") await loadExamTrash();
     writePrivateNavigation();
     renderDashboard();
+    if (state.tab === "sharing") {
+      await loadShares();
+      if (state.tab === "sharing") renderDashboard();
+    }
+    if (state.tab === "family") {
+      await loadFamilyData();
+      if (state.tab === "family") renderDashboard();
+    }
+    if (state.tab === "exams") {
+      await loadExamTrash();
+      if (state.tab === "exams") renderDashboard();
+    }
   }));
   document.querySelectorAll("[data-tab-jump]").forEach((button) => button.addEventListener("click", async () => {
     dispatchViewAction(state, { type: "view/tab", tab: button.dataset.tabJump });
@@ -1446,12 +1473,24 @@ function bindDashboard() {
     renderDashboard();
   }));
   document.querySelector("#student-select")?.addEventListener("change", async (event) => {
-    state.student = state.me.students.find((student) => student.id === event.target.value) || state.me.students[0];
-    await loadStudentData();
-    if (state.selectedExamId && !state.exams.some((item) => item.id === state.selectedExamId)) dispatchViewAction(state, { type: "view/clear-exam" });
-    if (state.tab === "sharing") await loadShares();
-    writePrivateNavigation({ replace: true });
-    renderDashboard();
+    const nextStudent = state.me.students.find((student) => student.id === event.target.value) || state.me.students[0];
+    const previousStudent = state.student;
+    if (!nextStudent || nextStudent.id === previousStudent?.id) return;
+    try {
+      const exams = await loadStudentData(nextStudent);
+      state.student = nextStudent;
+      state.exams = exams;
+      state.trash = [];
+      try { sessionStorage.setItem(studentSessionKey(state.me.family?.id), nextStudent.id); } catch {}
+      if (state.selectedExamId && !state.exams.some((item) => item.id === state.selectedExamId)) dispatchViewAction(state, { type: "view/clear-exam" });
+      if (state.tab === "sharing") await loadShares();
+      writePrivateNavigation({ replace: true });
+      renderDashboard();
+    } catch (error) {
+      state.student = previousStudent;
+      setNotice(`暂时无法切换到“${nextStudent.displayName}”——${error.message}`, "error");
+      renderDashboard();
+    }
   });
   document.querySelectorAll("[data-action='new-exam']").forEach((button) => button.addEventListener("click", () => examDialog()));
   document.querySelectorAll("[data-action='continue-exam']").forEach((button) => button.addEventListener("click", () => examDialog(state.exams.find(exam => exam.id === button.dataset.id))));
@@ -1465,6 +1504,10 @@ function bindDashboard() {
     const undo = state.undoDelete;
     if (!undo) return;
     restoreExam(undo.id, undo.revision);
+  });
+  document.querySelector("[data-action='retry-family']")?.addEventListener("click", async () => {
+    await loadFamilyData();
+    renderDashboard();
   });
   document.querySelector("[data-action='open-trajectory']")?.addEventListener("click", () => {
     const details = document.querySelector("#deep-trajectory");
